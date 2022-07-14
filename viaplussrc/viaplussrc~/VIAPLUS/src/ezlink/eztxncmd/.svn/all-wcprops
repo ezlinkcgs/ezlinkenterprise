@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/ezlinkenterprise/!svn/ver/1408/trunk/src/ezlink/eztxncmd
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/ezlinkenterprise/!svn/ver/264/trunk/src/ezlink/eztxncmd/Makefile
+END
+eztxncmd.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/ezlinkenterprise/!svn/ver/1408/trunk/src/ezlink/eztxncmd/eztxncmd.cpp
+END

@@ -1,0 +1,17 @@
+
+Pro*C/C++: Release 11.2.0.1.0 - Production on Wed Jun 19 20:19:40 2013
+
+Copyright (c) 1982, 2009, Oracle and/or its affiliates.  All rights reserved.
+
+Error at line 1, column 10 in file ezsafreaderdb.pc
+     1  #include <ezdb/eznetworkreplay.h>
+     1  .........1
+     1  PCC-S-02015, unable to open include file
+Error at line 6, column 10 in file ezsafreaderdb.pc
+     6  #include <ezlink/ezlnkmsg.h>
+     6  .........1
+     6  PCC-S-02015, unable to open include file
+Error at line 7, column 10 in file ezsafreaderdb.pc
+     7  #include <ezlink/ezsaftypes.h>
+     7  .........1
+     7  PCC-S-02015, unable to open include file

@@ -1,0 +1,3957 @@
+#include <ezbusiness/ezguicontroller.h>
+
+int EzGuiController :: InitEzGuiController( const char * TaskName )
+{
+	char logpath[ LOG_PATH_SIZE + 1 ];
+	EzCfgUtil cfgutil;
+	char cfgpath[ CFG_PATH_SIZE + 1 ], CfgVal[ CFG_VAL_SIZE + 1 ];
+
+	memset( logpath, 0, sizeof( logpath ) );
+	sprintf( logpath, "%s/%s/%s", getenv( "EZDIR_HOME" ), "log", "ezguicontroller.log" );
+
+	if( openDebug( logpath, TaskName ) < 0 )
+		exit( 0 );
+
+	SetDebug();
+
+	if( InitEzTaskUtil( this ) < 0 )
+	{
+	   trace( DEBUG_ERROR, "Error in Initializing EzTaskUtil" );
+	   trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+	   closeDebug();
+	   exit( 0 );
+	}
+
+	if( InitEzChannelUtil( this ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Initializing EzChannelUtil" );
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( InitEzCommUtil( this ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Initializing EzCommUtil" );
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( CreateChannel( GUICHANNEL, TaskName ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Creating EzGuiController Channel" );
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( !IsTaskRunning( "EzATMController" ) )
+	{
+		trace( "EzATMController is not running " );
+		trace( "^^^^^^^^^^^EzATMcmd Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( !IsTaskRunning( "EzAtmMgr" ) )
+	{
+		trace( "EzATMController is not running " );
+		trace( "^^^^^^^^^^^EzATMcmd Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( InitEzATMUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing the ATMUtil" );
+		trace( "^^^^^^^^^^^EzATMcmd Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	memset( cfgpath, 0, sizeof( cfgpath ) );
+	sprintf( cfgpath, "%s/%s/%s", getenv( "EZDIR_HOME" ), "cfg", "ezkernel.cfg" );
+	if( cfgutil.cfg_open( cfgpath ) < 0 )
+	{
+		trace( "Error in Opening File[%s]", cfgpath );
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+		return -1;
+	}
+
+	memset( CfgVal, 0, sizeof( CfgVal ) );
+	if( cfgutil.cfg_search( "TASK#MAXTASK", CfgVal, 2 ) < 0 )
+	{
+		trace( "Error in Searching TASK#MAXTASK in File[%s]", cfgpath );
+		cfgutil.cfg_close();
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+	MaxTask = atoi( CfgVal );
+
+	trace( DEBUG_TEST, "MaxTask[%d]", MaxTask );
+
+	memset( CfgVal, 0, sizeof( CfgVal ) );
+	if( cfgutil.cfg_search( "PORT#MAXPORT", CfgVal, 2 ) < 0 )
+	{
+		trace( "Error in Searching PORT#MAXPORT in File[%s]", cfgpath );
+		cfgutil.cfg_close();
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+	MaxPort = atoi( CfgVal );
+	trace( DEBUG_TEST, "MaxPort[%d]", MaxPort );
+
+	memset( CfgVal, 0, sizeof( CfgVal ) );
+	if( cfgutil.cfg_search( "CHANNEL#MAXCHANNELS", CfgVal, 2 ) < 0 )
+	{
+		trace( "Error in Searching CHANNEL#MAXCHANNELS in File[%s]", cfgpath );
+		cfgutil.cfg_close();
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+	MaxChannel = atoi( CfgVal );
+	trace( DEBUG_TEST, "MaxChannel[%d]", MaxChannel );
+
+	memset( CfgVal, 0, sizeof( CfgVal ) );
+	if( cfgutil.cfg_search( "CHANNEL#MAXPORTCHANNELS", CfgVal, 2 ) < 0 )
+	{
+			trace( "Error in Fetching CHANNEL#MAXPORTCHANNELS from file [%s]", cfgpath );
+			trace( "~~~~~~~~~~~~~~~~~~EzChannelMgr Ended Abnormally~~~~~~~~~~~~~~~~~~~~~~~~~~");
+			cfgutil.cfg_close();
+			closeDebug();
+			TaskExit();
+	}
+
+	MaxPortChannels = atoi( CfgVal );
+	trace( "Max Port Channels = [%d] ", MaxPortChannels );
+
+   	cfgutil.cfg_close();
+
+	memset( cfgpath, 0, sizeof( cfgpath ) );
+	sprintf( cfgpath, "%s/%s/%s", getenv( "EZDIR_HOME" ), "cfg", "ezbusiness.cfg" );
+	if( cfgutil.cfg_open( cfgpath ) < 0 )
+	{
+		trace( "Error in Opening File[%s]", cfgpath );
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	memset( CfgVal, 0, sizeof( CfgVal ) );
+	if( cfgutil.cfg_search( "EZBUSINESS#MAXGUIBYTES", CfgVal, 2 ) < 0 )
+	{
+		trace( "Error in Searching EZBUSINESS#MAXGUIBYTES in File[%s]", cfgpath );
+		cfgutil.cfg_close();
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	MaxGuiBytes = atoi( CfgVal );
+
+	memset( CfgVal, 0, sizeof( CfgVal ) );
+	if( cfgutil.cfg_search( "EZBUSINESS#MAXFIT", CfgVal, 2 ) < 0 )
+	{
+		trace( DEBUG_ERROR,"Error in Searching EZBUSINESS#MAXFIT from file[%s]", cfgpath );
+		cfgutil.cfg_close();
+		return -1;
+	}
+
+	if( CheckInteger( CfgVal ) < 0 )
+	{
+		trace( DEBUG_ERROR,"Invalid EZBUSINESS#MAXFIT[%s] value defined in file[%s]", CfgVal, cfgpath );
+		return -1;
+	}
+
+	MaxFits = atoi( CfgVal );
+
+	cfgutil.cfg_close();
+
+
+	if( attachChannelMemory() < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Attaching Channel Memory");
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( attachChannelPortMgrMemory() < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Attaching ChannalPortMgr Memory");
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( attachFitMemory() < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Attaching Fit Memory");
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( initDBUtil( TaskName, this ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Initializing DBUtil");
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( initNetworkUtil( this ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Initializing NetworkUtil....");
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( initReplayUtil( this ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Initializing ReplayUtil....");
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( initEchoUtil( this ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Initializing EchoUtil....");
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( initBusDayUtil( this ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Initializing BusDayUtil....");
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if ( initInstProfile( this ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Initializing InstProfile...." );
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( initEzInstSelectUtil( this ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Initializing InstSelect...." );
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( initEzNetworkSelectUtil( this ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Initializing NetworkSelect...." );
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( initBINProfile( this ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Initializing BINProfile...." );
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( initBranchProfile( this ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Initializing BranchProfile...." );
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+	TaskInit();
+	initEzSigUtil( this );
+}
+
+void EzGuiController :: ServiceRequest()
+{
+	char ReadBuf[ GUI_BUFFER_SIZE + 1 ], TempStr[ GUI_TEMP_STR_SIZE + 1 ];
+	int BufSize;
+
+	while( 1 )
+	{
+		trace( DEBUG_NORMAL, "Waiting for Message in EzGuiController Channel" );
+		memset( ReadBuf, 0, sizeof( ReadBuf ) );
+		if( ReadMessage( ReadBuf, &BufSize ) < 1 )
+		{
+			trace( DEBUG_ERROR, "Error in Reading EzATMController Channel" );
+			continue;
+		}
+		trace( DEBUG_NORMAL, "Message received from [ %s ]", GetLastSenderChannelName() );
+
+		memset( TempStr, 0, sizeof( TempStr ) );
+		getToken( ReadBuf, TempStr, GUI_GS, 1 );
+
+		if( !strcasecmp( TempStr, TASK_REQ ) )
+			processTaskRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, PORT_REQ ) )
+			processPortRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, CHANNELTASK_REQ ) )
+			processChannelTaskRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, CHANNELPORT_REQ ) )
+			processChannelPortRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, CHANNELMEMORY_REQ ) )
+			processChannelMemoryRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, NETWORK_REQ ) )
+			processNetworkRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, REPLAY_REQ ) )
+			processReplayRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, ECHO_REQ ) )
+			processEchoRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, ECHOPROPERTY_REQ ) )
+			processEchoPropertyRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, ATM_REQ ) )
+			processAtmRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, SECURITY_REQ ) )
+			processSecurityRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, FIT_REQ ) )
+			processFitRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, INST_REQ ) )
+			processInstRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, INSTSELECT_REQ ) )
+			processInstSelectRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, BIN_REQ ) )
+			processBinRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, NTWKSELECT_REQ ) )
+			processNtwkSelectRequest( ReadBuf );
+		else if ( !strcasecmp( TempStr, BRANCH_REQ ) )
+			processBranchRequest( ReadBuf );
+		else
+		{
+			trace( DEBUG_ERROR, "UnSupported Request[%s] from gui", TempStr );
+			continue;
+		}
+	}
+}
+
+int EzGuiController :: BuildDownLoadAll(  const char *GuiResp, struct EzAtmController *AtmControler )
+{
+        char CommandId[ TEMP + 1 ];
+        memset( CommandId, 0, sizeof( CommandId ) );
+        getToken( GuiResp, CommandId, DEVICE_FS, 5);
+        trace( "CommandId[%s]",CommandId);
+        if( !strcasecmp( CommandId, "all" ) )
+                AtmControler->DownloadType = DOWNLOAD_ALL ;
+        else if( !strcasecmp( CommandId, "state" ) )
+                AtmControler->DownloadType = DOWNLOAD_STATE ;
+        else if( !strcasecmp( CommandId, "screen" ) )
+                AtmControler->DownloadType = DOWNLOAD_SCREEN ;
+        else if( !strcasecmp( CommandId, "misc" ) )
+                AtmControler->DownloadType = DOWNLOAD_MISC ;
+        else if( !strcasecmp( CommandId, "emisc" ) )
+                AtmControler->DownloadType = DOWNLOAD_MISC_E ;
+        else if( !strcasecmp( CommandId, "fit" ) )
+                AtmControler->DownloadType = DOWNLOAD_FIT ;
+        else if( !strcasecmp( CommandId, "key" ) )
+                AtmControler->DownloadType = DOWNLOAD_KEY ;
+        else if( !strcasecmp( CommandId, "configid" ) )
+                AtmControler->DownloadType = DOWNLOAD_CONFIG_ID ;
+        else if( !strcasecmp( CommandId, "date_time" ) )
+                AtmControler->DownloadType = DOWNLOAD_DATE_TIME ;
+        else if( !strcasecmp( CommandId, "custom_icon" ) )
+                AtmControler->DownloadType = DOWNLOAD_CUSTOM_ICON ;
+        else if( !strcasecmp( CommandId, "custom_char" ) )
+                AtmControler->DownloadType = DOWNLOAD_CUSTOM_CHAR ;
+        else if( !strcasecmp( CommandId, "celldata" ) )
+                AtmControler->DownloadType = DOWNLOAD_CELLDATA ;
+        else if( !strcasecmp( CommandId, "template" ) )
+                AtmControler->DownloadType = DOWNLOAD_TEMPLATE ;
+        else if( !strcasecmp( CommandId, "reserved_screen" ) )
+        		AtmControler->DownloadType = DOWNLOAD_RESERVED_SCREEN ;
+        else
+        {
+
+                trace(DEBUG_ERROR,"Invalid Download Type..type help for more\n");
+                return -1;
+        }
+        if( WriteChannel( CONTROLLERCHANNEL, (char*)AtmControler, sizeof( struct EzAtmController ) ) < 0 )
+        {
+               trace( DEBUG_ERROR, "Failed to write msg into EzATMController Channel" );
+               return -1;
+        }
+
+
+	return 1;
+
+}
+
+int EzGuiController :: MakeAtmService ( char *CommandId,  struct EzAtmController *AtmControler )
+{
+	if( !strcasecmp( CommandId, "go_in_service" ) )
+	         AtmControler->CommandType = GO_IN_SERVICE ;
+    else if( !strcasecmp( CommandId, "go_out_service" ) )
+             AtmControler->CommandType = GO_OUT_SERVICE ;
+    else if( !strcasecmp( CommandId, "shutdown" ) )
+             AtmControler->CommandType = SHUTDOWN ;
+    else if( !strcasecmp( CommandId, "get_config_info" ) )
+    		AtmControler->CommandType = GET_CONFIG_INFO ;
+	else if( !strcasecmp( CommandId, "close_valid_shield" ) )
+			AtmControler->CommandType = CLOSE_VANDAL_SHIELD ;
+	else if( !strcasecmp( CommandId, "open_valid_shield" ) )
+	        AtmControler->CommandType = OPEN_VANDAL_SHIELD ;
+	else if( !strcasecmp( CommandId, "unlock_safe_door" ) )
+	        AtmControler->CommandType = UNLOCK_SAFE_DOOR ;
+	else if( !strcasecmp( CommandId, "lock_safe_door" ) )
+	        AtmControler->CommandType = LOCK_SAFE_DOOR ;
+	else if( !strcasecmp( CommandId, "emg" ) )
+	        AtmControler->CommandType = EMG_COMMAND ;
+	else if( !strcasecmp( CommandId, "get_supply_counters" ) )
+	        AtmControler->CommandType = GET_SUPPLY_COUNTS ;
+	else if( !strcasecmp( CommandId, "clear_supply_counters" ) )
+	        AtmControler->CommandType =  CLEAR_SUPPLY_COUNTS ;
+	else if( !strcasecmp( CommandId, "get_esupply_counters" ) )
+	        AtmControler->CommandType = GET_ESUPPLY_COUNTS ;
+	else if( !strcasecmp( CommandId, "clear_esupply_counters" ) )
+			AtmControler->CommandType =  CLEAR_ESUPPLY_COUNTS ;
+    else if( !strcasecmp( CommandId, "run_self_test" ) )
+            AtmControler->CommandType = RUN_SELF_TEST ;
+    else if( !strcasecmp( CommandId, "get_tally_info" ) )
+            AtmControler->CommandType = GET_TALLY_INFO ;
+    else if( !strcasecmp( CommandId, "get_errorlog" ) )
+            AtmControler->CommandType = GET_ERRORLOG ;
+    else if( !strcasecmp( CommandId, "get_hw_config" ) )
+           AtmControler->CommandType = GET_HW_CONF ;
+   else if( !strcasecmp( CommandId, "get_date_time" ) )
+           AtmControler->CommandType = GET_DATE_TIME ;
+   else if( !strcasecmp( CommandId, "get_ekc" ) )
+           AtmControler->CommandType =  GET_EKC ;
+   else
+   {
+           trace(DEBUG_ERROR,"Invalid Command Type..type help for more\n");
+           return -1;
+   }
+   if( WriteChannel( CONTROLLERCHANNEL, (char*)AtmControler, sizeof( struct EzAtmController ) ) < 0 )
+   {
+           trace( DEBUG_ERROR, "Failed to write msg into EzATMController Channel" );
+           return -1;
+   }
+   return 1;
+
+}
+int EzGuiController :: attachChannelMemory()
+{
+		ChannelMgrId = LocateChannelId( this, "EzChannelMgr" );
+
+		if( ChannelMgrId < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Creating EZCHANNELMGR Channel..." );
+			return -1;
+		}
+
+		ChannelMgrShmId = shmget ( ( key_t ) ChannelMgrId, 0, IPC_CREAT | 0666 );
+
+		if( ChannelMgrShmId < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Creating EzChannelMgr Shared Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			return -1;
+		}
+
+		ChannelMgrShmPtr = ( struct EzChannelTable * ) shmat( ChannelMgrShmId, 0, 0 );
+
+		if( ChannelMgrShmPtr == NULL )
+		{
+			trace( DEBUG_ERROR, "Error in attaching EzChannelMgr Shared Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			return -1;
+		}
+
+		ChannelMgrSemId = semget ( ( key_t ) ChannelMgrId, 0, IPC_CREAT | 0666 );
+
+		if( ChannelMgrSemId < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Creating EzChannelMgr Semaphore..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			return -1;
+		}
+		return 1;
+}
+
+int EzGuiController :: attachChannelPortMgrMemory()
+{
+		ChannelPortMgrId = LocateChannelId( this, "EzChannelPortMgr" );
+
+		if( ChannelPortMgrId < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Creating EZCHANNELPORTMGR Channel..." );
+			return -1;
+		}
+
+		ChannelPortMgrShmId = shmget ( ( key_t ) ChannelPortMgrId, 0, IPC_CREAT | 0666 );
+
+		if( ChannelPortMgrShmId < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Creating EzChannelPortMgr Shared Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			return -1;
+		}
+
+		ChannelPortMgrShmPtr = ( struct EzChannelPortTable * ) shmat( ChannelPortMgrShmId, 0, 0 );
+
+		if( ChannelPortMgrShmPtr == NULL )
+		{
+			trace( DEBUG_ERROR, "Error in attaching EzChannelPortMgr Shared Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			return -1;
+		}
+
+		ChannelPortMgrSemId = semget ( ( key_t ) ChannelPortMgrId, 0, IPC_CREAT | 0666 );
+
+		if( ChannelPortMgrSemId < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Creating EzChannelPortMgr Semaphore..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			return -1;
+		}
+		return 1;
+}
+
+int EzGuiController :: attachFitMemory()
+{
+		FitMemoryId = LocateMemoryId( this, ATMFITMEMORY );
+
+		if( FitMemoryId < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Locating %s", ATMFITMEMORY );
+			return -1;
+		}
+
+		FitMemoryShmId = shmget ( ( key_t ) FitMemoryId, 0, IPC_CREAT | 0666 );
+
+		if( FitMemoryShmId < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Creating Fit Memory Shared Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			return -1;
+		}
+
+		FitMemoryShmPtr = ( struct AtmFit * ) shmat( FitMemoryShmId, 0, 0 );
+
+		if( FitMemoryShmPtr == NULL )
+		{
+			trace( DEBUG_ERROR, "Error in attaching Fit Memory Shared Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			return -1;
+		}
+
+		FitMemorySemId = semget ( ( key_t ) FitMemoryId, 0, IPC_CREAT | 0666 );
+
+		if( FitMemorySemId < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Creating Fit Memory Semaphore..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			return -1;
+		}
+		return 1;
+}
+
+int EzGuiController :: getTaskCount()
+{
+	struct sembuf sem_buf;
+	int Count = 0;
+	for( int i = 0; i < MaxTask; i++ )
+	{
+		sem_buf.sem_num = i;
+		sem_buf.sem_flg = 0;
+		sem_buf.sem_op = -2;
+		if( semop( EzTaskMgrSemid, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for TaskMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+
+		if ( ( strcmp( ( EzTaskMgrShmPtr + i )->TaskName, TASK_INIT_NAME ) ) && ( ( EzTaskMgrShmPtr + i )->TaskId != TASK_INIT_VAL ) )
+			Count ++;
+
+		sem_buf.sem_op = 2;
+		if( semop( EzTaskMgrSemid, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for TaskMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+	}
+	return Count;
+}
+
+int EzGuiController :: getPortCount()
+{
+	struct sembuf sem_buf;
+	int Count = 0;
+	for( int i = 0; i < MaxPort; i++ )
+	{
+		sem_buf.sem_num = i;
+		sem_buf.sem_flg = 0;
+		sem_buf.sem_op = -2;
+		if( semop( EzCommMgrSemid, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for CommMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+
+		if ( ( strcmp( ( EzCommMgrShmPtr + i )->PortName, PORT_INIT_NAME ) ) && ( ( EzCommMgrShmPtr + i )->PortId != PORT_INIT_VAL ) )
+			Count ++;
+
+		sem_buf.sem_op = 2;
+		if( semop( EzCommMgrSemid, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for CommMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+	}
+	return Count;
+}
+
+int EzGuiController :: getChannelTaskCount()
+{
+		struct sembuf sem_buf;
+		int Count = 0;
+		for( int i = 0; i < MaxChannel; i++ )
+		{
+			sem_buf.sem_num = i;
+			sem_buf.sem_flg = 0;
+			sem_buf.sem_op = -2;
+			if( semop( ChannelMgrSemId, &sem_buf, 1 ) < 0 )
+			{
+				trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+				return -1;
+			}
+
+			if( ( strcmp( ( ChannelMgrShmPtr + i )->ChannelName, CHANNEL_INIT_NAME ) ) && ( ( ChannelMgrShmPtr +    i )->ChannelType == TASK_CHANNEL ) )
+				Count ++;
+
+			sem_buf.sem_op = 2;
+			if( semop( ChannelMgrSemId, &sem_buf, 1 ) < 0 )
+			{
+				trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+				return -1;
+			}
+		}
+		return Count;
+}
+
+int EzGuiController :: getChannelPortCount()
+{
+		struct sembuf sem_buf;
+		int Count = 0;
+		for( int i = 0; i < MaxPortChannels; i++ )
+		{
+			sem_buf.sem_num = i;
+			sem_buf.sem_flg = 0;
+			sem_buf.sem_op = -2;
+			if( semop( ChannelPortMgrSemId, &sem_buf, 1 ) < 0 )
+			{
+				trace( DEBUG_ERROR, "Error in Semop for ChannelPortMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+				return -1;
+			}
+
+			if( ( strcmp( ( ChannelPortMgrShmPtr + i )->PortName, CHANNEL_INIT_NAME ) ) )
+				Count ++;
+
+			sem_buf.sem_op = 2;
+			if( semop( ChannelPortMgrSemId, &sem_buf, 1 ) < 0 )
+			{
+				trace( DEBUG_ERROR, "Error in Semop for ChannelPortMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+				return -1;
+			}
+		}
+		return Count;
+}
+int EzGuiController :: getChannelMemoryCount()
+{
+		struct sembuf sem_buf;
+		int Count = 0;
+		for( int i = 0; i < MaxChannel; i++ )
+		{
+			sem_buf.sem_num = i;
+			sem_buf.sem_flg = 0;
+			sem_buf.sem_op = -2;
+			if( semop( ChannelMgrSemId, &sem_buf, 1 ) < 0 )
+			{
+				trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+				return -1;
+			}
+
+			if( ( strcmp( ( ChannelMgrShmPtr + i )->ChannelName, CHANNEL_INIT_NAME ) ) && ( ( ChannelMgrShmPtr +    i )->ChannelType == MEMORY_CHANNEL ) )
+				Count ++;
+
+			sem_buf.sem_op = 2;
+			if( semop( ChannelMgrSemId, &sem_buf, 1 ) < 0 )
+			{
+				trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+				return -1;
+			}
+		}
+		return Count;
+}
+
+
+int EzGuiController :: processTaskRequest( const char *GuiReq )
+{
+		int TaskCount = 0, TaskOffset = 0;
+		struct sembuf sem_buf;
+		char GuiResp[ GUI_MAX_SIZE + 1 ], RecordString[ GUI_RECORD_SIZE + 1 ], TempStr[ GUI_TEMP_STR_SIZE + 1 ];
+		char TaskStatus[ 20 ];
+
+		memset( TempStr, 0, sizeof( TempStr ) );
+		getToken( GuiReq, TempStr, 0x1c, 2 );
+
+		switch ( atoi( TempStr ) )
+		{
+			case GUI_LIST_CMD:
+
+				TaskCount = getTaskCount();
+
+				while( 1 )
+				{
+					memset( GuiResp, 0, sizeof( GuiResp ) );
+					if( !TaskOffset )
+						sprintf( GuiResp, "%c%s%c%d%c", GUI_STARTBIT, "TASK", GUI_GS , TaskCount, GUI_GS );
+					for( int i = TaskOffset; i < MaxTask; i++ )
+					{
+						sem_buf.sem_num = i;
+						sem_buf.sem_flg = 0;
+						sem_buf.sem_op = -2;
+
+						if( semop( EzTaskMgrSemid, &sem_buf, 1 ) < 0 )
+						{
+							trace( DEBUG_ERROR, "Error in Semop for TaskMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+							return -1;
+						}
+
+						if ( ( strcmp( ( EzTaskMgrShmPtr + i )->TaskName, TASK_INIT_NAME ) ) && ( ( EzTaskMgrShmPtr + i )->TaskId != TASK_INIT_VAL ) )
+						{
+							memset( RecordString, 0, sizeof( RecordString ) );
+							memset( TaskStatus, 0, sizeof( TaskStatus ) );
+							if( ( EzTaskMgrShmPtr + i )->TaskStatus == TASK_RUNNING )
+			                        strcpy( TaskStatus, "RUNNING" );
+			                else
+			                        strcpy( TaskStatus, "INIT" );
+
+							sprintf( RecordString, "%s%c%d%c%d%c%s%c%s%c%s%c", ( EzTaskMgrShmPtr + i )->TaskName, GUI_FS,  ( EzTaskMgrShmPtr + i )->TaskId, GUI_FS, ( EzTaskMgrShmPtr + i )->TraceLevel, GUI_FS, TaskStatus, GUI_FS,  ( EzTaskMgrShmPtr + i )->StartDate, GUI_FS, ( EzTaskMgrShmPtr + i )->StartTime, GUI_RS );
+							if( strlen( RecordString ) + strlen( GuiResp ) >= MaxGuiBytes )
+							{
+								TaskOffset = i;
+								sem_buf.sem_op = 2;
+								if( semop( EzTaskMgrSemid, &sem_buf, 1 ) < 0 )
+								{
+									trace( DEBUG_ERROR, "Error in Semop for TaskMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+									return -1;
+								}
+								break;
+							}
+							else
+								strcat( GuiResp, RecordString );
+						}
+
+						sem_buf.sem_op = 2;
+						if( semop( EzTaskMgrSemid, &sem_buf, 1 ) < 0 )
+						{
+							trace( DEBUG_ERROR, "Error in Semop for TaskMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+							return -1;
+						}
+
+						if( i + 1 == MaxTask )
+						{
+								TaskOffset = i + 1;
+								break;
+						}
+
+					}
+					if( TaskOffset == MaxTask )
+					{
+						strcat( GuiResp, "\x0f" );
+						if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+						{
+							trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+							return -1;
+						}
+						break;
+					}
+					else
+					{
+						if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+						{
+							trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+							return -1;
+						}
+
+					}
+				}
+			break;
+
+			case TASK_START:
+
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, GUI_GS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( StartTask( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "StartTask[ %s ]", TempStr );
+					return -1;
+				}
+			}
+
+			break;
+
+			case TASK_STOP:
+
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, GUI_GS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( StopTask( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "StartTask[ %s ]", TempStr );
+					return -1;
+				}
+			}
+			break;
+		}
+		return 1;
+}
+
+int EzGuiController :: processPortRequest( const char *GuiReq )
+{
+		int PortCount = 0, PortOffset = 0;
+		struct sembuf sem_buf;
+		char GuiResp[ GUI_MAX_SIZE + 1 ], RecordString[ GUI_RECORD_SIZE + 1 ], TempStr[ GUI_TEMP_STR_SIZE + 1 ];
+		char ConnStatus[ 50 ], ConnType[ 50 ];
+		struct ezcommdrvrconfig drvrconfig;
+
+		memset( TempStr, 0, sizeof( TempStr ) );
+		getToken( GuiReq, TempStr, 0x1c, 2 );
+
+		switch ( atoi( TempStr ) )
+		{
+			case GUI_LIST_CMD:
+
+				PortCount = getPortCount();
+
+				while( 1 )
+				{
+					memset( GuiResp, 0, sizeof( GuiResp ) );
+					if( !PortOffset )
+						sprintf( GuiResp, "%c%s%c%d%c", GUI_STARTBIT, "PORT", GUI_GS , PortCount, GUI_GS );
+					for( int i = PortOffset; i < MaxPort; i++ )
+					{
+						sem_buf.sem_num = i;
+						sem_buf.sem_flg = 0;
+						sem_buf.sem_op = -2;
+
+						if( semop( EzCommMgrSemid, &sem_buf, 1 ) < 0 )
+						{
+							trace( DEBUG_ERROR, "Error in Semop for CommMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+							return -1;
+						}
+
+						if ( ( strcmp( ( EzCommMgrShmPtr + i )->PortName, PORT_INIT_NAME ) ) && ( ( EzCommMgrShmPtr + i )->PortId != PORT_INIT_VAL ) )
+						{
+							memset( RecordString, 0, sizeof( RecordString ) );
+							memset( ConnType, 0, sizeof( ConnType ) );
+							if( ( EzCommMgrShmPtr + i )->ApplType == TCPIP_SERVER )
+								strcpy( ConnType, "SERVER" );
+							else
+								strcpy( ConnType, "CLIENT" );
+
+							memset( ConnStatus, 0, sizeof( ConnStatus ) );
+							if( ( EzCommMgrShmPtr + i )->PortStatus == PORT_INIT )
+								strcpy( ConnStatus, "INIT" );
+							else if( ( EzCommMgrShmPtr + i )->PortStatus == PORT_STOPPED )
+								strcpy( ConnStatus, "STOPPED" );
+							else if( ( EzCommMgrShmPtr + i )->PortStatus == PORT_LISTEN )
+								strcpy( ConnStatus, "LISTEN" );
+							else if( ( EzCommMgrShmPtr + i )->PortStatus == PORT_TRYING )
+								strcpy( ConnStatus, "TRY_CONNECT" );
+							else if( ( EzCommMgrShmPtr + i )->PortStatus == PORT_CONNECTED )
+								strcpy( ConnStatus, "CONNECTED" );
+
+							sprintf( RecordString, "%s%c%s%c%d%c%s%c%d%c%s%c", ( EzCommMgrShmPtr + i )->PortName, GUI_FS,  ( EzCommMgrShmPtr + i )->IpAddress, GUI_FS, ( EzCommMgrShmPtr + i )->PortNo, GUI_FS, ConnType, GUI_FS,  ( EzCommMgrShmPtr + i )->PortId, GUI_FS, ConnStatus, GUI_RS );
+							if( strlen( RecordString ) + strlen( GuiResp ) >= MaxGuiBytes )
+							{
+								PortOffset = i;
+								sem_buf.sem_op = 2;
+								if( semop( EzCommMgrSemid, &sem_buf, 1 ) < 0 )
+								{
+									trace( DEBUG_ERROR, "Error in Semop for CommMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+									return -1;
+								}
+								break;
+							}
+							else
+								strcat( GuiResp, RecordString );
+						}
+
+						sem_buf.sem_op = 2;
+						if( semop( EzCommMgrSemid, &sem_buf, 1 ) < 0 )
+						{
+							trace( DEBUG_ERROR, "Error in Semop for CommMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+							return -1;
+						}
+
+						if( i + 1 == MaxPort )
+						{
+								PortOffset = i + 1;
+								break;
+						}
+
+					}
+					if( PortOffset == MaxPort )
+					{
+						strcat( GuiResp, "\x0f" );
+						if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+						{
+							trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+							return -1;
+						}
+						break;
+					}
+					else
+					{
+						if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+						{
+							trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+							return -1;
+						}
+
+					}
+				}
+			break;
+
+			case GUI_START_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( StartPort( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "StartPort[ %s ]", TempStr );
+						return -1;
+					}
+				}
+
+			break;
+
+			case GUI_STOP_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( StopPort( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "StopPort[ %s ]", TempStr );
+						return -1;
+					}
+				}
+
+			break;
+
+			case GUI_ADD_CMD:
+
+				memset( &drvrconfig, 0, sizeof( struct ezcommdrvrconfig ) );
+				memset( drvrconfig.drivername, 0, sizeof( drvrconfig.drivername ) );
+				getToken( GuiReq, drvrconfig.drivername, GUI_GS, 3 );
+				trace("Processing the Request for [ %s ]", drvrconfig.drivername );
+
+				if( !strlen( drvrconfig.drivername ) )
+				{
+					trace( "Cannot Process Port Add Request...PortName is Null...." );
+					return -1;
+				}
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 5 );
+
+				if( !strlen( TempStr ) )
+				{
+					trace( "Cannot Process Port Add Request...ConnectionType is Null...." );
+					return -1;
+				}
+				if( !strcasecmp( TempStr, "accept" ) )
+					drvrconfig.connectiontype = TCPIP_SERVER;
+				else
+					drvrconfig.connectiontype = TCPIP_CLIENT;
+
+				if( drvrconfig.connectiontype == TCPIP_SERVER )
+				{
+					memset( drvrconfig.ipaddress, 0, sizeof( drvrconfig.ipaddress ) );
+					getToken( GuiReq, drvrconfig.ipaddress, GUI_GS, 6 );
+
+					if( !strlen( drvrconfig.ipaddress ) )
+					{
+						trace( "Cannot Process Port Add Request...IpAddress is Null...." );
+						return -1;
+					}
+
+					memset( TempStr, 0, sizeof( TempStr ) );
+					getToken( GuiReq, TempStr, GUI_GS, 7 );
+
+					if( !strlen( TempStr ) )
+					{
+						trace( "Cannot Process Port Add Request...PortNo is Null...." );
+						return -1;
+					}
+
+					drvrconfig.portno = atoi( TempStr );
+
+					memset( drvrconfig.destchannel, 0, sizeof( drvrconfig.destchannel ) );
+					getToken( GuiReq, drvrconfig.destchannel, GUI_GS, 8 );
+
+					memset( TempStr, 0, sizeof( TempStr ) );
+					getToken( GuiReq, TempStr, GUI_GS, 9 );
+					if( !strlen( TempStr ) )
+					{
+						trace( "Cannot Process Port Add Request...PortNo is Null...." );
+						return -1;
+					}
+					drvrconfig.nconnections = atoi( TempStr );
+
+					memset( TempStr, 0, sizeof( TempStr ) );
+					getToken( GuiReq, TempStr, GUI_GS, 10 );
+					if( !strlen( TempStr ) )
+					{
+						trace( "Cannot Process Port Add Request...HeaderType is Null...." );
+						return -1;
+					}
+					if( !strcasecmp( TempStr, "hex" ) )
+						drvrconfig.headertype = HEX;
+					else
+						drvrconfig.headertype = ASCII;
+
+					memset( TempStr, 0, sizeof( TempStr ) );
+					getToken( GuiReq, TempStr, GUI_GS, 11 );
+					if( !strlen( TempStr ) )
+					{
+						trace( "Cannot Process Port Add Request...HeaderLen is Null...." );
+						return -1;
+					}
+					drvrconfig.headerlen = atoi( TempStr );
+
+					memset( TempStr, 0, sizeof( TempStr ) );
+					getToken( GuiReq, TempStr, GUI_GS, 12 );
+					if( !strlen( TempStr ) )
+					{
+						trace( "Cannot Process Port Add Request...Keepalive is Null...." );
+						return -1;
+					}
+					if( !strcasecmp( TempStr, "Yes" ) )
+						drvrconfig.keepalive = true;
+					else
+						drvrconfig.keepalive = false;
+				}
+				else
+				{
+					memset( drvrconfig.ipaddress, 0, sizeof( drvrconfig.ipaddress ) );
+					getToken( GuiReq, drvrconfig.ipaddress, GUI_GS, 6 );
+
+					if( !strlen( drvrconfig.ipaddress ) )
+					{
+						trace( "Cannot Process Port Add Request...IpAddress is Null...." );
+						return -1;
+					}
+
+					memset( TempStr, 0, sizeof( TempStr ) );
+					getToken( GuiReq, TempStr, GUI_GS, 7 );
+
+					if( !strlen( TempStr ) )
+					{
+						trace( "Cannot Process Port Add Request...PortNo is Null...." );
+						return -1;
+					}
+
+					drvrconfig.portno = atoi( TempStr );
+
+					memset( drvrconfig.destchannel, 0, sizeof( drvrconfig.destchannel ) );
+					getToken( GuiReq, drvrconfig.destchannel, GUI_GS, 8 );
+
+					memset( TempStr, 0, sizeof( TempStr ) );
+					getToken( GuiReq, TempStr, GUI_GS, 9 );
+					if( !strlen( TempStr ) )
+					{
+						trace( "Cannot Process Port Add Request...PortNo is Null...." );
+						return -1;
+					}
+					drvrconfig.nconnections = atoi( TempStr );
+
+					memset( TempStr, 0, sizeof( TempStr ) );
+					getToken( GuiReq, TempStr, GUI_GS, 10 );
+					if( !strlen( TempStr ) )
+					{
+						trace( "Cannot Process Port Add Request...HeaderType is Null...." );
+						return -1;
+					}
+					if( !strcasecmp( TempStr, "hex" ) )
+						drvrconfig.headertype = HEX;
+					else
+						drvrconfig.headertype = ASCII;
+
+					memset( TempStr, 0, sizeof( TempStr ) );
+					getToken( GuiReq, TempStr, GUI_GS, 11 );
+					if( !strlen( TempStr ) )
+					{
+						trace( "Cannot Process Port Add Request...HeaderLen is Null...." );
+						return -1;
+					}
+					drvrconfig.headerlen = atoi( TempStr );
+
+					memset( TempStr, 0, sizeof( TempStr ) );
+					getToken( GuiReq, TempStr, GUI_GS, 12 );
+					if( !strlen( TempStr ) )
+					{
+						trace( "Cannot Process Port Add Request...Keepalive is Null...." );
+						return -1;
+					}
+
+					if( !strcasecmp( TempStr, "Yes" ) )
+						drvrconfig.keepalive = true;
+					else
+						drvrconfig.keepalive = false;
+				}
+
+				if( servicePortAddCommand( drvrconfig ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Error in Adding Port[ %s ]", drvrconfig.drivername );
+					return -1;
+				}
+
+				if( AddPort( drvrconfig.drivername ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Error in Adding Port[ %s ]", drvrconfig.drivername );
+					return -1;
+				}
+
+			break;
+
+			case GUI_UPDATE_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				trace("Processing the Request for [ %s ]", TempStr );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( StopPort( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Stoping Port[ %s ]", TempStr );
+						return -1;
+					}
+
+					if( StartPort( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Starting Port[ %s ]", TempStr );
+						return -1;
+					}
+				}
+
+			break;
+
+			case GUI_REMOVE_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				trace("Processing the Request for [ %s ]", TempStr );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( StopPort( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Stoping Port[ %s ]", TempStr );
+						return -1;
+					}
+
+					if( RemovePort( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Removing Port[ %s ]", TempStr );
+						return -1;
+					}
+				}
+			break;
+		}
+		return 1;
+}
+
+int EzGuiController :: processChannelTaskRequest( const char *GuiReq )
+{
+	int ChannelTaskCount = 0, ChannelOffset = 0;
+	struct sembuf sem_buf;
+	char ChannelName[ GUI_TEMP_STR_SIZE + 1 ];
+	char GuiResp[ GUI_MAX_SIZE + 1 ], RecordString[ GUI_RECORD_SIZE + 1 ], TempStr[ GUI_TEMP_STR_SIZE + 1 ];
+
+
+	memset( TempStr, 0, sizeof( TempStr ) );
+	getToken( GuiReq, TempStr, 0x1c, 2 );
+
+	switch ( atoi( TempStr ) )
+	{
+		case GUI_LIST_CMD:
+
+			ChannelTaskCount = getChannelTaskCount();
+
+
+			while( 1 )
+			{
+				memset( GuiResp, 0, sizeof( GuiResp ) );
+				if( !ChannelOffset )
+					sprintf( GuiResp, "%c%s%c%d%c", GUI_STARTBIT, "CHANNELTASK", GUI_GS , ChannelTaskCount, GUI_GS );
+				for( int i = ChannelOffset; i < MaxChannel; i++ )
+				{
+					sem_buf.sem_num = i;
+					sem_buf.sem_flg = 0;
+					sem_buf.sem_op = -2;
+
+					if( semop( ChannelMgrSemId, &sem_buf, 1 ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+						return -1;
+					}
+
+					if( ( strcmp( ( ChannelMgrShmPtr + i )->ChannelName, CHANNEL_INIT_NAME ) ) && ( ( ChannelMgrShmPtr +    i )->ChannelType == TASK_CHANNEL ) )
+					{
+						memset( RecordString, 0, sizeof( RecordString ) );
+						if( LoadMsgQInfo( ( ChannelMgrShmPtr + i )->ChannelQid ) >= 0 )
+						{
+	                        memset( ChannelName, 0, sizeof( ChannelName ) );
+                            strcpy( ChannelName, ( ChannelMgrShmPtr + i )->ChannelName + 5 );
+   							sprintf( RecordString, "%s%c%d%c%d%c%d%c%d%c", ChannelName, GUI_FS,  ( ChannelMgrShmPtr + i )->ChannelQid, GUI_FS,  GetNMsg(), GUI_FS,  GetNBytes(), GUI_FS, GetMaxBytes(), GUI_RS );
+						}
+						if( strlen( RecordString ) + strlen( GuiResp ) >= MaxGuiBytes )
+						{
+							ChannelOffset = i;
+							sem_buf.sem_op = 2;
+							if( semop( ChannelMgrSemId, &sem_buf, 1 ) < 0 )
+							{
+								trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+								return -1;
+							}
+							break;
+						}
+						else
+							strcat( GuiResp, RecordString );
+					}
+
+					sem_buf.sem_op = 2;
+					if( semop( ChannelMgrSemId, &sem_buf, 1 ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+						return -1;
+					}
+
+					if( i + 1 == MaxChannel )
+					{
+							ChannelOffset = i + 1;
+							break;
+					}
+
+				}
+				if( ChannelOffset == MaxChannel )
+				{
+					strcat( GuiResp, "\x0f" );
+					if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+						return -1;
+					}
+					break;
+				}
+				else
+				{
+					if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+					{
+
+						trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+						return -1;
+					}
+
+				}
+			}
+		break;
+	}
+	return 1;
+}
+
+int EzGuiController :: processChannelPortRequest( const char *GuiReq )
+{
+	int ChannelPortCount = 0, ChannelPortOffset = 0;
+	struct sembuf sem_buf;
+	char GuiResp[ GUI_MAX_SIZE + 1 ], RecordString[ GUI_RECORD_SIZE + 1 ], TempStr[ GUI_TEMP_STR_SIZE + 1 ];
+
+
+	memset( TempStr, 0, sizeof( TempStr ) );
+	getToken( GuiReq, TempStr, 0x1c, 2 );
+
+	switch ( atoi( TempStr ) )
+	{
+		case GUI_LIST_CMD:
+
+			ChannelPortCount = getChannelPortCount();
+
+
+			while( 1 )
+			{
+				memset( GuiResp, 0, sizeof( GuiResp ) );
+				if( !ChannelPortOffset )
+					sprintf( GuiResp, "%c%s%c%d%c", GUI_STARTBIT, "CHANNELPORT", GUI_GS , ChannelPortCount, GUI_GS );
+				for( int i = ChannelPortOffset; i < MaxPortChannels; i++ )
+				{
+					sem_buf.sem_num = i;
+					sem_buf.sem_flg = 0;
+					sem_buf.sem_op = -2;
+
+					if( semop( ChannelPortMgrSemId, &sem_buf, 1 ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+						return -1;
+					}
+
+					if( strcmp( ( ChannelPortMgrShmPtr + i )->PortName, CHANNEL_INIT_NAME ) )
+					{
+						memset( RecordString, 0, sizeof( RecordString ) );
+						sprintf( RecordString, "%s%c%d%c%d%c", ( ChannelPortMgrShmPtr + i )->PortName, GUI_FS,  ( ChannelPortMgrShmPtr + i )->PortId, GUI_FS,  ( ChannelPortMgrShmPtr + i )->NMessage, GUI_RS );
+
+						if( strlen( RecordString ) + strlen( GuiResp ) >= MaxGuiBytes )
+						{
+							ChannelPortOffset = i;
+							sem_buf.sem_op = 2;
+							if( semop( ChannelPortMgrSemId, &sem_buf, 1 ) < 0 )
+							{
+								trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+								return -1;
+							}
+							break;
+						}
+						else
+							strcat( GuiResp, RecordString );
+					}
+
+					sem_buf.sem_op = 2;
+					if( semop( ChannelPortMgrSemId, &sem_buf, 1 ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+						return -1;
+					}
+
+					if( i + 1 == MaxPortChannels )
+					{
+							ChannelPortOffset = i + 1;
+							break;
+					}
+
+				}
+				if( ChannelPortOffset == MaxPortChannels )
+				{
+					strcat( GuiResp, "\x0f" );
+					if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+						return -1;
+					}
+					break;
+				}
+				else
+				{
+					if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+					{
+
+						trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+						return -1;
+					}
+
+				}
+			}
+		break;
+
+
+	}
+	return 1;
+
+}
+
+int EzGuiController :: processChannelMemoryRequest( const char *GuiReq )
+{
+	int ChannelMemoryCount = 0, ChannelOffset = 0;
+	struct sembuf sem_buf;
+	char ChannelName[ GUI_TEMP_STR_SIZE + 1 ];
+	char GuiResp[ GUI_MAX_SIZE + 1 ], RecordString[ GUI_RECORD_SIZE + 1 ], TempStr[ GUI_TEMP_STR_SIZE + 1 ];
+
+
+	memset( TempStr, 0, sizeof( TempStr ) );
+	getToken( GuiReq, TempStr, 0x1c, 2 );
+
+	switch ( atoi( TempStr ) )
+	{
+		case GUI_LIST_CMD:
+
+			ChannelMemoryCount = getChannelMemoryCount();
+
+
+			while( 1 )
+			{
+				memset( GuiResp, 0, sizeof( GuiResp ) );
+				if( !ChannelOffset )
+					sprintf( GuiResp, "%c%s%c%d%c", GUI_STARTBIT, "CHANNELMEMORY", GUI_GS , ChannelMemoryCount, GUI_GS );
+				for( int i = ChannelOffset; i < MaxChannel; i++ )
+				{
+					sem_buf.sem_num = i;
+					sem_buf.sem_flg = 0;
+					sem_buf.sem_op = -2;
+
+					if( semop( ChannelMgrSemId, &sem_buf, 1 ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+						return -1;
+					}
+
+					if( ( strcmp( ( ChannelMgrShmPtr + i )->ChannelName, CHANNEL_INIT_NAME ) ) && ( ( ChannelMgrShmPtr +    i )->ChannelType == MEMORY_CHANNEL ) )
+					{
+						memset( RecordString, 0, sizeof( RecordString ) );
+						memset( ChannelName, 0, sizeof( ChannelName ) );
+						strcpy( ChannelName, ( ChannelMgrShmPtr + i )->ChannelName + 6 );
+						sprintf( RecordString, "%s%c%d%c", ChannelName, GUI_FS,  ( ChannelMgrShmPtr + i )->ChannelKeyId,GUI_RS );
+						if( strlen( RecordString ) + strlen( GuiResp ) >= MaxGuiBytes )
+						{
+							ChannelOffset = i;
+							sem_buf.sem_op = 2;
+							if( semop( ChannelMgrSemId, &sem_buf, 1 ) < 0 )
+							{
+								trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+								return -1;
+							}
+							break;
+						}
+						else
+							strcat( GuiResp, RecordString );
+					}
+
+					sem_buf.sem_op = 2;
+					if( semop( ChannelMgrSemId, &sem_buf, 1 ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+						return -1;
+					}
+
+					if( i + 1 == MaxChannel )
+					{
+							ChannelOffset = i + 1;
+							break;
+					}
+
+				}
+				if( ChannelOffset == MaxChannel )
+				{
+					strcat( GuiResp, "\x0f" );
+					if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+						return -1;
+					}
+					break;
+				}
+				else
+				{
+					if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+					{
+
+						trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+						return -1;
+					}
+
+				}
+			}
+		break;
+	}
+	return 1;
+}
+
+int EzGuiController :: processNetworkRequest( const char *GuiReq )
+{
+	int NetworkCount = 0, NetworkOffset = 0;
+	struct sembuf sem_buf;
+	char NetworkStatusStr[ 20 ];
+	char GuiResp[ GUI_MAX_SIZE + 1 ], RecordString[ GUI_RECORD_SIZE + 1 ], TempStr[ GUI_TEMP_STR_SIZE + 1 ];
+
+	memset( TempStr, 0, sizeof( TempStr ) );
+	getToken( GuiReq, TempStr, 0x1c, 2 );
+	switch ( atoi( TempStr ) )
+	{
+		case GUI_LIST_CMD:
+
+			NetworkCount = getCurrentNetworkCount();
+
+			while( 1 )
+			{
+				memset( GuiResp, 0, sizeof( GuiResp ) );
+				if( !NetworkOffset )
+					sprintf( GuiResp, "%c%s%c%d%c", GUI_STARTBIT, "NETWORK", GUI_GS , NetworkCount, GUI_GS );
+				for( int i = NetworkOffset; i < MaxNetworks; i++ )
+				{
+					sem_buf.sem_num = i;
+					sem_buf.sem_flg = 0;
+					sem_buf.sem_op = -2;
+
+					if( semop( NetworkMemorySemid, &sem_buf, 1 ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Semop for NetworkMemoryChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+						return -1;
+					}
+
+					if ( ( strcmp( ( NetworkMemoryShmPtr + i )->NetworkId, NETWORKID_INIT_VAL ) ) )
+					{
+						memset( NetworkStatusStr, 0, sizeof( NetworkStatusStr ) );
+
+                        if( ( NetworkMemoryShmPtr + i )->NetworkStatus == NETWORK_STATUS_UP )
+                                strcpy( NetworkStatusStr, "UP" );
+                        else if( ( NetworkMemoryShmPtr + i )->NetworkStatus == NETWORK_STATUS_DOWN )
+                                strcpy( NetworkStatusStr, "DOWN" );
+                        else if( ( NetworkMemoryShmPtr + i )->NetworkStatus == NETWORK_STATUS_SAF )
+                                strcpy( NetworkStatusStr, "SAF" );
+                        else if( ( NetworkMemoryShmPtr + i )->NetworkStatus == NETWORK_STATUS_SAFUPLOAD )
+                                strcpy( NetworkStatusStr, "SAFUPLOAD" );
+						memset( RecordString, 0, sizeof( RecordString ) );
+						sprintf( RecordString, "%s%c%s%c%s%c%s%c%d%c", ( NetworkMemoryShmPtr + i )->NetworkId, GUI_FS,  ( NetworkMemoryShmPtr + i )->ChannelName, GUI_FS, ( NetworkMemoryShmPtr + i )->PortName, GUI_FS, NetworkStatusStr, GUI_FS,  ( NetworkMemoryShmPtr + i )->TimeOut, GUI_RS );
+						if( strlen( RecordString ) + strlen( GuiResp ) >= MaxGuiBytes )
+						{
+							NetworkOffset = i;
+							sem_buf.sem_op = 2;
+							if( semop( NetworkMemorySemid, &sem_buf, 1 ) < 0 )
+							{
+								trace( DEBUG_ERROR, "Error in Semop for NetworkMemoryChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+								return -1;
+							}
+							break;
+						}
+						else
+							strcat( GuiResp, RecordString );
+					}
+
+					sem_buf.sem_op = 2;
+					if( semop( NetworkMemorySemid, &sem_buf, 1 ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Semop for NetworkMemoryChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+						return -1;
+					}
+
+					if( i + 1 == MaxNetworks )
+					{
+						NetworkOffset = i + 1;
+						break;
+					}
+
+				}
+				if( NetworkOffset == MaxNetworks )
+				{
+					strcat( GuiResp, "\x0f" );
+					if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+						return -1;
+					}
+					break;
+				}
+				else
+				{
+					if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+						return -1;
+					}
+
+				}
+			}
+		break;
+
+		case GUI_ADD_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( addNetworkInfo( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to add the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+
+				break;
+
+		case GUI_REMOVE_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( removeNetworkInfo( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to remove the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+				break;
+
+		case GUI_UPDATE_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( updateNetworkInfo( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to update the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+				break;
+
+		case GUI_DOWN_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( setNetworkStatus( TempStr, NETWORK_STATUS_DOWN ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to update the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+				break;
+
+		case GUI_UP_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( setNetworkStatus( TempStr, NETWORK_STATUS_UP ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to update the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+				break;
+
+		case GUI_EXCHANGE_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( serviceKeyXchg( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to ExchangeKey for  the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+				break;
+
+		case GUI_SIGNON_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( serviceSignOn( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to SignOn for  the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+
+				break;
+		case GUI_SIGNOFF_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( serviceSignOff( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to SignOff for  the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+
+				break;
+		case GUI_LOGON_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( serviceLogOn( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to LogOn for  the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+
+				break;
+		case GUI_LOGOFF_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( serviceLogOff( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to LogOff for  the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+
+				break;
+	}
+	return 1;
+}
+
+int EzGuiController :: processAtmRequest( const char *GuiReq )
+{
+	char TempStr[ GUI_TEMP_STR_SIZE + 1 ], AtmId[ ATM_ID_SIZE + 1 ], InstId[ INST_SIZE + 1 ], Action[ TEMP + 1 ], AtmLogicalGroup[ ATM_ID_SIZE + 1 ];
+	struct EzAtmController AtmCont;
+	struct EzAtmMgrQMsg atmmgrqmsg;
+	bool GroupActivity = false;
+	int AtmCount = 0;
+	struct AtmMemoryTable atmmem;
+	struct AtmTableInfo atminfo;
+	struct ATMSharedBuffer atmbuf;
+	struct DenomInfo denominfo[9];
+	EzDateTimeUtil dtu;
+
+	int SqlErr = 0;
+	char Date[ 10 ];
+	char Time[ 10 ];
+
+	trace("GuiReq[%s]",GuiReq);
+	memset( Action, 0, sizeof( Action ) );
+    getToken( GuiReq, Action, GUI_GS, 2 );
+
+    memset( InstId, 0, sizeof( InstId ) );
+    getToken( GuiReq, InstId, GUI_GS, 3 );
+
+    trace("InstId[%s]", InstId);
+    if( strlen( InstId ) == 0 )
+    {
+    	trace( DEBUG_ERROR,"Inst Id is NULL");
+    	return -1;
+    }
+
+    memset( AtmId, 0, sizeof( AtmId ) );
+    getToken( GuiReq, AtmId, GUI_GS, 4 );
+    trace("AtmId[%s]",AtmId);
+    if( strlen( AtmId ) == 0 )
+    {
+		trace( DEBUG_ERROR,"Atm Id is NULL");
+		return -1;
+	}
+
+    switch( atoi( Action ) )
+    {
+		case GUI_DOWNLOAD:
+			if( VerifyAtmMemory( AtmId ) < 0 )
+			{
+				AtmCount = GetAtmCount( AtmId );
+				trace( "AtmCount %d", AtmCount);
+				if( AtmCount <= 0 )
+				{
+					trace("Error in searching AtmLogicalGroup[%s] AtmCount[%d]", AtmId, AtmCount );
+					return -1;
+				}
+				else
+				{
+					GroupActivity = true;
+					memset( AtmLogicalGroup, 0, sizeof( AtmLogicalGroup ));
+					strcpy( AtmLogicalGroup, AtmId );
+				}
+			}
+
+
+			memset( &AtmCont, 0, sizeof( struct EzAtmController ) );
+			AtmCont.MsgType = EZ_ATM_DOWNLOAD_REQ ;
+			AtmCont.DownloadId = DOWNLOAD_SINGLE;
+
+			if( GroupActivity )
+			{
+				for( int i = 0; i < AtmCount; i++ )
+				{
+					if( GetAtmId( AtmLogicalGroup, AtmCont.AtmId, i + 1 ) > 0 )
+					{
+						trace("Posting msg for ATMId[%s]", AtmCont.AtmId );
+						if( BuildDownLoadAll( GuiReq, &AtmCont  ) < 0 )
+						{
+							trace( DEBUG_ERROR, "Failed in BuildDownLoadAll" );
+							return -1;
+						}
+					}
+				}
+			}
+			else
+			{
+				memcpy( AtmCont.AtmId, AtmId, strlen( AtmId ) );
+				if( BuildDownLoadAll( GuiReq, &AtmCont  ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Failed in BuildDownLoadAll" );
+					return -1;
+				}
+			}
+			break;
+
+		case GUI_COMMAND:
+			if( VerifyAtmMemory( AtmId ) < 0 )
+			{
+				AtmCount = GetAtmCount( AtmId );
+				trace( "AtmCount %d", AtmCount);
+				if( AtmCount <= 0 )
+				{
+					trace("Error in searching AtmLogicalGroup[%s] AtmCount[%d]", AtmId, AtmCount );
+					return -1;
+				}
+				else
+				{
+					GroupActivity = true;
+					memset( AtmLogicalGroup, 0, sizeof( AtmLogicalGroup ));
+					strcpy( AtmLogicalGroup, AtmId );
+				}
+			}
+
+
+			memset( &AtmCont, 0, sizeof( struct EzAtmController ) );
+			AtmCont.MsgType = EZ_ATM_COMMAND_REQ ;
+
+			if( GroupActivity )
+			{
+				for( int i = 0; i < AtmCount; i++ )
+				{
+					if( GetAtmId( AtmLogicalGroup, AtmCont.AtmId, i + 1 ) > 0 )
+					{
+						trace("Posting msg for ATMId[%s]", AtmCont.AtmId );
+
+						memset( TempStr, 0, sizeof( TempStr ));
+						getToken( GuiReq, TempStr, DEVICE_FS, 5 );
+						trace("TempStr[%s]",TempStr);
+						MakeAtmService( TempStr , &AtmCont );
+					}
+				}
+			}
+			else
+			{
+				memcpy( AtmCont.AtmId, AtmId, strlen( AtmId ) );
+				trace("GuiReq[%s]",GuiReq);
+				memset( TempStr, 0, sizeof( TempStr ));
+				getToken( GuiReq, TempStr, DEVICE_FS, 5 );
+				trace("TempStr[%s]",TempStr);
+				MakeAtmService( TempStr , &AtmCont );
+			}
+			break;
+
+		case GUI_ADD_CMD:
+			if( VerifyAtmMemory( AtmId ) < 0 )
+			{
+				memset( &atmmgrqmsg,0, sizeof( struct EzAtmMgrQMsg ));
+				atmmgrqmsg.SourceType = MEMORY;
+				atmmgrqmsg.CommandCode = ATMINFOMEMORY;
+				atmmgrqmsg.OperationCode = ADD;
+				strcpy( atmmgrqmsg.AtmId, AtmId );
+				strcpy( atmmgrqmsg.SourceBuffer, InstId );
+
+				postAtmMgrMsg( &atmmgrqmsg );
+
+			}
+			else
+			{
+				trace( DEBUG_ERROR, "Atm id [%s] already Exist", AtmId );
+				return -1;
+			}
+
+			break;
+
+		case GUI_REMOVE_CMD:
+			if( VerifyAtmMemory( AtmId ) > 0 )
+			{
+				memset( &atmmgrqmsg,0, sizeof( struct EzAtmMgrQMsg ));
+				atmmgrqmsg.SourceType = MEMORY;
+				atmmgrqmsg.CommandCode = ATMINFOMEMORY;
+				atmmgrqmsg.OperationCode = DELETE;
+				strcpy( atmmgrqmsg.AtmId, AtmId );
+				strcpy( atmmgrqmsg.SourceBuffer, InstId );
+
+				postAtmMgrMsg( &atmmgrqmsg );
+
+			}
+			else
+				trace( DEBUG_ERROR, "Atm id [%s] does not Exist", AtmId );
+			break;
+
+		case GUI_UPDATE_CMD:
+
+			if( VerifyAtmMemory( AtmId ) > 0 )
+			{
+				memset( &atmmgrqmsg,0, sizeof( struct EzAtmMgrQMsg ));
+				atmmgrqmsg.SourceType = MEMORY;
+				atmmgrqmsg.CommandCode = ATMINFOMEMORY;
+				atmmgrqmsg.OperationCode = UPDATE;
+				strcpy( atmmgrqmsg.AtmId, AtmId );
+				strcpy( atmmgrqmsg.SourceBuffer, InstId );
+
+				postAtmMgrMsg( &atmmgrqmsg );
+
+			}
+			else
+				trace( DEBUG_ERROR, "Atm id [%s] does not Exist", AtmId );
+			break;
+
+		case GUI_RESETDENOM:
+
+			if( VerifyAtmMemory( AtmId ) > 0 )
+			{
+				memset( &atmmem, 0, sizeof( struct AtmMemoryTable ) );
+				if( ReadAtmMemory( AtmId, &atmmem ) < 0 )
+				{
+					trace( "Unable to Read AtmMemoryTable AtmId< %s >",  AtmId );
+					return -1;
+				}
+
+				memset( &atmbuf, 0, sizeof( struct ATMSharedBuffer ) );
+				memset( &atminfo, 0, sizeof( struct AtmTableInfo ) );
+				memset( &denominfo, 0, sizeof( struct DenomInfo ) * 8 );
+
+				memcpy( &atminfo, atmmem.AtmInfoBuffer, sizeof( atmmem.AtmInfoBuffer ) );
+				memcpy( &atmbuf, atmmem.AtmSharedBuffer, sizeof( atmmem.AtmSharedBuffer ) );
+				memcpy( &denominfo, &atmbuf.denominfo, sizeof( struct DenomInfo ) * 8 );
+
+				for( int i = 0; i < 8; i++ )
+				{
+					if( denominfo[ i ].Status == 'N' )
+						denominfo[ i ].Status = 'Y';
+				}
+				if( DBConnect( ) < 0 )
+				{
+					trace( DEBUG_ERROR,"Error in Connecting the Database");
+					return  -1;
+				}
+				memset( atminfo.BatchId, 0, sizeof( atminfo.BatchId ) );
+				SqlErr = readAtmBatchId( AtmId, atminfo.BatchId );
+				if( SqlErr != 0 )
+				{
+					trace("Error in Fetching BatchId for AtmId[%s] Ora[%05d]", AtmId, SqlErr);
+					return -1;
+				}
+				DBClose();
+				trace("Current BatchId[%s]",atminfo.BatchId);
+				memset( &atmbuf.denominfo, 0, sizeof( struct DenomInfo ) * 8 );
+				memcpy( &atmbuf.denominfo, &denominfo, sizeof( struct DenomInfo ) * 8 );
+
+				memset( atmmem.AtmSharedBuffer, 0, sizeof( atmmem.AtmSharedBuffer ) );
+				memcpy( atmmem.AtmSharedBuffer, &atmbuf, sizeof( struct ATMSharedBuffer ) );
+
+				memset( atmmem.AtmInfoBuffer, 0, sizeof( atmmem.AtmInfoBuffer ) );
+				memcpy( atmmem.AtmInfoBuffer, &atminfo, sizeof( atmmem.AtmInfoBuffer ) );
+
+				if( WriteAtmMemory( AtmId, &atmmem ) < 0 )
+				{
+					trace( "Error in Reseting Denom memory for Atm[ %s ]", AtmId );
+					return -1;
+				}
+				else
+					trace( "Denom memory for Atm[ %s ] is Reseted", AtmId );
+			}
+			else
+				trace( DEBUG_ERROR, "Atm id [%s] does not Exist", AtmId );
+			break;
+
+		case GUI_CLEARSTATUS:
+
+			if( VerifyAtmMemory( AtmId ) > 0 )
+			{
+				memset( &atmmem, 0, sizeof( struct AtmMemoryTable ) );
+				if( ReadAtmMemory( AtmId, &atmmem) < 0 )
+				{
+					trace( "Unable to Read AtmMemoryTable AtmId< %s >",  AtmId );
+					return -1;
+				}
+
+				memset( &atminfo, 0, sizeof( struct AtmTableInfo ) );
+				memcpy( &atminfo, atmmem.AtmInfoBuffer, sizeof( struct AtmTableInfo ) );
+
+				memset( &atmbuf, 0, sizeof( struct ATMSharedBuffer ) );
+				memcpy( &atmbuf, atmmem.AtmSharedBuffer, sizeof( struct ATMSharedBuffer ) );
+
+				memset( atmbuf.StaticStatus, 0, sizeof( atmbuf.StaticStatus ) );
+				strcpy( atmbuf.StaticStatus, "NONE" );
+
+				memset( atmbuf.StatusMsg, 0, sizeof( atmbuf.StatusMsg ) );
+
+				memset( atmmem.AtmSharedBuffer, 0, sizeof( atmmem.AtmSharedBuffer ) );
+				memcpy( atmmem.AtmSharedBuffer, &atmbuf, sizeof( struct ATMSharedBuffer ) );
+
+				if( WriteAtmMemory( AtmId, &atmmem ) < 0 )
+				{
+					trace( "Error in Clearing Status memory for Atm[ %s ]", AtmId );
+					return -1;
+				}
+				else
+					trace( "Status memory for Atm[ %s ] is Cleared", AtmId );
+
+				if( DBConnect( ) < 0 )
+				{
+					trace( DEBUG_ERROR,"Error in Connecting the Database");
+					return  -1;
+				}
+
+				memset( Date, 0, sizeof( Date ) );
+				sprintf( Date, "%06d", dtu.getSysDate() );
+				memset( Time, 0, sizeof( Time ) );
+				sprintf( Time, "%06d", dtu.getSysTime() );
+
+				SqlErr = ClearATMStaticStatus( atmbuf.StaticStatus, AtmId, Date, Time );
+				if( SqlErr != 0 )
+				{
+					trace( DEBUG_ERROR,"Error in Updating the table ORA ERR: [%05d]", SqlErr );
+					 return -1;
+				}
+				else
+				{
+					trace( "Status Table for Atm[ %s ] is Cleared", AtmId );
+				}
+
+				DBClose();
+			}
+			else
+				trace( DEBUG_ERROR, "Atm id [%s] does not Exist", AtmId );
+			break;
+    }
+    return 1;
+}
+
+int EzGuiController :: processReplayRequest( const char *GuiReq )
+{
+		int ReplayCount = 0, ReplayOffset = 0;
+		struct sembuf sem_buf;
+		char Status[ 20 ], ReplayStatus[ 20 ],ReplayProperty[ 50 ], ReplayAction[ 50 ], ReplayFlag[ 20 ], MsgTypeIndicatorFlag[ 20 ];
+		char GuiResp[ GUI_MAX_SIZE + 1 ], RecordString[ GUI_RECORD_SIZE + 1 ], TempStr[ GUI_TEMP_STR_SIZE + 1 ];
+
+		memset( TempStr, 0, sizeof( TempStr ) );
+		getToken( GuiReq, TempStr, 0x1c, 2 );
+
+		switch ( atoi( TempStr ) )
+		{
+			case GUI_LIST_CMD:
+				ReplayCount = getCurrentReplayCount();
+			while( 1 )
+			{
+				memset( GuiResp, 0, sizeof( GuiResp ) );
+				if( !ReplayOffset )
+					sprintf( GuiResp, "%c%s%c%d%c", GUI_STARTBIT, "REPLAY", GUI_GS , ReplayCount, GUI_GS );
+				//trace( DEBUG_TEST,"GuiResp[%s]", GuiResp );
+				for( int i = ReplayOffset; i < MaxNetwork; i++ )
+				{
+					sem_buf.sem_num = i;
+					sem_buf.sem_flg = 0;
+					sem_buf.sem_op = -2;
+
+					if( semop( ReplaySemid, &sem_buf, 1 ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Semop for ReplayMemoryChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+						return -1;
+					}
+
+					if ( ( strcmp( ( replaytable_ptr + i )->NetworkId, REPLAY_NETWORKID_INIT_VAL ) ) )
+					{
+						memset( RecordString, 0, sizeof( RecordString ) );
+						memset( ReplayProperty, 0, sizeof( ReplayProperty ) );
+						memset( ReplayAction, 0, sizeof( ReplayAction ) );
+						memset( Status, 0, sizeof( Status ) );
+			            memset( ReplayStatus, 0, sizeof( ReplayStatus ) );
+			            memset( ReplayFlag, 0, sizeof( ReplayFlag ) );
+			            memset( MsgTypeIndicatorFlag, 0, sizeof( MsgTypeIndicatorFlag ) );
+
+			            if( ( replaytable_ptr + i )->ReplayProperty == REPLAY_DOWN )
+			                strcpy( ReplayProperty, "REPLAY WHEN DOWN" );
+			            else if( ( replaytable_ptr + i )->ReplayProperty == REPLAY_UP )
+			                strcpy( ReplayProperty, "REPLAY WHEN UP" );
+			            else
+			                strcpy( ReplayProperty, "REPLAY WHEN ALWAYS" );
+
+			            if( ( replaytable_ptr + i )->ReplayAction == REPLAY_TIMEOUT_DOWN )
+			                strcpy( ReplayAction, "TIMEOUT, DOWN THE NETWORK" );
+			            else
+			                strcpy( ReplayAction, "TIMEOUT, CONTINUE REPLAY" );
+
+			            if( ( replaytable_ptr + i )->Status == REPLAY_NETWORK_RUNNING )
+			                strcpy( Status, "RUNNING" );
+			            else
+			                strcpy( Status, "SUSPENDED" );
+
+			            if( ( replaytable_ptr + i )->ReplayStatus == REPLAY_STATUS_ACTIVE )
+			                strcpy( ReplayStatus, "ACTIVE" );
+			            else
+			                strcpy( ReplayStatus, "IDLE" );
+
+			            if( ( replaytable_ptr + i )->ReplayFlag == REPLAY_FLAG_IDLE )
+			            	strcpy( ReplayFlag, "IDLE" );
+			            else
+			            	strcpy( ReplayFlag, "ACTIVE" );
+
+			            if( ( replaytable_ptr + i )->MsgTypeIndicator == REPLAY_MSGTYPEINDICATOR_INIT )
+            				strcpy( MsgTypeIndicatorFlag, "IDLE" );
+            			else
+            				strcpy( MsgTypeIndicatorFlag, "DOWNLOAD" );
+
+			            sprintf( RecordString, "%s%c%d%c%s%c%s%c%s%c%s%c%s%c%s%c", ( replaytable_ptr + i )->NetworkId, GUI_FS,  ( replaytable_ptr + i )->ReplayInterval, GUI_FS, ReplayProperty, GUI_FS,  ReplayAction, GUI_FS, Status, GUI_FS, ReplayStatus, GUI_FS, ReplayFlag, GUI_FS, MsgTypeIndicatorFlag, GUI_RS );
+
+			            if( strlen( RecordString ) + strlen( GuiResp ) >= MaxGuiBytes )
+						{
+							ReplayOffset = i;
+							sem_buf.sem_op = 2;
+							if( semop( ReplaySemid, &sem_buf, 1 ) < 0 )
+							{
+								trace( DEBUG_ERROR, "Error in Semop for ReplayMemoryChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+								return -1;
+							}
+							break;
+						}
+						else
+							strcat( GuiResp, RecordString );
+					}
+
+					sem_buf.sem_op = 2;
+					if( semop( ReplaySemid, &sem_buf, 1 ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Semop for ReplayMemoryChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+						return -1;
+					}
+
+					if( i + 1 == MaxNetwork )
+					{
+						ReplayOffset = i + 1;
+							break;
+					}
+
+				}
+				if( ReplayOffset == MaxNetwork )
+				{
+					strcat( GuiResp, "\x0f" );
+					if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+						return -1;
+					}
+					break;
+				}
+				else
+				{
+					if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+						return -1;
+					}
+
+				}
+			}
+		break;
+		case GUI_ADD_CMD:
+
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, GUI_GS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( addNetworkReplay( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Unable to Add the network[ %s ]", TempStr );
+					return -1;
+				}
+			}
+
+		break;
+		case GUI_REMOVE_CMD:
+
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, GUI_GS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( removeNetworkReplay( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Unable to Remove the network[ %s ]", TempStr );
+					return -1;
+				}
+			}
+
+		break;
+		case GUI_UPDATE_CMD:
+
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, GUI_GS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( updateNetworkReplay( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Unable to update the network[ %s ]", TempStr );
+					return -1;
+				}
+			}
+
+		break;
+		case GUI_SUSPEND_CMD:
+
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, GUI_GS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( suspendNetworkReplay( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Unable to Suspend the network[ %s ]", TempStr );
+					return -1;
+				}
+			}
+
+		break;
+		case GUI_RESUME_CMD:
+
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, GUI_GS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( resumeNetworkReplay( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Unable to Resume the network[ %s ]", TempStr );
+					return -1;
+				}
+			}
+
+		break;
+		case GUI_INTIMATE_CMD:
+
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, GUI_GS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( intimateNetworkReplay( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Unable to Resume the network[ %s ]", TempStr );
+					return -1;
+				}
+			}
+
+			break;
+		}
+		return 1;
+}
+
+int EzGuiController :: processEchoRequest( const char *GuiReq )
+{
+	int EchoCount = 0, EchoOffset = 0;
+	struct sembuf sem_buf;
+	char EchoProperty[ 30 ], Status[ 20 ];
+	char GuiResp[ GUI_MAX_SIZE + 1 ], RecordString[ GUI_RECORD_SIZE + 1 ], TempStr[ GUI_TEMP_STR_SIZE + 1 ];
+
+	memset( TempStr, 0, sizeof( TempStr ) );
+	getToken( GuiReq, TempStr, 0x1c, 2 );
+	trace( DEBUG_TEST, "TempStr[%s]",TempStr );
+	switch ( atoi( TempStr ) )
+	{
+		case GUI_LIST_CMD:
+			EchoCount = getCurrentEchoCount();
+
+			while( 1 )
+			{
+				memset( GuiResp, 0, sizeof( GuiResp ) );
+				if( !EchoOffset )
+					sprintf( GuiResp, "%c%s%c%d%c", GUI_STARTBIT, "ECHO", GUI_GS , EchoCount, GUI_GS );
+				for( int i = EchoOffset; i < MaxNetwork; i++ )
+				{
+					sem_buf.sem_num = i;
+					sem_buf.sem_flg = 0;
+					sem_buf.sem_op = -2;
+
+					if( semop( EchoSemid, &sem_buf, 1 ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Semop for EchoMemoryChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+						return -1;
+					}
+
+					if ( ( strcmp( ( echotable_ptr + i )->NetworkId, ECHO_NETWORKID_INIT_VAL ) ) )
+					{
+						memset( RecordString, 0, sizeof( RecordString ) );
+						memset( EchoProperty, 0, sizeof( EchoProperty ));
+						memset( Status, 0, sizeof( Status ));
+
+						if( ( echotable_ptr + i )->EchoProperty == ECHO_SEND_ALWAYS )
+							strcpy( EchoProperty, "ECHO ALWAYS" );
+						else
+							strcpy( EchoProperty, "SEND ECHO, WHEN DOWN" );
+						if( ( echotable_ptr + i )->Status == ECHO_THREAD_RUNNING )
+							strcpy( Status, "RUNNING" );
+						else
+							strcpy( Status, "SUSPENDED" );
+
+						sprintf( RecordString, "%s%c%s%c%s%c%s%c", ( echotable_ptr + i )->NetworkId, GUI_FS,  ( echotable_ptr + i )->EchoPropertyId, GUI_FS, EchoProperty, GUI_FS,  Status, GUI_RS );
+						if( strlen( RecordString ) + strlen( GuiResp ) >= MaxGuiBytes )
+						{
+							EchoOffset = i;
+							sem_buf.sem_op = 2;
+							if( semop( EchoSemid, &sem_buf, 1 ) < 0 )
+							{
+								trace( DEBUG_ERROR, "Error in Semop for EchoMemoryChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+								return -1;
+							}
+							break;
+						}
+						else
+							strcat( GuiResp, RecordString );
+					}
+
+					sem_buf.sem_op = 2;
+					if( semop( EchoSemid, &sem_buf, 1 ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Semop for EchoMemoryChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+						return -1;
+					}
+
+					if( i + 1 == MaxNetwork )
+					{
+						EchoOffset = i + 1;
+							break;
+					}
+
+				}
+				if( EchoOffset == MaxNetwork )
+				{
+					strcat( GuiResp, "\x0f" );
+					if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+						return -1;
+					}
+					break;
+				}
+				else
+				{
+					if( PostGuiReply( GuiResp, GetLastSenderChannelName() ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+						return -1;
+					}
+
+				}
+			}
+			break;
+
+		case GUI_ADD_CMD:
+
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, GUI_GS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( addNetworkEcho( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Unable to start the network[ %s ]", TempStr );
+					return -1;
+				}
+			}
+
+			break;
+
+		case GUI_REMOVE_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( removeNetworkEcho( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to stop the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+
+			break;
+
+		case GUI_UPDATE_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( updateNetworkEcho( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to update the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+
+				break;
+
+		case GUI_SUSPEND_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					trace( DEBUG_ERROR,"Calling the SuspendNetwork");
+					if( suspendNetworkEcho( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to Suspend the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+
+				break;
+
+		case GUI_RESUME_CMD:
+
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( resumeNetworkEcho( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to Resume the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+
+				break;
+	}
+	return 1;
+}
+
+int EzGuiController :: processEchoPropertyRequest( const char *GuiReq )
+{
+	int EchoCount = 0, EchoOffset = 0;
+	struct sembuf sem_buf;
+	char EchoProperty[ 30 ], Status[ 20 ];
+	char GuiResp[ GUI_MAX_SIZE + 1 ], RecordString[ GUI_RECORD_SIZE + 1 ], TempStr[ GUI_TEMP_STR_SIZE + 1 ];
+
+	memset( TempStr, 0, sizeof( TempStr ) );
+	getToken( GuiReq, TempStr, 0x1c, 2 );
+	trace( DEBUG_TEST, "TempStr[%s]",TempStr );
+	switch ( atoi( TempStr ) )
+	{
+		case GUI_ADD_CMD:
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, GUI_GS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( addEchoProperty( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Unable to start the network[ %s ]", TempStr );
+					return -1;
+				}
+			}
+
+			break;
+
+		case GUI_REMOVE_CMD:
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( removeEchoProperty( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to stop the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+
+			break;
+
+		case GUI_UPDATE_CMD:
+				memset( TempStr, 0, sizeof( TempStr ) );
+				getToken( GuiReq, TempStr, GUI_GS, 3 );
+				if( strlen( TempStr ) != 0 )
+				{
+					if( updateEchoProperty( TempStr ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Unable to update the network[ %s ]", TempStr );
+						return -1;
+					}
+				}
+
+				break;
+	}
+	return 1;
+}
+
+int EzGuiController :: processSecurityRequest( const char *GuiReq )
+{
+	char SecurityId[ 17 ];
+	int retval;
+	char TempStr[ GUI_TEMP_STR_SIZE + 1 ], Action[ TEMP + 1 ];
+	struct EzSecurityMgrQMsg secmgrqmsg;
+	struct EzSecurityMsg securitymsg;
+
+
+	memset( Action, 0, sizeof( Action ) );
+	getToken( GuiReq, Action, 0x1c, 2 );
+
+	memset( TempStr, 0, sizeof( TempStr ) );
+	getToken( GuiReq, TempStr, GUI_GS, 3 );
+	if( strlen( TempStr ) != 0 )
+	{
+		memset( SecurityId, 0, sizeof( SecurityId ) );
+		strcpy( SecurityId, TempStr );
+	}
+	else
+	{
+		trace("SecurityId is NULL");
+		return -1;
+	}
+
+	switch ( atoi( Action ) )
+	{
+		case GUI_ADD_CMD:
+			trace( "Adding SecurityId[ %s ]", SecurityId );
+			memset( &secmgrqmsg, 0, sizeof( struct EzSecurityMgrQMsg ) );
+			secmgrqmsg.SourceType = EZSEC_MEMORY;
+			secmgrqmsg.CommandCode = EZSEC_EZSECURITY;
+			secmgrqmsg.OperationCode = EZSEC_ADD;
+			memset( &securitymsg, 0, sizeof( struct EzSecurityMsg ) );
+			strcpy( securitymsg.SecurityId,SecurityId );
+			memcpy( secmgrqmsg.SourceBuffer, &securitymsg, sizeof( struct EzSecurityMsg ) );
+			if( WriteChannel( SECURITYMGRCHANNEL, ( char * ) &secmgrqmsg, sizeof( struct EzSecurityMgrQMsg ) ) < 0 )
+			{
+				trace( DEBUG_ERROR, "Failed to write msg into %s Channel", SECURITYMGRCHANNEL );
+			    return -1;
+			}
+			else
+				trace( "Message written to %s channel", SECURITYMGRCHANNEL );
+			break;
+
+		case GUI_REMOVE_CMD:
+
+			trace( "Removing SecurityId[ %s ]", SecurityId );
+			memset( &secmgrqmsg, 0, sizeof( struct EzSecurityMgrQMsg ) );
+			secmgrqmsg.SourceType = EZSEC_MEMORY;
+			secmgrqmsg.CommandCode = EZSEC_EZSECURITY;
+			secmgrqmsg.OperationCode = EZSEC_DELETE;
+			memset( &securitymsg, 0, sizeof( struct EzSecurityMsg ) );
+			strcpy( securitymsg.SecurityId,SecurityId );
+			memcpy( secmgrqmsg.SourceBuffer, &securitymsg, sizeof( struct EzSecurityMsg ) );
+			if( WriteChannel( SECURITYMGRCHANNEL, ( char * ) &secmgrqmsg, sizeof( struct EzSecurityMgrQMsg ) ) < 0 )
+			{
+				trace( DEBUG_ERROR, "Failed to write msg into %s Channel", SECURITYMGRCHANNEL );
+			    return -1;
+			}
+			else
+				trace( "Message written to %s channel", SECURITYMGRCHANNEL );
+			break;
+
+		case GUI_UPDATE_CMD:
+
+			trace( "Updating SecurityId[ %s ]", SecurityId );
+			memset( &secmgrqmsg, 0, sizeof( struct EzSecurityMgrQMsg ) );
+			secmgrqmsg.SourceType = EZSEC_MEMORY;
+			secmgrqmsg.CommandCode = EZSEC_EZSECURITY;
+			secmgrqmsg.OperationCode = EZSEC_UPDATE;
+			memset( &securitymsg, 0, sizeof( struct EzSecurityMsg ) );
+			strcpy( securitymsg.SecurityId,SecurityId );
+			memcpy( secmgrqmsg.SourceBuffer, &securitymsg, sizeof( struct EzSecurityMsg ) );
+			if( WriteChannel( SECURITYMGRCHANNEL, ( char * ) &secmgrqmsg, sizeof( struct EzSecurityMgrQMsg ) ) < 0 )
+			{
+				trace( DEBUG_ERROR, "Failed to write msg into %s Channel", SECURITYMGRCHANNEL );
+			    return -1;
+			}
+			else
+				trace( "Message written to %s channel", SECURITYMGRCHANNEL );
+			break;
+	}
+	return 1;
+}
+
+int EzGuiController :: processFitRequest( const char *GuiReq )
+{
+	char InstId[ 11 ], FitRecord[ 11 ];
+	char TempStr[ GUI_TEMP_STR_SIZE + 1 ], Action[ TEMP + 1 ];
+	int retval;
+	struct AtmFitMsg atmfitmsg;
+
+	memset( Action, 0, sizeof( Action ) );
+	getToken( GuiReq, Action, GUI_GS, 2 );
+
+	memset( TempStr, 0, sizeof( TempStr ) );
+	getToken( GuiReq, TempStr, GUI_GS, 3 );
+
+	if( strlen( TempStr ) != 0 )
+	{
+		memset( InstId, 0, sizeof( InstId ) );
+		strcpy( InstId, TempStr );
+
+		memset( TempStr, 0, sizeof( TempStr ) );
+		getToken( GuiReq, TempStr, GUI_GS, 4 );
+
+		if( strlen( TempStr ) != 0 )
+		{
+			memset( FitRecord, 0, sizeof( FitRecord ) );
+			strcpy( FitRecord, TempStr );
+		}
+		else
+		{
+			trace( DEBUG_ERROR,"FitRecord is NULL");
+			return -1;
+		}
+	}
+	else
+	{
+		trace( DEBUG_ERROR,"InstId is NULL");
+		return -1;
+	}
+
+	//NEED TO GET COMMAND
+	switch ( atoi( Action ) )
+	{
+		case GUI_ADD_CMD:
+			if( VerifyAtmFit( InstId, FitRecord ) < 0 )
+				trace( DEBUG_ERROR,"Error: ATM FIT Record[%s] already exist", FitRecord );
+			else
+			{
+				memset( &atmfitmsg, 0, sizeof( struct AtmFitMsg ));
+				memset( &atmmgrqmsg,0, sizeof( struct EzAtmMgrQMsg ));
+
+				strcpy( atmfitmsg.InstId, InstId );
+				strcpy( atmfitmsg.FitRecord, FitRecord );
+
+				atmmgrqmsg.SourceType = MEMORY;
+				atmmgrqmsg.CommandCode = FITMEMORY;
+				atmmgrqmsg.OperationCode = ADD;
+				memcpy( atmmgrqmsg.SourceBuffer, (char *)&atmfitmsg, sizeof( struct AtmFitMsg ) );
+
+				postAtmMgrMsg( &atmmgrqmsg );
+			}
+			break;
+
+		case GUI_REMOVE_CMD:
+			if( VerifyAtmFit( InstId, FitRecord ) > 0 )
+				trace( DEBUG_ERROR,"Error: ATM FIT Record[%s] does not exist", FitRecord );
+			else
+			{
+				memset( &atmfitmsg, 0, sizeof( struct AtmFitMsg ));
+				memset( &atmmgrqmsg,0, sizeof( struct EzAtmMgrQMsg ));
+
+				strcpy( atmfitmsg.InstId, InstId );
+				strcpy( atmfitmsg.FitRecord, FitRecord );
+
+				atmmgrqmsg.SourceType = MEMORY;
+				atmmgrqmsg.CommandCode = FITMEMORY;
+				atmmgrqmsg.OperationCode = DELETE;
+				memcpy( atmmgrqmsg.SourceBuffer, (char *)&atmfitmsg, sizeof( struct AtmFitMsg ) );
+
+				postAtmMgrMsg( &atmmgrqmsg );
+			}
+			break;
+
+		case GUI_UPDATE_CMD:
+			if( VerifyAtmFit( InstId, FitRecord ) >= 0 )
+			{
+				dptr->trace( DEBUG_ERROR,"Error: ATM FIT Record[%s] does not exist", FitRecord );
+
+			}
+			else
+			{
+				memset( &atmfitmsg, 0, sizeof( struct AtmFitMsg ));
+				memset( &atmmgrqmsg,0, sizeof( struct EzAtmMgrQMsg ));
+
+				strcpy( atmfitmsg.InstId, InstId );
+				strcpy( atmfitmsg.FitRecord, FitRecord );
+
+				atmmgrqmsg.SourceType = MEMORY;
+				atmmgrqmsg.CommandCode = FITMEMORY;
+				atmmgrqmsg.OperationCode = DELETE;
+				memcpy( atmmgrqmsg.SourceBuffer, (char *)&atmfitmsg, sizeof( struct AtmFitMsg ) );
+
+				postAtmMgrMsg( &atmmgrqmsg );
+			}
+			break;
+	}
+	return 1;
+}
+
+int EzGuiController :: processInstRequest( const char *GuiReq )
+{
+	char InstId[ INST_SIZE + 1 ];
+	int retval = -1;
+	char TempStr[ GUI_TEMP_STR_SIZE + 1 ], Action[ TEMP + 1 ];
+	struct EzInstProfileMemory instprofile_rec;
+
+	memset( Action, 0, sizeof( Action ) );
+	getToken( GuiReq, Action, 0x1c, 2 );
+
+	memset( TempStr, 0, sizeof( TempStr ) );
+	getToken( GuiReq, TempStr, GUI_GS, 3 );
+	if( strlen( TempStr ) != 0 )
+	{
+		memset( InstId, 0, sizeof( InstId ) );
+		strcpy( InstId, TempStr );
+	}
+	else
+	{
+		trace( DEBUG_ERROR,"Error:InstId is NULL");
+		return retval;
+	}
+
+	switch ( atoi( Action ) )
+	{
+		case GUI_ADD_CMD:
+			if( DBConnect() < 0 )
+			{
+				trace( "Error in Connecting with Switch Database" );
+				return retval;
+			}
+
+			memset( &instprofile_rec, 0, sizeof( struct EzInstProfileMemory ) );
+			retval = readEzInstProfile( InstId, &instprofile_rec );
+			if( retval != 0 )
+			{
+				trace( "Error in Reading InstId[%s] from EzInstProfile....OraErr[%05d]", InstId, retval );
+				DBClose();
+				return retval;
+			}
+			if( addInstProfile( InstId, instprofile_rec ) < 0 )
+			{
+				DBClose();
+				return retval;
+			}
+			retval = 1;
+			DBClose();
+			break;
+
+		case GUI_UPDATE_CMD:
+			if( DBConnect() < 0 )
+			{
+				trace( "Error in Connecting with Switch Database" );
+				return retval;
+			}
+
+			memset( &instprofile_rec, 0, sizeof( struct EzInstProfileMemory ) );
+			retval = readEzInstProfile( InstId, &instprofile_rec );
+			if( retval != 0 )
+			{
+				trace( "Error in Reading InstId[%s] from EzInstProfile....OraErr[%05d]", InstId, retval );
+				DBClose();
+				return retval;
+			}
+			if( updateInstProfile( InstId, instprofile_rec ) < 0 )
+			{
+				DBClose();
+				return retval;
+			}
+			retval = 1;
+			DBClose();
+			break;
+
+		case GUI_REMOVE_CMD:
+			if( deleteInstProfile( InstId ) > 0 )
+				retval = 1;
+			break;
+	}
+	return retval;
+}
+
+int EzGuiController :: processInstSelectRequest( const char *GuiReq )
+{
+	char RecordNo[ TEMP_STR_SIZE + 1 ];
+	int retval = -1;
+	char TempStr[ GUI_TEMP_STR_SIZE + 1 ], Action[ TEMP + 1 ];
+	struct EzInstSelectMemory instselect_rec;
+
+	memset( Action, 0, sizeof( Action ) );
+	getToken( GuiReq, Action, 0x1c, 2 );
+
+	memset( TempStr, 0, sizeof( TempStr ) );
+	getToken( GuiReq, TempStr, GUI_GS, 3 );
+	if( strlen( TempStr ) != 0 )
+	{
+		memset( RecordNo, 0, sizeof( RecordNo ) );
+		strcpy( RecordNo, TempStr );
+	}
+	else
+	{
+		trace( DEBUG_ERROR,"Error:RecordNo is NULL");
+		return retval;
+	}
+
+	switch ( atoi( Action ) )
+	{
+		case GUI_ADD_CMD:
+			if( DBConnect() < 0 )
+			{
+				trace( "Error in Connecting with Switch Database" );
+				return retval;
+			}
+
+			memset( &instselect_rec, 0, sizeof( struct EzInstSelectMemory ) );
+			retval = readEzInstSelect( RecordNo, &instselect_rec );
+			if( retval != 0 )
+			{
+				trace( "Error in Reading RecordNo[%s] from EzInstSelect....OraErr[%05d]", RecordNo, retval );
+				DBClose();
+				return retval;
+			}
+			if( addInstSelect( RecordNo, instselect_rec ) < 0 )
+			{
+				DBClose();
+				return retval;
+			}
+			DBClose();
+			retval = 1;
+			break;
+
+		case GUI_UPDATE_CMD:
+			if( DBConnect() < 0 )
+			{
+				trace( "Error in Connecting with Switch Database" );
+				return retval;
+			}
+
+			memset( &instselect_rec, 0, sizeof( struct EzInstSelectMemory ) );
+			retval = readEzInstSelect( RecordNo, &instselect_rec );
+			if( retval != 0 )
+			{
+				trace( "Error in Reading RecordNo[%s] from EzInstSelect....OraErr[%05d]", RecordNo, retval );
+				DBClose();
+				return retval;
+			}
+			if( updateInstSelect( RecordNo, instselect_rec ) < 0 )
+			{
+				DBClose();
+				return retval;
+			}
+			DBClose();
+			retval = 1;
+			break;
+
+		case GUI_REMOVE_CMD:
+			if( deleteInstSelect( RecordNo ) > 0 )
+				retval = 1;
+			break;
+	}
+	return retval;
+}
+
+int EzGuiController :: processBinRequest( const char *GuiReq )
+{
+	char Bin[ TEMP_STR_SIZE + 1 ], InstId[ INST_SIZE + 1 ];;
+	int retval = -1;
+	char TempStr[ GUI_TEMP_STR_SIZE + 1 ], Action[ TEMP + 1 ];
+	struct EzBINProfileMemory binprofile_rec;
+
+
+	memset( Action, 0, sizeof( Action ) );
+	getToken( GuiReq, Action, GUI_GS, 2 );
+
+	memset( TempStr, 0, sizeof( TempStr ) );
+	getToken( GuiReq, TempStr, GUI_GS, 3 );
+
+	if( strlen( TempStr ) != 0 )
+	{
+		memset( InstId, 0, sizeof( InstId ) );
+		strcpy( InstId, TempStr );
+
+		memset( TempStr, 0, sizeof( TempStr ) );
+		getToken( GuiReq, TempStr, GUI_GS, 4 );
+
+		if( strlen( TempStr ) != 0 )
+		{
+			memset( Bin, 0, sizeof( Bin ) );
+			strcpy( Bin, TempStr );
+		}
+		else
+		{
+			trace( DEBUG_ERROR,"Bin is NULL");
+			return retval;
+		}
+	}
+	else
+	{
+		trace( DEBUG_ERROR,"InstId is NULL");
+		return retval;
+	}
+
+	switch ( atoi( Action ) )
+	{
+		case GUI_ADD_CMD:
+			if( DBConnect() < 0 )
+			{
+				trace( "Error in Connecting with Switch Database" );
+				return retval;
+			}
+
+			memset( &binprofile_rec, 0, sizeof( struct EzBINProfileMemory ) );
+			trace( "Reading InstId[%s] BIN[%s] from EzBINProfile....", InstId, Bin );
+			retval = readEzBINProfile( InstId, Bin, &binprofile_rec );
+			if( retval != 0 )
+			{
+				trace( "Error in Reading InstId[%s] BIN[%s] from EzBINProfile....OraErr[%05d]", InstId, Bin, retval );
+				DBClose();
+				return retval;
+			}
+			trace(DEBUG_NORMAL,"[%s][%s][%s][%s][%s]", binprofile_rec.InstId, binprofile_rec.BIN, binprofile_rec.ProductCode, binprofile_rec.ProductName,binprofile_rec.TxnList);
+
+			if( addBINProfile( binprofile_rec ) < 0 )
+			{
+				DBClose();
+				return retval;
+			}
+			DBClose();
+			retval = 1;
+			break;
+
+		case GUI_UPDATE_CMD:
+			if( DBConnect() < 0 )
+			{
+				trace( "Error in Connecting with Switch Database" );
+				return retval;
+			}
+
+			memset( &binprofile_rec, 0, sizeof( struct EzBINProfileMemory ) );
+			retval = readEzBINProfile( InstId, Bin, &binprofile_rec );
+			if( retval != 0 )
+			{
+				trace( "Error in Reading InstId[%s] BIN[%s] from EzBINProfile....OraErr[%05d]", InstId, Bin, retval );
+				DBClose();
+				return retval;
+			}
+			if( updateBINProfile( binprofile_rec ) < 0 )
+			{
+				DBClose();
+				return retval;
+			}
+			DBClose();
+			retval = 1;
+			break;
+
+		case GUI_REMOVE_CMD:
+			if( deleteBINProfile( InstId, Bin ) < 0 )
+				retval = 1;
+			break;
+	}
+	return retval;
+}
+
+int EzGuiController :: processNtwkSelectRequest( const char *GuiReq )
+{
+	char RecordNo[ TEMP_STR_SIZE + 1 ];
+	int retval = -1;
+	char TempStr[ GUI_TEMP_STR_SIZE + 1 ], Action[ TEMP + 1 ];
+	struct EzNetworkSelectMemory networkselect_rec;
+
+	memset( Action, 0, sizeof( Action ) );
+	getToken( GuiReq, Action, 0x1c, 2 );
+
+	memset( TempStr, 0, sizeof( TempStr ) );
+	getToken( GuiReq, TempStr, GUI_GS, 3 );
+	if( strlen( TempStr ) != 0 )
+	{
+		memset( RecordNo, 0, sizeof( RecordNo ) );
+		strcpy( RecordNo, TempStr );
+	}
+	else
+	{
+		trace( DEBUG_ERROR,"Error:RecordNo is NULL");
+		return retval;
+	}
+
+	switch ( atoi( Action ) )
+	{
+		case GUI_ADD_CMD:
+			if( DBConnect() < 0 )
+			{
+				trace( "Error in Connecting with Switch Database" );
+				return retval;
+			}
+
+			memset( &networkselect_rec, 0, sizeof( struct EzNetworkSelectMemory ) );
+			retval = readEzNetworkSelect( RecordNo, &networkselect_rec );
+			if( retval != 0 )
+			{
+				trace( "Error in Reading RecordNo[%s] from EzNetworkSelect....OraErr[%05d]", RecordNo, retval );
+				DBClose();
+				return retval;
+			}
+			if( addNetworkSelect( RecordNo, networkselect_rec ) < 0 )
+			{
+				DBClose();
+				return retval;
+			}
+			DBClose();
+			retval = 1;
+			break;
+
+		case GUI_UPDATE_CMD:
+			if( DBConnect() < 0 )
+			{
+				trace( "Error in Connecting with Switch Database" );
+				return retval;
+			}
+
+			memset( &networkselect_rec, 0, sizeof( struct EzNetworkSelectMemory ) );
+			retval = readEzNetworkSelect( RecordNo, &networkselect_rec );
+			if( retval != 0 )
+			{
+				trace( "Error in Reading RecordNo[%s] from EzNetworkSelect....OraErr[%05d]", RecordNo, retval );
+				DBClose();
+				return retval;
+			}
+			if( updateNetworkSelect( RecordNo, networkselect_rec ) < 0 )
+			{
+				DBClose();
+				return retval;
+			}
+			retval = 1;
+			DBClose();
+			break;
+
+		case GUI_REMOVE_CMD:
+			if( deleteNetworkSelect( RecordNo ) > 0 )
+				retval = 1;
+			break;
+	}
+	return retval;
+}
+
+int EzGuiController :: processBranchRequest( const char *GuiReq )
+{
+	char BranchCode[ INST_SIZE + 1 ], InstId[ INST_SIZE + 1 ];
+	int retval = -1;
+	char TempStr[ GUI_TEMP_STR_SIZE + 1 ], Action[ TEMP + 1 ];
+	struct EzBranchProfileMemory branchprofile_rec;
+
+	memset( Action, 0, sizeof( Action ) );
+	getToken( GuiReq, Action, GUI_GS, 2 );
+
+	memset( TempStr, 0, sizeof( TempStr ) );
+	getToken( GuiReq, TempStr, GUI_GS, 3 );
+
+	if( strlen( TempStr ) != 0 )
+	{
+		memset( InstId, 0, sizeof( InstId ) );
+		strcpy( InstId, TempStr );
+
+		memset( TempStr, 0, sizeof( TempStr ) );
+		getToken( GuiReq, TempStr, GUI_GS, 4 );
+
+		if( strlen( TempStr ) != 0 )
+		{
+			memset( BranchCode, 0, sizeof( BranchCode ) );
+			strcpy( BranchCode, TempStr );
+		}
+		else
+		{
+			trace( DEBUG_ERROR,"BranchCode is NULL");
+			return retval;
+		}
+	}
+	else
+	{
+		trace( DEBUG_ERROR,"InstId is NULL");
+		return retval;
+	}
+	switch ( atoi( Action ) )
+	{
+		case GUI_ADD_CMD:
+			break;
+		case GUI_UPDATE_CMD:
+			break;
+		case GUI_REMOVE_CMD:
+			break;
+	}
+	return retval;
+}
+
+int EzGuiController :: addNetworkReplay( const char *NetworkId )
+{
+	struct EzNetworkReplay networkreplay_rec;
+	struct EzReplayTable replaytable_rec;
+
+	int retval;
+	struct sembuf sem_buf;
+
+	if( DBConnect() < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Connecting with Switch Database..." );
+		return -1;
+	}
+
+	memset( &networkreplay_rec, 0, sizeof( struct EzNetworkReplay ) );
+	retval = readEzNetworkReplay( NetworkId, &networkreplay_rec );
+	DBClose();
+
+	if( retval != 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Reading NetworkId[%s] from EzNetworkReplay Table....SqlErr[%05d]", NetworkId, retval );
+		return -1;
+	}
+
+	memset( &replaytable_rec, 0, sizeof( struct EzReplayTable ) );
+	strcpy( replaytable_rec.NetworkId, networkreplay_rec.NetworkId );
+	replaytable_rec.ReplayInterval = networkreplay_rec.ReplayInterval;
+	replaytable_rec.ReplayProperty = networkreplay_rec.ReplayProperty;
+	replaytable_rec.ReplayAction = networkreplay_rec.ReplayAction;
+	replaytable_rec.ReplayLookUpInterval = networkreplay_rec.ReplayLookUpInterval;
+	replaytable_rec.Status = REPLAY_NETWORK_RUNNING;
+	replaytable_rec.ReplayStatus = REPLAY_STATUS_IDLE;
+	replaytable_rec.ReplayFlag = REPLAY_FLAG_IDLE;
+	replaytable_rec.MsgTypeIndicator = REPLAY_MSGTYPEINDICATOR_INIT;
+
+	if( addReplayMemory( replaytable_rec ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in adding NetworkId[%s] in ReplayMemory...", NetworkId );
+		return -1;
+	}
+
+	return 1;
+}
+
+int EzGuiController :: removeNetworkReplay( const char *NetworkId )
+{
+    if( deleteReplayMemory( NetworkId ) < 0 )
+	{
+    	trace( DEBUG_ERROR, "Error in removing NetworkId[%s] from ReplayMemory...", NetworkId );
+		return -1;
+	}
+    return 1;
+}
+
+int EzGuiController :: suspendNetworkReplay( const char *NetworkId )
+{
+	if( updateReplayStatus( NetworkId, REPLAY_NETWORK_SUSPEND ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Updating Replay Status as Suspended for NetworkId[%s] from ReplayMemory...", NetworkId );
+		return -1;
+	}
+	return 1;
+}
+
+int EzGuiController :: resumeNetworkReplay( const char *NetworkId )
+{
+	if( updateReplayStatus( NetworkId, REPLAY_NETWORK_RUNNING ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Updating Replay Status as Running for NetworkId[%s] from ReplayMemory...", NetworkId );
+		return -1;
+	}
+	return 1;
+}
+
+int EzGuiController :: intimateNetworkReplay( const char *NetworkId )
+{
+	struct EzTxnMsg txnmsg;
+	memset( &txnmsg, 0, sizeof( struct EzTxnMsg ) );
+
+	txnmsg.MsgType = EZLINK_TXN_ReplayIntimationRequest;
+	strcpy( txnmsg.NetworkId, NetworkId );
+
+	if( WriteChannel( EZSAFREADERCHANNEL, ( char * ) &txnmsg, sizeof( struct EzTxnMsg ) ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Writing Initimate NetworkReplay Message to Channel[%s] for NetworkId[%s]", "EzSafReader", NetworkId );
+		return -1;
+	}
+	else
+	{
+		trace( DEBUG_NORMAL, "Written Initimate NetworkReplay Message to Channel[%s] for NetworkId[%s]", "EzSafReader", NetworkId );
+		return 1;
+	}
+    return 1;
+}
+
+int EzGuiController :: updateNetworkReplay( const char *NetworkId )
+{
+	struct EzNetworkReplay networkreplay_rec;
+	struct EzReplayTable replaytable_rec;
+
+	int retval;
+	struct sembuf sem_buf;
+
+	if( DBConnect() < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Connecting with Switch Database..." );
+		return -1;
+	}
+
+	memset( &networkreplay_rec, 0, sizeof( struct EzNetworkReplay ) );
+	retval = readEzNetworkReplay( NetworkId, &networkreplay_rec );
+	DBClose();
+
+	if( retval != 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Reading NetworkId[%s] from EzNetworkReplay Table....SqlErr[%05d]", NetworkId, retval );
+		return -1;
+	}
+
+	memset( &replaytable_rec, 0, sizeof( struct EzReplayTable ) );
+	strcpy( replaytable_rec.NetworkId, networkreplay_rec.NetworkId );
+	replaytable_rec.ReplayInterval = networkreplay_rec.ReplayInterval;
+	replaytable_rec.ReplayProperty = networkreplay_rec.ReplayProperty;
+	replaytable_rec.ReplayAction = networkreplay_rec.ReplayAction;
+	replaytable_rec.ReplayLookUpInterval = networkreplay_rec.ReplayLookUpInterval;
+	replaytable_rec.Status = REPLAY_NETWORK_RUNNING;
+	replaytable_rec.ReplayStatus = REPLAY_STATUS_IDLE;
+	replaytable_rec.ReplayFlag = REPLAY_FLAG_IDLE;
+	replaytable_rec.MsgTypeIndicator = REPLAY_MSGTYPEINDICATOR_INIT;
+
+	if( updateReplayMemory( replaytable_rec ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Updating NetworkId[%s] in ReplayMemory...", NetworkId );
+		return -1;
+	}
+	return 1;
+}
+
+int EzGuiController :: addNetworkInfo( const char *NetworkId )
+{
+	struct EzNetwork eznetwork_rec;
+	struct EzNetworkMemory network_rec;
+	int retval;
+	struct sembuf sem_buf;
+
+	if( DBConnect() < 0 )
+	{
+		trace( "Error in Reading Switch DB" );
+		return -1;
+	}
+
+	memset( &eznetwork_rec, 0, sizeof( struct EzNetwork ) );
+	retval = readEzNetwork( NetworkId, &eznetwork_rec );
+	if( DBClose() < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Closing Switch Database" );
+		return -1;
+	}
+	if( retval != 0 )
+	{
+		trace( "Error in Reading NetworkId[%s] from EzNetwork Table...SqlErr[%05d]", NetworkId, retval );
+		return -1;
+	}
+	memset( &network_rec, 0, sizeof( struct EzNetworkMemory ) );
+	strcpy( network_rec.InstId, eznetwork_rec.InstId );
+	strcpy( network_rec.NetworkId, eznetwork_rec.NetworkId );
+	strcpy( network_rec.NetworkName, eznetwork_rec.NetworkName );
+	strcpy( network_rec.NetworkPropertyId, eznetwork_rec.NetworkPropertyId );
+	network_rec.NetworkStatus = eznetwork_rec.NetworkStatus;
+	network_rec.CutOverReq = eznetwork_rec.CutOverReq;
+	network_rec.KeyReq = eznetwork_rec.KeyReq;
+	network_rec.TimeOut = eznetwork_rec.TimeOut;
+	strcpy( network_rec.ChannelName, eznetwork_rec.ChannelName );
+	strcpy( network_rec.PortName, eznetwork_rec.PortName );
+
+	if( addNetworkMemory( network_rec ) < 0 )
+	{
+		trace( "Error in adding NetworkId[%s] in NetworkMemory", NetworkId );
+		return -1;
+	}
+	return 1;
+}
+
+int EzGuiController :: removeNetworkInfo( const char *NetworkId )
+{
+	if( deleteNetworkMemory( NetworkId ) < 0 )
+	{
+		trace( "Error in removing NetworkId[%s] from NetworkMemory", NetworkId );
+		return -1;
+	}
+	return 1;
+}
+
+int EzGuiController :: updateNetworkInfo( const char *NetworkId )
+{
+	struct EzNetwork eznetwork_rec;
+	struct EzNetworkMemory network_rec;
+	int retval;
+	struct sembuf sem_buf;
+
+	if( DBConnect() < 0 )
+	{
+		trace( "Error in Reading Switch DB" );
+		return -1;
+	}
+
+	memset( &eznetwork_rec, 0, sizeof( struct EzNetwork ) );
+	retval = readEzNetwork( NetworkId, &eznetwork_rec );
+	if( DBClose() < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Closing Switch Database" );
+		return -1;
+	}
+	if( retval != 0 )
+	{
+		trace( "Error in Reading NetworkId[%s] from EzNetwork Table...SqlErr[%05d]", NetworkId, retval );
+		return -1;
+	}
+	memset( &network_rec, 0, sizeof( struct EzNetworkMemory ) );
+	strcpy( network_rec.InstId, eznetwork_rec.InstId );
+	strcpy( network_rec.NetworkId, eznetwork_rec.NetworkId );
+	strcpy( network_rec.NetworkName, eznetwork_rec.NetworkName );
+	strcpy( network_rec.NetworkPropertyId, eznetwork_rec.NetworkPropertyId );
+	network_rec.NetworkStatus = eznetwork_rec.NetworkStatus;
+	network_rec.CutOverReq = eznetwork_rec.CutOverReq;
+	network_rec.KeyReq = eznetwork_rec.KeyReq;
+	network_rec.TimeOut = eznetwork_rec.TimeOut;
+	strcpy( network_rec.ChannelName, eznetwork_rec.ChannelName );
+	strcpy( network_rec.PortName, eznetwork_rec.PortName );
+
+	if( updateNetworkMemory( network_rec ) < 0 )
+	{
+		trace( "Error in Updating NetworkId[%s] in NetworkMemory", NetworkId );
+		return -1;
+	}
+	return 1;
+}
+
+int EzGuiController :: serviceSignOn( const char *NetworkId )
+{
+	struct EzNetworkMgrMsg netmsg;
+
+	memset( &netmsg, 0, sizeof( struct EzNetworkMgrMsg ) );
+	netmsg.Command = EZLINK_NTWK_SIGNON;
+	strcpy( netmsg.NetworkId, NetworkId );
+
+	if( WriteChannel( NETWORKMGRCHANNEL,( char * ) &netmsg, sizeof( struct EzNetworkMgrMsg ) ) < 0 )
+	{
+			trace( "Error in Writing Network SignOn Message to NetworkMgr" );
+			return -1;
+	}
+	trace( "Written Network SignOn Message Successfully to NetworkMgr" );
+	return 1;
+}
+
+int EzGuiController :: serviceSignOff( const char *NetworkId )
+{
+	struct EzNetworkMgrMsg netmsg;
+
+	memset( &netmsg, 0, sizeof( struct EzNetworkMgrMsg ) );
+	netmsg.Command = EZLINK_NTWK_SIGNOFF;
+	strcpy( netmsg.NetworkId, NetworkId );
+
+	if( WriteChannel( NETWORKMGRCHANNEL,( char * ) &netmsg, sizeof( struct EzNetworkMgrMsg ) ) < 0 )
+	{
+			trace( "Error in Writing Network SignOff Message to NetworkMgr" );
+			return -1;
+	}
+	trace( "Written Network SignOff Message Successfully to NetworkMgr" );
+	return 1;
+}
+
+int EzGuiController :: serviceLogOn( const char *NetworkId )
+{
+	struct EzNetworkMgrMsg netmsg;
+
+	memset( &netmsg, 0, sizeof( struct EzNetworkMgrMsg ) );
+	netmsg.Command = EZLINK_NTWK_LOGON;
+	strcpy( netmsg.NetworkId, NetworkId );
+
+	if( WriteChannel( NETWORKMGRCHANNEL,( char * ) &netmsg, sizeof( struct EzNetworkMgrMsg ) ) < 0 )
+	{
+			trace( "Error in Writing Network LogOn Message to NetworkMgr" );
+			return -1;
+	}
+	trace( "Written Network LogOn Message Successfully to NetworkMgr" );
+	return 1;
+}
+
+int EzGuiController :: serviceLogOff( const char *NetworkId )
+{
+	struct EzNetworkMgrMsg netmsg;
+
+	memset( &netmsg, 0, sizeof( struct EzNetworkMgrMsg ) );
+	netmsg.Command = EZLINK_NTWK_LOGOFF;
+	strcpy( netmsg.NetworkId, NetworkId );
+
+	if( WriteChannel( NETWORKMGRCHANNEL,( char * ) &netmsg, sizeof( struct EzNetworkMgrMsg ) ) < 0 )
+	{
+			trace( "Error in Writing Network LogOff Message to NetworkMgr" );
+			return -1;
+	}
+	trace( "Written Network LogOff Message Successfully to NetworkMgr" );
+	return 1;
+}
+
+int EzGuiController :: serviceKeyXchg( const char *NetworkId )
+{
+	struct EzNetworkMgrMsg netmsg;
+
+	memset( &netmsg, 0, sizeof( struct EzNetworkMgrMsg ) );
+	netmsg.Command = EZLINK_NTWK_KEYXHG;
+	strcpy( netmsg.NetworkId, NetworkId );
+
+	if( WriteChannel( NETWORKMGRCHANNEL,( char * ) &netmsg, sizeof( struct EzNetworkMgrMsg ) ) < 0 )
+	{
+			trace( "Error in Writing Network Key Exchange Message to NetworkMgr" );
+			return -1;
+	}
+	else
+		trace( "Written Network Key Exchange Message Successfully to NetworkMgr" );
+	return 1;
+}
+
+int EzGuiController :: addNetworkEcho( const char *NetworkId )
+{
+	struct EzNetworkEcho networkecho_rec;
+	struct EzEchoTable echotable_rec;
+	struct sembuf sem_buf;
+
+	int retval = -1;
+
+	trace( DEBUG_NORMAL, "Adding NetworkId[%s] in EzEchoTable", NetworkId );
+
+	if( DBConnect() < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Connecting with Switch Database" );
+		return -1;
+	}
+
+	memset( &networkecho_rec, 0, sizeof( struct EzNetworkEcho ) );
+	retval = readEzNetworkEcho( NetworkId, &networkecho_rec );
+	if( DBClose() < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Closing Switch Database" );
+		return -1;
+	}
+	if( retval != 0 )
+	{
+		trace( DEBUG_ERROR, "Error in reading NetworkId[%s] from EzNetworkEcho Table....SqlErr[%05d]", NetworkId, retval );
+		return -1;
+	}
+
+	memset( &echotable_rec, 0, sizeof( struct EzEchoTable ) );
+	strcpy( echotable_rec.NetworkId, networkecho_rec.NetworkId );
+	strcpy( echotable_rec.EchoPropertyId, networkecho_rec.EchoPropertyId );
+	echotable_rec.EchoProperty = networkecho_rec.EchoProperty;
+	echotable_rec.LogOnReq = networkecho_rec.LogOnReq;
+
+	if( addEchoMemory( echotable_rec ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in adding NetworkId[%s] EzEchoMemory....", NetworkId );
+		return -1;
+	}
+	return 1;
+}
+
+int EzGuiController :: removeNetworkEcho( const char *NetworkId )
+{
+	if( deleteEchoMemory( NetworkId ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in removing NetworkId[%s] EzEchoMemory....", NetworkId );
+		return -1;
+	}
+	return 1;
+}
+
+int EzGuiController :: suspendNetworkEcho( const char *NetworkId )
+{
+	if( updateEchoThreadStatus( NetworkId, ECHO_THREAD_SUSPEND ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Updating NetworkId[%s] Status as Suspended....", NetworkId );
+		return -1;
+	}
+	return 1;
+}
+
+int EzGuiController :: resumeNetworkEcho( const char *NetworkId )
+{
+	if( updateEchoThreadStatus( NetworkId, ECHO_THREAD_RUNNING ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Updating NetworkId[%s] Status as Running....", NetworkId );
+		return -1;
+	}
+	return 1;
+}
+
+int EzGuiController :: updateNetworkEcho( const char *NetworkId )
+{
+	struct EzNetworkEcho networkecho_rec;
+	struct EzEchoTable echotable_rec;
+	struct sembuf sem_buf;
+
+	int retval = -1;
+
+	trace( DEBUG_NORMAL, "Adding NetworkId[%s] in EzEchoTable", NetworkId );
+
+	if( DBConnect() < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Connecting with Switch Database" );
+		return -1;
+	}
+
+	memset( &networkecho_rec, 0, sizeof( struct EzNetworkEcho ) );
+	retval = readEzNetworkEcho( NetworkId, &networkecho_rec );
+	if( DBClose() < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Closing Switch Database" );
+		return -1;
+	}
+	if( retval != 0 )
+	{
+		trace( DEBUG_ERROR, "Error in reading NetworkId[%s] from EzNetworkEcho Table....SqlErr[%05d]", NetworkId, retval );
+		return -1;
+	}
+
+	memset( &echotable_rec, 0, sizeof( struct EzEchoTable ) );
+	strcpy( echotable_rec.NetworkId, networkecho_rec.NetworkId );
+	strcpy( echotable_rec.EchoPropertyId, networkecho_rec.EchoPropertyId );
+	echotable_rec.EchoProperty = networkecho_rec.EchoProperty;
+	echotable_rec.LogOnReq = networkecho_rec.LogOnReq;
+
+	if( updateEchoMemory( echotable_rec ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Updating NetworkId[%s] EzEchoMemory....", NetworkId );
+		return -1;
+	}
+	return 1;
+}
+
+int EzGuiController :: addEchoProperty( const char *EchoPropertyId )
+{
+	struct EzEchoMgrMsg echomsg;
+	struct EzEchoProperty echoproperty_rec;
+	int retval;
+
+	if( DBConnect() < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Connecting with Switch DB....." );
+		return -1;
+	}
+
+	memset( &echoproperty_rec, 0, sizeof( struct EzEchoProperty ) );
+	retval = readEzEchoProperty( EchoPropertyId, &echoproperty_rec );
+
+	if( retval != 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Reading EchoPropertyId[%s] from EzEchoProperty Table...SqlErr[%05d]", retval );
+		DBClose();
+		return -1;
+	}
+
+	if( DBClose() < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Closing Switch DB....." );
+		return -1;
+	}
+
+	echomsg.Command = EZLINK_NTWK_ECHOPROPERTY_ADD;
+	strcpy( echomsg.EchoPropertyId, EchoPropertyId );
+
+	if( WriteChannel( ECHOMGRCHANNEL, ( char * ) &echomsg, sizeof( struct EzEchoMgrMsg ) ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Writing Add EchoProperty Thread to Channel[%s] for EchoPropertyId[%s]", "EzEchoMgr", EchoPropertyId );
+		return -1;
+	}
+	else
+	{
+		trace( DEBUG_NORMAL, "Written Add EchoProperty Thread to Channel[%s] for EchoPropertyId[%s]", "EzEchoMgr", EchoPropertyId );
+		return 1;
+	}
+}
+
+int EzGuiController :: updateEchoProperty( const char *EchoPropertyId )
+{
+	struct EzEchoMgrMsg echomsg;
+	struct EzEchoProperty echoproperty_rec;
+	int retval;
+
+	if( DBConnect() < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Connecting with Switch DB....." );
+		return -1;
+	}
+
+	memset( &echoproperty_rec, 0, sizeof( struct EzEchoProperty ) );
+	retval = readEzEchoProperty( EchoPropertyId, &echoproperty_rec );
+	if( retval != 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Reading EchoPropertyId[%s] from EzEchoProperty Table...SqlErr[%05d]", retval );
+		DBClose();
+		return -1;
+	}
+
+	if( DBClose() < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Closing Switch DB....." );
+		return -1;
+	}
+
+
+	memset( &echomsg, 0, sizeof( struct EzEchoMgrMsg ) );
+
+	echomsg.Command = EZLINK_NTWK_ECHOPROPERTY_UPDATE;
+	strcpy( echomsg.EchoPropertyId, EchoPropertyId );
+
+	if( WriteChannel( ECHOMGRCHANNEL, ( char * ) &echomsg, sizeof( struct EzEchoMgrMsg ) ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Writing Update EchoProperty Thread to Channel[%s] for EchoPropertyId[%s]", "EzEchoMgr", EchoPropertyId );
+		return -1;
+	}
+	else
+	{
+		trace( DEBUG_NORMAL, "Written Update EchoProperty Thread to Channel[%s] for EchoPropertyId[%s]", "EzEchoMgr", EchoPropertyId );
+		return 1;
+	}
+}
+
+int EzGuiController :: removeEchoProperty( const char *EchoPropertyId )
+{
+	struct EzEchoMgrMsg echomsg;
+
+	memset( &echomsg, 0, sizeof( struct EzEchoMgrMsg ) );
+
+	echomsg.Command = EZLINK_NTWK_ECHOPROPERTY_REMOVE;
+	strcpy( echomsg.EchoPropertyId, EchoPropertyId );
+
+	if( WriteChannel( ECHOMGRCHANNEL, ( char * ) &echomsg, sizeof( struct EzEchoMgrMsg ) ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Writing Remove EchoProperty Thread to Channel[%s] for EchoPropertyId[%s]", "EzEchoMgr", EchoPropertyId );
+		return -1;
+	}
+	else
+	{
+		trace( DEBUG_NORMAL, "Written Remove EchoProperty Thread to Channel[%s] for EchoPropertyId[%s]", "EzEchoMgr", EchoPropertyId );
+		return 1;
+	}
+}
+
+
+int EzGuiController :: addAtmFit( const char *InstId,  const char *FitRecord, struct AtmFit *AtmFit_rec )
+{
+	int retval = -1;
+	struct sembuf sem_buf;
+
+	for( int i = 0; i < MaxFits; i++ )
+	{
+		sem_buf.sem_num = i;
+		sem_buf.sem_flg = 0;
+		sem_buf.sem_op = -2;
+
+		if( semop( FitMemoryShmId, &sem_buf, 1 ) < 0 )
+		{
+			trace( "Error in Semop Operation...for Fit Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			return -1;
+		}
+
+		if( !strcmp( ( FitMemoryShmPtr + i )->FitRecord , FITRECORD_INIT_VAL ) )
+		{
+			retval = 1;
+			memset( ( FitMemoryShmPtr + i ), 0, sizeof( struct AtmFit ) );
+			strcpy( ( FitMemoryShmPtr + i )->InstId, AtmFit_rec->InstId );
+			strcpy( ( FitMemoryShmPtr + i )->AtmLogicalGroup, AtmFit_rec->AtmLogicalGroup );
+			strcpy( ( FitMemoryShmPtr + i )->AtmId, AtmFit_rec->AtmId );
+			strcpy( ( FitMemoryShmPtr + i )->FitRecord, AtmFit_rec->FitRecord );
+			strcpy( ( FitMemoryShmPtr + i )->SecurityId, AtmFit_rec->SecurityId );
+			( FitMemoryShmPtr + i )->IndirectState = AtmFit_rec->IndirectState;
+			sem_buf.sem_op = 2;
+			if( semop( FitMemorySemId, &sem_buf, 1 ) < 0 )
+			{
+				trace( "Error in Semop Operation...for Fit Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+				return -1;
+			}
+			break;
+		}
+		sem_buf.sem_op = 2;
+		if( semop( FitMemorySemId, &sem_buf, 1 ) < 0 )
+		{
+			trace( "Error in Semop Operation...for Fit Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			return -1;
+		}
+	}
+	return 1;
+}
+
+int EzGuiController :: updateAtmFit( const char *InstId,  const char *FitRecord, struct AtmFit *AtmFit_rec )
+{
+	int retval = -1;
+	struct sembuf sem_buf;
+
+	for( int i = 0; i < MaxFits; i++ )
+	{
+		sem_buf.sem_num = i;
+		sem_buf.sem_flg = 0;
+		sem_buf.sem_op = -2;
+
+		if( semop( FitMemoryShmId, &sem_buf, 1 ) < 0 )
+		{
+			trace( "Error in Semop Operation...for Fit Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			return -1;
+		}
+
+		if( !strcmp( ( FitMemoryShmPtr + i )->InstId ,  AtmFit_rec->InstId ) && !strcmp( ( FitMemoryShmPtr + i )->FitRecord ,  AtmFit_rec->FitRecord ))
+		{
+			retval = 1;
+			memset( ( FitMemoryShmPtr + i ), 0, sizeof( struct AtmFit ) );
+			strcpy( ( FitMemoryShmPtr + i )->InstId ,  AtmFit_rec->InstId );
+			strcpy( ( FitMemoryShmPtr + i )->AtmLogicalGroup, AtmFit_rec->AtmLogicalGroup );
+			strcpy( ( FitMemoryShmPtr + i )->AtmId, AtmFit_rec->AtmId );
+			strcpy( ( FitMemoryShmPtr + i )->FitRecord,  AtmFit_rec->FitRecord );
+			strcpy( ( FitMemoryShmPtr + i )->SecurityId, AtmFit_rec->SecurityId );
+			( FitMemoryShmPtr + i )->IndirectState = AtmFit_rec->IndirectState;
+			sem_buf.sem_op = 2;
+			if( semop( FitMemorySemId, &sem_buf, 1 ) < 0 )
+			{
+				trace( "Error in Semop Operation...for Fit Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+				return -1;
+			}
+			break;
+		}
+		sem_buf.sem_op = 2;
+		if( semop( FitMemorySemId, &sem_buf, 1 ) < 0 )
+		{
+			trace( "Error in Semop Operation...for Fit Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			return -1;
+		}
+	}
+	return 1;
+}
+
+int EzGuiController :: removeAtmFit( const char *InstId,  const char *FitRecord, struct AtmFit *AtmFit_rec )
+{
+	int retval = -1;
+	struct sembuf sem_buf;
+
+	for( int i = 0; i < MaxFits; i++ )
+	{
+		sem_buf.sem_num = i;
+		sem_buf.sem_flg = 0;
+		sem_buf.sem_op = -2;
+
+		if( semop( FitMemoryShmId, &sem_buf, 1 ) < 0 )
+		{
+			trace( "Error in Semop Operation...for Fit Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			return -1;
+		}
+
+		if( !strcmp( ( FitMemoryShmPtr + i )->InstId ,  AtmFit_rec->InstId ) && !strcmp( ( FitMemoryShmPtr + i )->FitRecord ,  AtmFit_rec->FitRecord ))
+		{
+			retval = 1;
+			memset( ( FitMemoryShmPtr + i ), 0, sizeof( struct AtmFit ) );
+			strcpy( ( FitMemoryShmPtr + i )->FitRecord , FITRECORD_INIT_VAL );
+			sem_buf.sem_op = 2;
+			if( semop( FitMemorySemId, &sem_buf, 1 ) < 0 )
+			{
+				trace( "Error in Semop Operation...for Fit Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+				return -1;
+			}
+			break;
+		}
+		sem_buf.sem_op = 2;
+		if( semop( FitMemorySemId, &sem_buf, 1 ) < 0 )
+		{
+			trace( "Error in Semop Operation...for Fit Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			return -1;
+		}
+	}
+	return 1;
+}
+
+int EzGuiController :: PostGuiReply( char *GuiResp, char *GuiPort )
+{
+	int Count = 0, ByteLen = 0;
+
+	ByteLen = strlen( GuiResp );
+
+	if ( WritePortChannel( GuiPort, GuiResp, strlen( GuiResp ) ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Failed to post the Message into Port Channel[ %s ]", GuiPort );
+		return -1;
+	}
+	else
+		trace( DEBUG_NORMAL, "Posted the Message to Port Channel[ %s ]", GuiPort );
+
+	return 1;
+}
+
+int EzGuiController :: postAtmMgrMsg( struct EzAtmMgrQMsg *atmmgrmsg )
+{
+    if( WriteChannel( ATMMGRCHANNEL, (char *)atmmgrmsg, sizeof( struct EzAtmMgrQMsg ) ) < 0 )
+	{
+		trace( "Failed to write msg into %s Channel", ATMMGRCHANNEL );
+		return -1;
+	}
+	else
+		printf("Request will be Processed...");
+	return 1;
+}
+
+int EzGuiController :: servicePortAddCommand( struct ezcommdrvrconfig drvrconfig )
+{
+	EzCfgUtil cfgutil;
+	char cfgpath[ CFG_PATH_SIZE + 1 ], newcfgpath[ CFG_PATH_SIZE + 1 ], cfgparam[ CFG_VAL_SIZE + 1 ], cfgval[ CFG_VAL_SIZE + 1 ];
+	char command[ 150 ];
+	bool driver_start_found = false, driver_end_found = false;
+	FILE *curr_fp, *new_fp, *pipe_ptr;
+	EzDateTimeUtil ezdatetimeutil;
+	char FBuffer[ 200 ], LineStr[ 200 ], backupfile[ 200 ];
+
+	memset( cfgpath, 0, sizeof( cfgpath ) );
+	sprintf( cfgpath, "%s/%s/%s", getenv( "EZDIR_HOME" ), "cfg", "eznet.cfg" );
+
+	if( cfgutil.cfg_open( cfgpath ) < 0 )
+	{
+		trace( "Error in opening file[%s]....cannot add port[%s]", cfgpath, drvrconfig.drivername );
+		return -1;
+	}
+
+	memset( cfgparam, 0, sizeof( cfgparam ) );
+	sprintf( cfgparam, "DRIVER#%s", drvrconfig.drivername );
+
+	memset( cfgval ,0, sizeof( cfgval ) );
+	if( cfgutil.cfg_search( cfgparam, cfgval, 1 ) >= 0 )
+	{
+		trace( "Cannot add Port[%s]....PortName already exists in DRIVER_START_DEF in eznet.cfg file", drvrconfig.drivername );
+		cfgutil.cfg_close();
+		return -1;
+	}
+
+	memset( cfgval ,0, sizeof( cfgval ) );
+	if( cfgutil.cfg_group_count( drvrconfig.drivername ) >= 0 )
+	{
+		trace( "Cannot add Port[%s]....%s_START_DEF already exists in eznet.cfg file", drvrconfig.drivername, drvrconfig.drivername );
+		cfgutil.cfg_close();
+		return -1;
+	}
+
+	cfgutil.cfg_close();
+
+	curr_fp = fopen( cfgpath, "r" );
+
+	if( curr_fp == NULL )
+	{
+		trace( "Error in opening file[%s]....cannot add port[%s]", cfgpath, drvrconfig.drivername );
+		return -1;
+	}
+
+	memset( newcfgpath, 0, sizeof( newcfgpath ) );
+	sprintf( newcfgpath, "%s/%s/%s/%s.%06d%06d", getenv( "EZDIR_HOME" ), "cfg", "eznetbakfiles", "eznet.cfg.tmp", ezdatetimeutil.getSysDate(), ezdatetimeutil.getSysTime() );
+	new_fp = fopen( newcfgpath, "w" );
+
+	if( new_fp == NULL )
+	{
+		trace( "Error in opening file[%s]....cannot add port[%s]", cfgpath, drvrconfig.drivername );
+		fclose( curr_fp );
+		return -1;
+	}
+
+	while( !feof( curr_fp ) )
+	{
+		memset( FBuffer, 0, sizeof( FBuffer ) );
+		fgets( FBuffer, sizeof( FBuffer ), curr_fp );
+		memset( LineStr, 0, sizeof( LineStr ) );
+		for( int i = 0, j = 0; i < strlen( FBuffer ); i++ )
+		{
+			if( FBuffer[ i ] != '\t' && FBuffer[ i ] != '\n' && FBuffer[ i ] != '\r' && FBuffer[ i ] != ' ' )
+			{
+				LineStr[ j ] = FBuffer[ i ];
+				j++;
+			}
+		}
+
+		if( !strcmp( LineStr, "DRIVER_START_DEF" ) )
+			driver_start_found = true;
+
+		if( driver_start_found && !driver_end_found && !strcmp( LineStr, "END_DEF" ) )
+		{
+			fprintf( new_fp, "\t%s\n", drvrconfig.drivername );
+			driver_end_found = true;
+		}
+		fprintf( new_fp, "%s", FBuffer );
+	}
+
+	fclose( curr_fp );
+
+	fprintf( new_fp, "\n" );
+
+	fprintf( new_fp, "\n%s_START_DEF", drvrconfig.drivername );
+	fprintf( new_fp, "\n\tProtocol\tTCPIP" );
+	if( drvrconfig.apptype == TCPIP_SERVER )
+		fprintf( new_fp, "\n\tConnectionType\taccept" );
+	else
+		fprintf( new_fp, "\n\tConnectionType\tmake" );
+	fprintf( new_fp, "\n\tIpAddress\t%s", drvrconfig.ipaddress );
+	fprintf( new_fp, "\n\tPortNo\t%d", drvrconfig.portno );
+	fprintf( new_fp, "\n\tDestChannel\t%s", drvrconfig.destchannel );
+	fprintf( new_fp, "\n\tNConnections\t%d", drvrconfig.nconnections );
+	if( drvrconfig.headertype == ASCII )
+		fprintf( new_fp, "\n\tHeaderType\tascii" );
+	else
+		fprintf( new_fp, "\n\tHeaderType\thex" );
+
+	fprintf( new_fp, "\n\tHeaderLen\t%d", drvrconfig.headerlen );
+	if( drvrconfig.keepalive )
+		fprintf( new_fp, "\n\tEnableKeepalive\tYes" );
+	else
+		fprintf( new_fp, "\n\tEnableKeepalive\tNo" );
+
+	fprintf( new_fp, "\nEND_DEF" );
+	fclose( new_fp );
+
+	memset( backupfile, 0, sizeof( backupfile ) );
+	sprintf( backupfile, "%s/%s/%s/%s.%06d_%06d", getenv( "EZDIR_HOME" ), "cfg", "eznetbakfiles", "eznet.cfg", ezdatetimeutil.getSysDate(), ezdatetimeutil.getSysTime() );
+
+	memset( command, 0, sizeof( command ) );
+	sprintf( command, "cp %s %s", cfgpath, backupfile );
+
+	pipe_ptr = popen( command, "r" );
+
+	if( pipe_ptr == NULL )
+	{
+		trace( "Error in opening pipe...SysErr[%s]", strerror( errno ) );
+		return -1;
+	}
+
+	pclose( pipe_ptr );
+
+	memset( command, 0, sizeof( command ) );
+	sprintf( command, "cp %s %s", newcfgpath, cfgpath );
+
+	pipe_ptr = popen( command, "r" );
+
+	if( pipe_ptr == NULL )
+	{
+		trace( "Error in opening pipe...SysErr[%s]", strerror( errno ) );
+		return -1;
+	}
+
+	pclose( pipe_ptr );
+
+	memset( command, 0, sizeof( command ) );
+	sprintf( command, "rm %s", newcfgpath );
+
+	pipe_ptr = popen( command, "r" );
+
+	if( pipe_ptr == NULL )
+	{
+		trace( "Error in opening pipe...SysErr[%s]", strerror( errno ) );
+		return -1;
+	}
+
+	pclose( pipe_ptr );
+
+	return 1;
+}
+
+int EzGuiController :: getToken( const char *msg, char *tmp, char ch, int count )
+{
+	int i = 0, j = 0, cnt = 0;
+	for( i = 0; i < strlen( msg ); i++ )
+	{
+		if( msg[ i ] == ch )
+			cnt++;
+		else if( cnt == count )
+			break;
+		else if ( cnt + 1 == count )
+		{
+			tmp[ j ] = msg[ i ];
+			j++;
+		}
+	}
+}
+
+int main( int argc, char **argv )
+{
+    EzGuiController ezatmcontrollerobj;
+    ezatmcontrollerobj.InitEzGuiController( argv[ 0 ] );
+    ezatmcontrollerobj.ServiceRequest();
+    return 1;
+}

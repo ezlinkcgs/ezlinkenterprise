@@ -1,0 +1,623 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sqlca.h>
+#include <ezlink/ezlnkmsg.h>
+#include <eztms/eztmsdbtypes.h>
+
+int insertTerminalMaster( const char *I_MachineId, struct EzTxnMsg *txnmsg, const char *I_TMSTxnRefNum, const char *I_OpType )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char MachineId[ 33 ];
+		char TermId[ 9 ];
+		char DeviceType[ 17 ];
+		char MerchantId[ 16 ];
+		char BatchId[ 13 ];
+		char CardScheme[ 13 ];
+		char TMSTxnRefNum[ 151 ];
+		int MsgType;
+		char TxnCode[ 7 ];
+		char OpType[ 3 ];
+		char chn[ 20 ];
+		char TermLoc[ 65 ];
+		int TraceNo;
+		char AuthNum[ 13 ];
+		char RefNum[ 13 ];
+		char TranDate[ 7 ];
+		int TranTime;
+		char LocalDate[ 7 ];
+		int LocalTime;
+		int RespCode;
+		int AuthCode;
+		char TxnCurrency[ 5 ];
+		char AcqConvRate[ 33 ];
+		char AcqConvDate[ 7 ];
+		int MCC;
+		char TxnAmount[ 33 ];
+		char TxnStatus;
+		short ind_var;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MachineId IS STRING(33);
+	EXEC SQL VAR TermId IS STRING(9);
+	EXEC SQL VAR DeviceType IS STRING(17);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR BatchId IS STRING(13);
+	EXEC SQL VAR CardScheme IS STRING(13);
+	EXEC SQL VAR TMSTxnRefNum IS STRING(151);
+	EXEC SQL VAR TxnCode IS STRING(7);
+	EXEC SQL VAR OpType IS STRING(3);
+	EXEC SQL VAR chn IS STRING(20);
+	EXEC SQL VAR TermLoc IS STRING(65);
+	EXEC SQL VAR AuthNum IS STRING(13);
+	EXEC SQL VAR RefNum IS STRING(13);
+	EXEC SQL VAR TranDate IS STRING(7);
+	EXEC SQL VAR LocalDate IS STRING(7);
+	EXEC SQL VAR TxnCurrency IS STRING(5);
+	EXEC SQL VAR AcqConvRate IS STRING(33);
+	EXEC SQL VAR AcqConvDate IS STRING(7);
+	EXEC SQL VAR TxnAmount IS STRING(33);
+	
+	
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( MachineId, 0, sizeof( MachineId ) );
+	memset( TermId, 0, sizeof( TermId ) );
+	memset( MerchantId, 0, sizeof( MerchantId ) );
+	memset( DeviceType, 0, sizeof( DeviceType ) );
+	memset( BatchId, 0, sizeof( BatchId ) );
+	memset( CardScheme, 0, sizeof( CardScheme ) );
+	memset( TMSTxnRefNum, 0, sizeof( TMSTxnRefNum ) );
+	memset( TxnCode, 0, sizeof( TxnCode ) );
+	memset( OpType, 0, sizeof( OpType ) );
+	memset( chn, 0, sizeof( chn ) );
+	memset( TermLoc, 0, sizeof( TermLoc ) );
+	memset( AuthNum, 0, sizeof( AuthNum ) );
+	memset( RefNum, 0, sizeof( RefNum ) );
+	memset( TranDate, 0, sizeof( TranDate ) );
+	memset( LocalDate, 0, sizeof( LocalDate ) );
+	memset( TxnCurrency, 0, sizeof( TxnCurrency ) );
+	memset( TxnAmount, 0, sizeof( TxnAmount ) );
+	
+	strcpy( InstId, txnmsg->AcquirerInst );
+	strcpy( MachineId, I_MachineId );
+	strcpy( TermId, txnmsg->TerminalId );
+	strcpy( MerchantId, txnmsg->AcceptorId );
+	strcpy( DeviceType, txnmsg->DeviceType );
+	strcpy( BatchId, txnmsg->BatchId );
+	strcpy( CardScheme, "BPESA" );
+	strcpy( TMSTxnRefNum, I_TMSTxnRefNum );
+	MsgType = txnmsg->MsgType;
+	sprintf( TxnCode, "%06d", txnmsg->TxnCode );
+	strcpy( OpType, I_OpType );
+	strcpy( chn, txnmsg->chn );
+	strcpy( TermLoc, txnmsg->TerminalLocation );
+	TraceNo = txnmsg->TraceNo;
+	strcpy( AuthNum, txnmsg->AuthNum );
+	strcpy( RefNum, txnmsg->RefNum );
+	sprintf( TranDate, "%06d", txnmsg->TranDate );
+	TranTime = txnmsg->TranTime;
+	sprintf( LocalDate, "%06d", txnmsg->LocalDate );
+	LocalTime = txnmsg->LocalTime;
+	RespCode = txnmsg->RespCode;
+	AuthCode = txnmsg->AuthCode;
+	sprintf( TxnCurrency, "%03d", txnmsg->AcqCurrencyCode );
+	strcpy( AcqConvRate, "1.0" );
+	sprintf( AcqConvDate, "%06d", txnmsg->TranDate );
+	MCC = txnmsg->MerchantType;
+	strcpy( TxnAmount, txnmsg->Amount );
+	TxnStatus = 'T';
+	
+	EXEC SQL INSERT INTO EZMMS_TRANSACTION
+	(
+		INSTID,
+		MACHINEID,
+		TERMID,
+		MERCHANTID,
+		DEVICETYPE,
+		BATCHID,
+		CARDSCHEME,
+		TXNREFNUM,
+		MSGTYPE,
+		TXNCODE,
+		TXNTYPE,
+		CHN,
+		TERMLOC,
+		TRACENO,
+		AUTHNUM,
+		REFNUM,
+		TRANDATE,
+		TRANTIME,
+		LOCALDATE,
+		LOCALTIME,
+		RESPCODE,
+		AUTHCODE,
+		TXNCURRENCY,
+		TXNCONVRATE,
+		TXNCONVDATE,
+		MCC,
+		TXNAMOUNT,
+		TXNSTATUS
+	)
+	VALUES
+	(
+		:InstId,
+		:MachineId,
+		:TermId,
+        :MerchantId,
+        :DeviceType,
+        :BatchId,
+        :CardScheme,
+        :TMSTxnRefNum,
+        :MsgType,
+        :TxnCode,
+        :OpType,
+        :chn,
+        :TermLoc,
+        :TraceNo,
+        :AuthNum,
+        :RefNum,
+        to_date( :TranDate, 'dd-mm-yy' ),
+        :TranTime,
+        to_date( :LocalDate, 'dd-mm-yy' ),
+        :LocalTime,
+        :RespCode,
+        :AuthCode,
+        :TxnCurrency,
+        :AcqConvRate,
+        to_date( :AcqConvDate, 'dd-mm-yy' ),
+        :MCC,
+        :TxnAmount,
+        :TxnStatus
+    );
+	
+	if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+    {
+        EXEC SQL COMMIT;
+        return sqlca.sqlcode;
+    }
+}
+
+int insertTerminalTxnLog( const char *I_MachineId, struct EzTxnMsg *txnmsg )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char MachineId[ 33 ];
+		char TermId[ 9 ];
+		char DeviceType[ 17 ];
+		char MerchantId[ 16 ];
+		char BatchId[ 13 ];
+		char CardScheme[ 13 ];
+		int MsgType;
+		char TxnCode[ 7 ];
+		char chn[ 20 ];
+		char TermLoc[ 65 ];
+		int TraceNo;
+		char AuthNum[ 13 ];
+		char RefNum[ 13 ];
+		char TranDate[ 7 ];
+		int TranTime;
+		char LocalDate[ 7 ];
+		int LocalTime;
+		int RespCode;
+		int AuthCode;
+		char TxnCurrency[ 5 ];
+		int MCC;
+		char TxnAmount[ 33 ];
+		short ind_var;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MachineId IS STRING(33);
+	EXEC SQL VAR TermId IS STRING(9);
+	EXEC SQL VAR DeviceType IS STRING(17);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR BatchId IS STRING(13);
+	EXEC SQL VAR CardScheme IS STRING(13);
+	EXEC SQL VAR TxnCode IS STRING(7);
+	EXEC SQL VAR chn IS STRING(20);
+	EXEC SQL VAR TermLoc IS STRING(65);
+	EXEC SQL VAR AuthNum IS STRING(13);
+	EXEC SQL VAR RefNum IS STRING(13);
+	EXEC SQL VAR TranDate IS STRING(7);
+	EXEC SQL VAR LocalDate IS STRING(7);
+	EXEC SQL VAR TxnCurrency IS STRING(5);
+	EXEC SQL VAR TxnAmount IS STRING(33);
+	
+	
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( MachineId, 0, sizeof( MachineId ) );
+	memset( TermId, 0, sizeof( TermId ) );
+	memset( MerchantId, 0, sizeof( MerchantId ) );
+	memset( DeviceType, 0, sizeof( DeviceType ) );
+	memset( BatchId, 0, sizeof( BatchId ) );
+	memset( CardScheme, 0, sizeof( CardScheme ) );
+	memset( TxnCode, 0, sizeof( TxnCode ) );
+	memset( chn, 0, sizeof( chn ) );
+	memset( TermLoc, 0, sizeof( TermLoc ) );
+	memset( AuthNum, 0, sizeof( AuthNum ) );
+	memset( RefNum, 0, sizeof( RefNum ) );
+	memset( TranDate, 0, sizeof( TranDate ) );
+	memset( LocalDate, 0, sizeof( LocalDate ) );
+	memset( TxnCurrency, 0, sizeof( TxnCurrency ) );
+	memset( TxnAmount, 0, sizeof( TxnAmount ) );
+	
+	strcpy( InstId, txnmsg->AcquirerInst );
+	strcpy( MachineId, I_MachineId );
+	strcpy( TermId, txnmsg->TerminalId );
+	strcpy( MerchantId, txnmsg->AcceptorId );
+	strcpy( DeviceType, txnmsg->DeviceType );
+	strcpy( BatchId, txnmsg->BatchId );
+	strcpy( CardScheme, "BPESA" );
+	MsgType = txnmsg->MsgType;
+	sprintf( TxnCode, "%06d", txnmsg->TxnCode );
+	strcpy( chn, txnmsg->chn );
+	strcpy( TermLoc, txnmsg->TerminalLocation );
+	TraceNo = txnmsg->TraceNo;
+	strcpy( AuthNum, txnmsg->AuthNum );
+	strcpy( RefNum, txnmsg->RefNum );
+	sprintf( TranDate, "%06d", txnmsg->TranDate );
+	TranTime = txnmsg->TranTime;
+	sprintf( LocalDate, "%06d", txnmsg->LocalDate );
+	LocalTime = txnmsg->LocalTime;
+	RespCode = txnmsg->RespCode;
+	AuthCode = txnmsg->AuthCode;
+	sprintf( TxnCurrency, "%03d", txnmsg->AcqCurrencyCode );
+	MCC = txnmsg->MerchantType;
+	strcpy( TxnAmount, txnmsg->Amount );
+	
+	EXEC SQL INSERT INTO EZMMS_TRANSACTIONLOG
+	(
+		INSTID,
+		MACHINEID,
+		TERMID,
+		MERCHANTID,
+		DEVICETYPE,
+		BATCHID,
+		CARDSCHEME,
+		MSGTYPE,
+		TXNCODE,
+		CHN,
+		TERMLOC,
+		TRACENO,
+		AUTHNUM,
+		REFNUM,
+		TRANDATE,
+		TRANTIME,
+		LOCALDATE,
+		LOCALTIME,
+		RESPCODE,
+		AUTHCODE,
+		TXNCURRENCY,
+		MCC,
+		TXNAMOUNT
+	)
+	VALUES
+	(
+		:InstId,
+		:MachineId,
+		:TermId,
+        :MerchantId,
+        :DeviceType,
+        :BatchId,
+        :CardScheme,
+        :MsgType,
+        :TxnCode,
+        :chn,
+        :TermLoc,
+        :TraceNo,
+        :AuthNum,
+        :RefNum,
+        to_date( :TranDate, 'dd-mm-yy' ),
+        :TranTime,
+        to_date( :LocalDate, 'dd-mm-yy' ),
+        :LocalTime,
+        :RespCode,
+        :AuthCode,
+        :TxnCurrency,
+        :MCC,
+        :TxnAmount
+    );
+	
+	if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+    {
+        EXEC SQL COMMIT;
+        return sqlca.sqlcode;
+    }
+}
+
+int insertTerminalBatchTxnInfo( const char *I_MachineId, struct EzTxnMsg *txnmsg, const char *I_TMSTxnRefNum )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char MachineId[ 33 ];
+		char TermId[ 9 ];
+		char MerchantId[ 16 ];
+		char BatchId[ 13 ];
+		char TMSTxnRefNum[ 151 ];
+		int MsgType;
+		int TxnCode;
+		char chn[ 20 ];
+		char TermLoc[ 65 ];
+		int TraceNo;
+		char AuthNum[ 13 ];
+		char RefNum[ 13 ];
+		char TranDate[ 7 ];
+		int TranTime;
+		char LocalDate[ 7 ];
+		int LocalTime;
+		int RespCode;
+		int AuthCode;
+		int CurrencyCode;
+		int MCC;
+		char TxnAmount[ 21 ];
+		char TermAmount[ 21 ];
+		char MatchFlag;
+		char MatchDesc[ 33 ];
+		short ind_var;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MachineId IS STRING(33);
+	EXEC SQL VAR TermId IS STRING(9);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR BatchId IS STRING(13);
+	EXEC SQL VAR TMSTxnRefNum IS STRING(151);
+	EXEC SQL VAR chn IS STRING(20);
+	EXEC SQL VAR TermLoc IS STRING(65);
+	EXEC SQL VAR AuthNum IS STRING(13);
+	EXEC SQL VAR RefNum IS STRING(13);
+	EXEC SQL VAR TranDate IS STRING(7);
+	EXEC SQL VAR LocalDate IS STRING(7);
+	EXEC SQL VAR TxnAmount IS STRING(21);
+	EXEC SQL VAR TermAmount IS STRING(21);
+	EXEC SQL VAR MatchDesc IS STRING(33);
+	
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( MachineId, 0, sizeof( MachineId ) );
+	memset( TermId, 0, sizeof( TermId ) );
+	memset( MerchantId, 0, sizeof( MerchantId ) );
+	memset( BatchId, 0, sizeof( BatchId ) );
+	memset( TMSTxnRefNum, 0, sizeof( TMSTxnRefNum ) );
+	memset( chn, 0, sizeof( chn ) );
+	memset( TermLoc, 0, sizeof( TermLoc ) );
+	memset( AuthNum, 0, sizeof( AuthNum ) );
+	memset( RefNum, 0, sizeof( RefNum ) );
+	memset( TranDate, 0, sizeof( TranDate ) );
+	memset( LocalDate, 0, sizeof( LocalDate ) );
+	memset( TxnAmount, 0, sizeof( TxnAmount ) );
+	memset( TermAmount, 0, sizeof( TermAmount ) );
+	memset( MatchDesc, 0, sizeof( MatchDesc ) );
+	
+	strcpy( InstId, txnmsg->AcquirerInst );
+	strcpy( MachineId, I_MachineId );
+	strcpy( TermId, txnmsg->TerminalId );
+	strcpy( MerchantId, txnmsg->AcceptorId );
+	strcpy( BatchId, txnmsg->BatchId );
+	strcpy( TMSTxnRefNum, I_TMSTxnRefNum );
+	MsgType = txnmsg->MsgType;
+	TxnCode = txnmsg->TxnCode;
+	strcpy( chn, txnmsg->chn );
+	strcpy( TermLoc, txnmsg->TerminalLocation );
+	TraceNo = txnmsg->TraceNo;
+	strcpy( AuthNum, txnmsg->AuthNum );
+	strcpy( RefNum, txnmsg->RefNum );
+	sprintf( TranDate, "%06d", txnmsg->TranDate );
+	TranTime = txnmsg->TranTime;
+	sprintf( LocalDate, "%06d", txnmsg->LocalDate );
+	LocalTime = txnmsg->LocalTime;
+	RespCode = txnmsg->RespCode;
+	AuthCode = txnmsg->AuthCode;
+	CurrencyCode = txnmsg->AcqCurrencyCode;
+	MCC = txnmsg->MerchantType;
+	strcpy( TxnAmount, txnmsg->Amount );
+	strcpy( TermAmount, txnmsg->Amount );
+	MatchFlag = 'M';
+	strcpy( MatchDesc, "MATCHED" );
+	
+	EXEC SQL INSERT INTO EZMMSBATCHTXNINFO
+	(
+		INSTID,
+		MACHINEID,	
+		TERMID,
+		MERCHANTID,
+		BATCHID,
+		TXNREFNUM,
+		MSGTYPE,
+		TXNCODE,
+		CHN,
+		TERMLOC,
+		TRACENO,
+		AUTHNUM,
+		REFNUM,
+		TRANDATE,
+		TRANTIME,
+		LOCALDATE,
+		LOCALTIME,
+		RESPCODE,
+		AUTHCODE,
+		CURRENCYCODE,
+		MCC,
+		TXNAMOUNT,
+		TERMAMOUNT,
+		MATCHFLAG,
+		MATCHDESC
+	)
+	VALUES
+	(
+		:InstId,
+		:MachineId,
+		:TermId,
+        :MerchantId,
+        :BatchId,
+        :TMSTxnRefNum,
+        :MsgType,
+        :TxnCode,
+        :chn,
+        :TermLoc,
+        :TraceNo,
+        :AuthNum,
+        :RefNum,
+        to_date( :TranDate, 'dd-mm-yy' ),
+        :TranTime,
+        to_date( :LocalDate, 'dd-mm-yy' ),
+        :LocalTime,
+        :RespCode,
+        :AuthCode,
+        :CurrencyCode,
+        :MCC,
+        :TxnAmount,
+        :TermAmount,
+        :MatchFlag,
+        :MatchDesc
+    );
+	
+	if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+    {
+            EXEC SQL COMMIT;
+            return sqlca.sqlcode;
+    }
+}
+
+int readTerminalBatchInfo( const char *I_MachineId, struct EzTerminalBatchInfo *terminalbatchinfo_rec )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char BatchId[ 13 ];
+		char InstId[ 13 ];
+		char MachineId[ 33 ];
+		char Termid[ 9 ];
+		char MerchantId[ 16 ];
+		char OpenDate[ 7 ];
+		int OpenTime;
+		char OpenSource;
+		int SaleCount;
+		double SaleAmount;
+		int VoidCount;
+		double VoidAmount;
+		int AuthCount;
+		double AuthAmount;
+		short ind_var;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR BatchId IS STRING(13);
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MachineId IS STRING(33);
+	EXEC SQL VAR Termid IS STRING(9);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR OpenDate IS STRING(7);
+	
+	memset( BatchId, 0, sizeof( BatchId ) );
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( MachineId, 0, sizeof( MachineId ) );
+	memset( Termid, 0, sizeof( Termid ) );
+	memset( MerchantId, 0, sizeof( MerchantId ) );
+	memset( OpenDate, 0, sizeof( OpenDate ) );
+	
+	strcpy( MachineId, I_MachineId );
+	
+	EXEC SQL SELECT 
+		RTRIM(INSTID),
+		RTRIM(BATCHID),
+		RTRIM(TERMID),
+		RTRIM(MERCHANTID),
+		TO_CHAR(OPENDATE, 'DDMMYY' ),
+		OPENTIME,
+		SALECOUNT,
+		SALEAMOUNT,
+		VOIDCOUNT,
+		VOIDAMOUNT,
+		AUTHCOUNT,
+		AUTHAMOUNT
+	INTO 
+		:InstId:ind_var,
+		:BatchId:ind_var,
+		:Termid: ind_var,
+		:MerchantId:ind_var,
+		:OpenDate:ind_var,
+		:OpenTime:ind_var,
+		:SaleCount:ind_var,
+		:SaleAmount:ind_var,
+		:VoidCount:ind_var,
+		:VoidAmount:ind_var,
+		:AuthCount:ind_var,
+		:AuthAmount:ind_var
+	FROM EZMMSBATCHINFO WHERE RTRIM(MACHINEID) =:I_MachineId; 
+	
+	if( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	
+	strcpy( terminalbatchinfo_rec->MachineId, MachineId );
+	strcpy( terminalbatchinfo_rec->BatchId, BatchId );
+	strcpy( terminalbatchinfo_rec->Termid, Termid );
+	strcpy( terminalbatchinfo_rec->MerchantId, MerchantId );
+	strcpy( terminalbatchinfo_rec->OpenDate, OpenDate );
+	terminalbatchinfo_rec->OpenTime = OpenTime;
+	terminalbatchinfo_rec->SaleCount = SaleCount;
+	terminalbatchinfo_rec->SaleAmount = SaleAmount;
+	terminalbatchinfo_rec->VoidCount = VoidCount;
+	terminalbatchinfo_rec->VoidAmount = VoidAmount;
+	terminalbatchinfo_rec->AuthCount = AuthCount;
+	terminalbatchinfo_rec->AuthAmount = AuthAmount;
+	return sqlca.sqlcode;
+}
+
+int updateSaleTxn( const char *I_MachineId, double I_TxnAmount, int I_TxnCount )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char MachineId[ 33 ];
+		double TxnAmount;
+		int TxnCount;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR MachineId IS STRING(33);
+	
+	memset( MachineId, 0, sizeof( MachineId ) );
+	strcpy( MachineId, I_MachineId );
+	TxnAmount = I_TxnAmount;
+	TxnCount = I_TxnCount;
+	
+	EXEC SQL UPDATE EZMMSBATCHINFO SET SALECOUNT = :TxnCount, SALEAMOUNT = :TxnAmount WHERE RTRIM(MACHINEID) = :MachineId;
+			
+	if( sqlca.sqlcode != 0 )
+	   	return sqlca.sqlcode;
+    else
+    {
+	    EXEC SQL COMMIT;
+        if( sqlca.sqlcode != 0 )
+	   		return sqlca.sqlcode;
+	}
+}
+
+int updateVoidTxn( const char *I_MachineId, double I_TxnAmount, int I_TxnCount )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char MachineId[ 33 ];
+		double TxnAmount;
+		int TxnCount;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR MachineId IS STRING(33);
+	
+	memset( MachineId, 0, sizeof( MachineId ) );
+	strcpy( MachineId, I_MachineId );
+	TxnAmount = I_TxnAmount;
+	TxnCount = I_TxnCount;
+	
+	EXEC SQL UPDATE EZMMSBATCHINFO SET VOIDCOUNT = :TxnCount, VOIDAMOUNT = :TxnAmount WHERE RTRIM(MACHINEID) = :MachineId;
+			
+	if( sqlca.sqlcode != 0 )
+	   	return sqlca.sqlcode;
+    else
+    {
+	    EXEC SQL COMMIT;
+        if( sqlca.sqlcode != 0 )
+	   		return sqlca.sqlcode;
+	}
+}

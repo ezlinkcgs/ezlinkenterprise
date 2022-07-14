@@ -1,0 +1,466 @@
+#include <eztms/eztmsdbtypes.h>
+#include <ezmms/ezmmsdbtypes.h>
+#include <eztms/eztmsdef.h>
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <ezlink/ezlnkmsg.h>
+
+int updateTerminalStatus( struct EzMMSTerminalStatus *status_ptr, char UpdateFlag  )
+{
+	int ErrCode;
+	EXEC SQL BEGIN DECLARE SECTION;
+   		char InstId[ 13 ];
+   		char MachineId[ 33 ];
+		char MerchantId[ 16 ];
+		char StoreId[ 33 ];
+		char TerminalId[ 9 ];
+		char LastRcvDate[ 7 ];
+		char LastRcvTime[ 7 ];
+		char LastTxnDate[ 7 ];
+		char LastTxnTime[ 7 ];
+		char Version[ 16 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MachineId IS STRING(33);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR StoreId IS STRING(33);
+	EXEC SQL VAR TerminalId IS STRING(9);
+	EXEC SQL VAR LastRcvDate IS STRING(7);
+	EXEC SQL VAR LastRcvTime IS STRING(7);
+	EXEC SQL VAR LastTxnDate IS STRING(7);
+	EXEC SQL VAR LastTxnTime IS STRING(7);
+	EXEC SQL VAR Version IS STRING(16);
+	
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( MachineId, 0, sizeof( MachineId ) );
+	memset( MerchantId, 0, sizeof( MerchantId ) );
+	memset( StoreId, 0, sizeof( StoreId ) );
+	memset( TerminalId, 0, sizeof( TerminalId ) );
+	memset( LastRcvDate, 0, sizeof( LastRcvDate ) );
+	memset( LastRcvTime, 0, sizeof( LastRcvTime ) );
+	memset( LastTxnDate, 0, sizeof( LastTxnDate ) );
+	memset( LastTxnTime, 0, sizeof( LastTxnTime ) );
+	memset( Version, 0, sizeof( Version ) );
+	
+	strcpy( InstId, status_ptr->InstId );
+	strcpy( MachineId, status_ptr->MachineId );
+	strcpy( MerchantId, status_ptr->MerchantId );
+	strcpy( StoreId, status_ptr->StoreId );
+	strcpy( TerminalId, status_ptr->TerminalId );
+	strcpy( LastRcvDate, status_ptr->LastRcvDate );
+	strcpy( LastRcvTime, status_ptr->LastRcvTime );
+	strcpy( LastTxnDate, status_ptr->LastTxnDate );
+	strcpy( LastTxnTime, status_ptr->LastTxnTime );
+	strcpy( Version, status_ptr->Version );
+	
+	if( UpdateFlag == TERMINAL_STATUSID_ECHO )
+	{
+		EXEC SQL UPDATE EZMMS_TERMINALSTATUS SET
+			LAST_RCVD_DATE = SYSDATE,
+			LAST_RCVD_TIME = :LastRcvTime,
+			VERSION = :Version
+		WHERE TRIM(INST_ID) = :InstId AND TRIM(MERCHANT_ID) = :MerchantId AND TRIM(TERMINAL_ID) = :TerminalId;
+	}
+	else
+	{
+		EXEC SQL UPDATE EZMMS_TERMINALSTATUS SET
+			LAST_RCVD_DATE = SYSDATE,
+			LAST_RCVD_TIME = :LastRcvTime,
+			LAST_TXN_DATE = SYSDATE,
+			LAST_TXN_TIME = :LastTxnTime
+		WHERE TRIM(INST_ID) = :InstId AND TRIM(MERCHANT_ID) = :MerchantId AND TRIM(TERMINAL_ID) = :TerminalId;
+	}
+	
+	if( sqlca.sqlcode == 1403 )
+	{
+		EXEC SQL INSERT INTO EZMMS_TERMINALSTATUS
+		(
+			INST_ID,
+			MACHINE_ID,
+			MERCHANT_ID,
+			STORE_ID,
+			TERMINAL_ID,
+			LAST_RCVD_DATE,
+			LAST_RCVD_TIME,
+			LAST_TXN_DATE,
+			LAST_TXN_TIME,
+			VERSION
+		)
+		VALUES
+		(
+			:InstId,
+			:MachineId,
+			:MerchantId,
+			:StoreId,
+			:TerminalId,
+			to_date( :LastRcvDate, 'dd-mm-yy' ),
+			:LastRcvTime,
+			to_date( :LastTxnDate, 'dd-mm-yy' ),
+			:LastTxnTime,
+			:Version
+		);
+	}
+	
+	ErrCode = sqlca.sqlcode;
+		
+	if ( sqlca.sqlcode != 0 )
+	{
+		EXEC SQL COMMIT;
+	    return ( ErrCode );
+	}
+    else
+    {
+    	EXEC SQL COMMIT;
+        return ( sqlca.sqlcode );
+    }     
+}
+
+int updateTermPINKeyinTable( const char *I_MachineId, const char *I_TermPINKey )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char MachineId[ 33 ];  
+		char TermPINKey[ 65 ];  
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR MachineId IS STRING( 33 );
+	EXEC SQL VAR TermPINKey IS STRING( 65 );
+	
+	memset( MachineId, 0, sizeof( MachineId ) );
+	memset( TermPINKey, 0, sizeof( TermPINKey ) );
+	
+	strcpy( MachineId, I_MachineId );
+	strcpy( TermPINKey, I_TermPINKey );
+	
+	EXEC SQL UPDATE EZMMS_TERMINALPROFILE SET 
+		TERM_PIN_KEY=:TermPINKey
+	WHERE TRIM(MACHINE_ID)=:MachineId;
+	
+	if ( sqlca.sqlcode != 0 )
+    	return ( sqlca.sqlcode );
+	else
+	{
+		EXEC SQL COMMIT;
+		if ( sqlca.sqlcode != 0 )
+        	return ( sqlca.sqlcode );
+	}
+}
+
+int updateTerminalBatchTxnInfo( const char *I_MachineId, const char *I_TMSTxnRefNum, const char *I_Amount, char I_MatchFlag, const char *I_MatchDesc )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char MachineId[ 33 ];
+		char TMSTxnRefNum[ 151 ];
+		char TermAmount[ 21 ];
+		char MatchFlag;
+		char MatchDesc[ 33 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR MachineId IS STRING(33);
+	EXEC SQL VAR TMSTxnRefNum IS STRING(151);
+	EXEC SQL VAR TermAmount IS STRING(21);
+	EXEC SQL VAR MatchDesc IS STRING(33);
+	
+	memset( MachineId, 0, sizeof( MachineId ) );
+	memset( TMSTxnRefNum, 0, sizeof( TMSTxnRefNum ) );
+	memset( TermAmount, 0, sizeof( TermAmount ) );
+	memset( MatchDesc, 0, sizeof( MatchDesc ) );
+	
+	strcpy( MachineId, I_MachineId );
+	strcpy( TMSTxnRefNum, I_TMSTxnRefNum );
+	strcpy( TermAmount, I_Amount );
+	MatchFlag = I_MatchFlag;
+	strcpy( MatchDesc, I_MatchDesc );
+	
+	EXEC SQL UPDATE EZMMSBATCHTXNINFO SET 
+    	TERMAMOUNT = :TermAmount,
+    	MATCHFLAG = :MatchFlag,
+    	MATCHDESC = :MatchDesc
+    WHERE TRIM(MACHINEID) = :MachineId AND TRIM(TXNREFNUM) = :TMSTxnRefNum;
+    
+    if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+    {
+    	EXEC SQL COMMIT;
+        return sqlca.sqlcode;
+    }
+}
+
+int readTerminalBatchInfo( const char *I_MachineId, struct EzTerminalBatchInfo *termbatchinfo_rec )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char BatchId[ 13 ];
+		char InstId[ 13 ];
+		char MachineId[ 33 ];
+		char Termid[ 9 ];
+		char MerchantId[ 16 ];
+		char OpenDate[ 7 ];
+		int OpenTime;
+		char Source;
+		int SaleCount;
+		double SaleAmount;
+		int VoidCount;
+		double VoidAmount;
+		int AuthCount;
+		double AuthAmount;
+		short ind_var;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR BatchId IS STRING(13);
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MachineId IS STRING(33);
+	EXEC SQL VAR Termid IS STRING(9);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR OpenDate IS STRING(7);
+	
+	memset( BatchId, 0, sizeof( BatchId ) );
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( MachineId, 0, sizeof( MachineId ) );
+	memset( Termid, 0, sizeof( Termid ) );
+	memset( MachineId, 0, sizeof( MachineId ) );
+	memset( OpenDate, 0, sizeof( OpenDate ) );
+	
+	strcpy( MachineId, I_MachineId );
+	
+	EXEC SQL SELECT 
+		RTRIM(INSTID),
+		RTRIM(BATCHID),
+		RTRIM(TERMID),
+		RTRIM(MERCHANTID),
+		TO_CHAR(OPENDATE, 'DDMMYY' ),
+		OPENTIME,
+		SOURCE,
+		SALECOUNT,
+		SALEAMOUNT,
+		VOIDCOUNT,
+		VOIDAMOUNT,
+		AUTHCOUNT,
+		AUTHAMOUNT
+	INTO 
+		:InstId:ind_var,
+		:BatchId:ind_var,
+		:Termid: ind_var,
+		:MerchantId:ind_var,
+		:OpenDate:ind_var,
+		:OpenTime:ind_var,
+		:Source:ind_var,
+		:SaleCount:ind_var,
+		:SaleAmount:ind_var,
+		:VoidCount:ind_var,
+		:VoidAmount:ind_var,
+		:AuthCount:ind_var,
+		:AuthAmount:ind_var
+	FROM EZMMSBATCHINFO WHERE RTRIM(MACHINEID) =:MachineId; 
+	
+	if( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	
+	strcpy( termbatchinfo_rec->InstId, InstId );
+	strcpy( termbatchinfo_rec->MachineId, MachineId );
+	strcpy( termbatchinfo_rec->BatchId, BatchId );
+	strcpy( termbatchinfo_rec->Termid, Termid );
+	strcpy( termbatchinfo_rec->MerchantId, MerchantId );
+	strcpy( termbatchinfo_rec->OpenDate, OpenDate );
+	termbatchinfo_rec->OpenTime = OpenTime;
+	termbatchinfo_rec->Source = Source;
+	termbatchinfo_rec->SaleCount = SaleCount;
+	termbatchinfo_rec->SaleAmount = SaleAmount;
+	termbatchinfo_rec->VoidCount = VoidCount;
+	termbatchinfo_rec->VoidAmount = VoidAmount;
+	termbatchinfo_rec->AuthCount = AuthCount;
+	termbatchinfo_rec->AuthAmount = AuthAmount;
+	return sqlca.sqlcode;
+}
+
+int insertTerminalBatchUpload( const char *I_MachineId, struct EzTxnMsg *txnmsg, const char *I_TMSTxnRefNum, char I_MatchFlag, const char *I_MatchDesc )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char MachineId[ 33 ];
+		char TermId[ 9 ];
+		char MerchantId[ 16 ];
+		char BatchId[ 13 ];
+		char TMSTxnRefNum[ 151 ];
+		int MsgType;
+		int TxnCode;
+		char chn[ 20 ];
+		char TermLoc[ 65 ];
+		int TraceNo;
+		char AuthNum[ 13 ];
+		char RefNum[ 13 ];
+		char TranDate[ 7 ];
+		int TranTime;
+		char LocalDate[ 7 ];
+		int LocalTime;
+		int RespCode;
+		int AuthCode;
+		int CurrencyCode;
+		int MCC;
+		char TxnAmount[ 21 ];
+		char MatchFlag;
+		char MatchDesc[ 33 ];
+		short ind_var;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MachineId IS STRING(33);
+	EXEC SQL VAR TermId IS STRING(9);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR BatchId IS STRING(13);
+	EXEC SQL VAR TMSTxnRefNum IS STRING(151);
+	EXEC SQL VAR chn IS STRING(20);
+	EXEC SQL VAR TermLoc IS STRING(65);
+	EXEC SQL VAR AuthNum IS STRING(13);
+	EXEC SQL VAR RefNum IS STRING(13);
+	EXEC SQL VAR TranDate IS STRING(7);
+	EXEC SQL VAR LocalDate IS STRING(7);
+	EXEC SQL VAR TxnAmount IS STRING(21);
+	EXEC SQL VAR MatchDesc IS STRING(33);
+	
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( MachineId, 0, sizeof( MachineId ) );
+	memset( TermId, 0, sizeof( TermId ) );
+	memset( MerchantId, 0, sizeof( MerchantId ) );
+	memset( BatchId, 0, sizeof( BatchId ) );
+	memset( TMSTxnRefNum, 0, sizeof( TMSTxnRefNum ) );
+	memset( chn, 0, sizeof( chn ) );
+	memset( TermLoc, 0, sizeof( TermLoc ) );
+	memset( AuthNum, 0, sizeof( AuthNum ) );
+	memset( RefNum, 0, sizeof( RefNum ) );
+	memset( TranDate, 0, sizeof( TranDate ) );
+	memset( LocalDate, 0, sizeof( LocalDate ) );
+	memset( TxnAmount, 0, sizeof( TxnAmount ) );
+	memset( MatchDesc, 0, sizeof( MatchDesc ) );
+	
+	strcpy( InstId, txnmsg->AcquirerInst );
+	strcpy( MachineId, I_MachineId );
+	strcpy( TermId, txnmsg->TerminalId );
+	strcpy( MerchantId, txnmsg->AcceptorId );
+	strcpy( BatchId, txnmsg->BatchId );
+	strcpy( TMSTxnRefNum, I_TMSTxnRefNum );
+	MsgType = txnmsg->MsgType;
+	TxnCode = txnmsg->TxnCode;
+	strcpy( chn, txnmsg->chn );
+	strcpy( TermLoc, txnmsg->TerminalLocation );
+	TraceNo = txnmsg->TraceNo;
+	strcpy( AuthNum, txnmsg->AuthNum );
+	strcpy( RefNum, txnmsg->RefNum );
+	sprintf( TranDate, "%06d", txnmsg->TranDate );
+	TranTime = txnmsg->TranTime;
+	sprintf( LocalDate, "%06d", txnmsg->LocalDate );
+	LocalTime = txnmsg->LocalTime;
+	RespCode = txnmsg->RespCode;
+	AuthCode = txnmsg->AuthCode;
+	CurrencyCode = txnmsg->AcqCurrencyCode;
+	MCC = txnmsg->MerchantType;
+	strcpy( TxnAmount, txnmsg->Amount );
+	MatchFlag = I_MatchFlag;
+	strcpy( MatchDesc, I_MatchDesc );
+	
+	EXEC SQL INSERT INTO EZMMSBATCHUPLOAD
+	(
+		INSTID,
+		MACHINEID,	
+		TERMID,
+		MERCHANTID,
+		BATCHID,
+		TXNREFNUM,
+		MSGTYPE,
+		TXNCODE,
+		CHN,
+		TERMLOC,
+		TRACENO,
+		AUTHNUM,
+		REFNUM,
+		TRANDATE,
+		TRANTIME,
+		LOCALDATE,
+		LOCALTIME,
+		RESPCODE,
+		AUTHCODE,
+		CURRENCYCODE,
+		MCC,
+		TXNAMOUNT,
+		MATCHFLAG,
+		MATCHDESC
+	)
+	VALUES
+	(
+		:InstId,
+		:MachineId,
+		:TermId,
+        :MerchantId,
+        :BatchId,
+        :TMSTxnRefNum,
+        :MsgType,
+        :TxnCode,
+        :chn,
+        :TermLoc,
+        :TraceNo,
+        :AuthNum,
+        :RefNum,
+        to_date( :TranDate, 'dd-mm-yy' ),
+        :TranTime,
+        to_date( :LocalDate, 'dd-mm-yy' ),
+        :LocalTime,
+        :RespCode,
+        :AuthCode,
+        :CurrencyCode,
+        :MCC,
+        :TxnAmount,
+        :MatchFlag,
+        :MatchDesc
+    );
+	
+	if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+    {
+            EXEC SQL COMMIT;
+            return sqlca.sqlcode;
+    }
+}
+
+
+int readTxnAllowed( const char *I_InstId, const char *I_TerminalType, char *I_BinList, char *I_TxnList )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char BinList[ 129 ];
+		char TxnList[ 129 ];
+		char TerminalType[ 17 ];
+		short ind_var;
+	EXEC SQL END DECLARE SECTION;
+	
+	int i = 0;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR BinList IS STRING(129);
+	EXEC SQL VAR TerminalType IS STRING( 17 );
+	EXEC SQL VAR TxnList IS STRING(129);	
+	memset( InstId, 0, sizeof( InstId ) );
+	strcpy( InstId, I_InstId );
+	
+	memset( TerminalType, 0, sizeof( TerminalType ) );
+	strcpy( TerminalType, I_TerminalType );
+	memset( BinList, 0, sizeof( BinList ) );
+	memset( TxnList, 0, sizeof( TxnList ) );
+	
+	EXEC SQL SELECT 
+		TRIM(BINLIST),
+		TRIM(TXNLIST)
+	INTO 
+		:BinList,
+		:TxnList
+	FROM EZMMS_TERMINAL_RESTRICT WHERE TRIM(INST_ID) = :InstId AND TRIM(TERMINALTYPE) = :TerminalType;
+
+	if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;        
+   	strcpy( I_BinList, BinList );
+   	strcpy( I_TxnList, TxnList );
+   	return sqlca.sqlcode;
+}
+

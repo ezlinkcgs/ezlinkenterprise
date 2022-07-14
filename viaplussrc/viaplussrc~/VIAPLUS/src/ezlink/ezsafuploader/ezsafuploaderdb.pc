@@ -1,0 +1,86 @@
+#include <sqlca.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ezlink/ezlnkmsg.h>
+
+int ResetAccountBalance( const char *InstId, const char *BrCode )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+    	char Input_InstId[ 13 ];
+        char Input_BrCode[ 13 ];
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR Input_InstId IS STRING(13);
+    EXEC SQL VAR Input_BrCode IS STRING(13);
+    
+    memset( Input_InstId, 0, sizeof( Input_InstId ) );
+    memset( Input_BrCode, 0, sizeof( Input_BrCode ) );
+
+	strcpy( Input_InstId, InstId );
+    strcpy( Input_BrCode, BrCode );
+    
+    EXEC SQL UPDATE EZACCOUNTINFO SET AVAILBAL= 0, LEDGERBAL= 0 where TRIM(INSTID)=:Input_InstId AND TRIM(BRANCHCODE)=:Input_BrCode; 
+
+    if ( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+	{
+        EXEC SQL COMMIT;
+        return sqlca.sqlcode;
+    }
+}
+
+int resetAccountBalance( const char *InstId )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+    	char Input_InstId[ 13 ];
+    EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR Input_InstId IS STRING(13);
+        
+    memset( Input_InstId, 0, sizeof( Input_InstId ) );
+    strcpy( Input_InstId, InstId );
+    
+    EXEC SQL UPDATE EZACCOUNTINFO SET AVAILBAL= 0, LEDGERBAL= 0 where TRIM(INSTID)=:Input_InstId; 
+
+    if ( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+	{
+        EXEC SQL COMMIT;
+        return sqlca.sqlcode;
+    }
+}
+
+int UpdateAccountBalance( const char *InstId, const char *AccountNo, double AvailBal, double LedgerBal )
+{
+        EXEC SQL BEGIN DECLARE SECTION ;
+        	char Input_InstId[ 13 ];
+            char Input_AccountNo[ 33 ];
+            double Input_AvailBal;
+            double Input_LedgerBal;
+        EXEC SQL END DECLARE SECTION ;
+
+		EXEC SQL VAR Input_InstId IS STRING(13);
+        EXEC SQL VAR Input_AccountNo IS STRING(33);
+		
+		memset( Input_InstId, 0, sizeof( Input_InstId ) );
+        memset( Input_AccountNo, 0, sizeof( Input_AccountNo ) );
+
+		strcpy( Input_InstId, InstId );
+        strcpy( Input_AccountNo, AccountNo );
+        Input_AvailBal = AvailBal;
+        Input_LedgerBal = LedgerBal;
+
+        EXEC SQL UPDATE EZACCOUNTINFO SET AVAILBAL=:Input_AvailBal, LEDGERBAL=:Input_LedgerBal where TRIM(INSTID)=:Input_InstId AND TRIM(ACCOUNTNO)=:Input_AccountNo; 
+
+        if ( sqlca.sqlcode != 0 )
+                return sqlca.sqlcode;
+        else
+		{
+                EXEC SQL COMMIT;
+                return sqlca.sqlcode;
+        }
+}
+		

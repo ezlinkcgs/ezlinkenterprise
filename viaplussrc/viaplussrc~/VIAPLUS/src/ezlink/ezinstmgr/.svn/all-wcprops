@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/ezlinkenterprise/!svn/ver/2538/trunk/src/ezlink/ezinstmgr
+END
+ezinstmgrutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/ezlinkenterprise/!svn/ver/2484/trunk/src/ezlink/ezinstmgr/ezinstmgrutil.cpp
+END
+ezinstmgr.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/ezlinkenterprise/!svn/ver/2426/trunk/src/ezlink/ezinstmgr/ezinstmgr.cpp
+END
+ezinstmgrdb.pc
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/ezlinkenterprise/!svn/ver/2538/trunk/src/ezlink/ezinstmgr/ezinstmgrdb.pc
+END
+ezinstmgrdb.c
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/ezlinkenterprise/!svn/ver/2538/trunk/src/ezlink/ezinstmgr/ezinstmgrdb.c
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/ezlinkenterprise/!svn/ver/1428/trunk/src/ezlink/ezinstmgr/Makefile
+END
+ezinstmgrdb.lis
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/ezlinkenterprise/!svn/ver/2475/trunk/src/ezlink/ezinstmgr/ezinstmgrdb.lis
+END

@@ -1,0 +1,58 @@
+#include <ezdb/eznetworkreplay.h>
+#include <sqlca.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+int readEzNetworkReplay( const char *I_NetworkId, struct EzNetworkReplay *eznetworkreplay_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		char Input_NetworkId[ 17 ];
+		int ReplayInterval;
+		int ReplayLookUpInterval;
+		char ReplayProperty;
+		char ReplayAction;
+    	EXEC SQL END DECLARE SECTION;
+
+        int i = 0;
+
+        EXEC SQL VAR NetworkId IS STRING(17);
+        EXEC SQL VAR Input_NetworkId IS STRING(17);
+
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	memset( Input_NetworkId, 0, sizeof( Input_NetworkId ) );
+
+	strcpy( Input_NetworkId, I_NetworkId );
+
+	EXEC SQL SELECT
+		RTRIM(NETWORKID),
+		REPLAYINTERVAL,
+		REPLAYLOOKUPINTERVAL,
+		REPLAYPROPERTY,
+		REPLAYACTION
+	INTO
+		:NetworkId,
+		:ReplayInterval,
+		:ReplayLookUpInterval,
+		:ReplayProperty,
+		:ReplayAction
+	FROM EZNETWORKREPLAY WHERE RTRIM(NETWORKID)=:Input_NetworkId;
+
+	if( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+
+	strcpy( eznetworkreplay_ptr->NetworkId, NetworkId );
+	eznetworkreplay_ptr->ReplayInterval = ReplayInterval;
+	eznetworkreplay_ptr->ReplayLookUpInterval = ReplayLookUpInterval;
+	eznetworkreplay_ptr->ReplayProperty = ReplayProperty;
+	eznetworkreplay_ptr->ReplayAction = ReplayAction;
+
+	return 0;
+
+}
+
+
+
+
+

@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/ezlinkenterprise/!svn/ver/2052/trunk/src/ezbusiness/ezesmemgr
+END
+ezesmemgr.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/ezlinkenterprise/!svn/ver/2052/trunk/src/ezbusiness/ezesmemgr/ezesmemgr.cpp
+END
+ezesmemgrutildb.c
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/ezlinkenterprise/!svn/ver/2052/trunk/src/ezbusiness/ezesmemgr/ezesmemgrutildb.c
+END
+ezesmemgrutildb.pc
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/ezlinkenterprise/!svn/ver/2052/trunk/src/ezbusiness/ezesmemgr/ezesmemgrutildb.pc
+END
+ezsmscutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/ezlinkenterprise/!svn/ver/2052/trunk/src/ezbusiness/ezesmemgr/ezsmscutil.cpp
+END
+ezesmemgrutildb.lis
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/ezlinkenterprise/!svn/ver/2052/trunk/src/ezbusiness/ezesmemgr/ezesmemgrutildb.lis
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/ezlinkenterprise/!svn/ver/2052/trunk/src/ezbusiness/ezesmemgr/Makefile
+END
+ezesmemgrutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/ezlinkenterprise/!svn/ver/2052/trunk/src/ezbusiness/ezesmemgr/ezesmemgrutil.cpp
+END

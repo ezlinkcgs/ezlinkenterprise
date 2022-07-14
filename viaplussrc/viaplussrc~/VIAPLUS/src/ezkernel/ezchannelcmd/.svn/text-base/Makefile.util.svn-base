@@ -1,0 +1,8 @@
+BINDIR=${EZDIR_HOME}/bin
+LIBDIR=${EZDIR_HOME}/lib
+OBJFILE=ezchannelcmdutil.o
+SOURCE=ezchannelcmdutil.cpp
+INCLUDEDIR=${EZDIR_HOME}/include
+
+${OBJFILE}	:	${SOURCE}
+			g++ -c ${SOURCE} -I${INCLUDEDIR}

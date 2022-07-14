@@ -1,0 +1,730 @@
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <ezdb/ezdevicekey.h>
+#include <ezdb/eznetworkkey.h>
+#include <ezdb/ezsecurity.h>
+#include <ezdb/ezhsminfo.h>
+#include <ezbusiness/ezatmkey.h>
+#include <ezdb/ezsecurityproperty.h>
+
+int getATMCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZATMINFO;
+    if( sqlca.sqlcode != 0)
+    {
+	    *SqlErr = sqlca.sqlcode;
+	    return -1;
+    }
+    else
+    	return reccount;
+}
+
+int getEzNetworkCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZNETWORKKEY;
+    if( sqlca.sqlcode != 0 )
+    {
+	    *SqlErr = sqlca.sqlcode;
+	    return -1;
+    }
+    else
+    	return reccount;
+}
+
+int getDeviceKeyCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZDEVICEKEY;
+    
+    if( sqlca.sqlcode != 0)
+    {
+	    *SqlErr = sqlca.sqlcode;
+	    return -1;
+    }
+    else
+    	return reccount;
+}
+
+int getSecurityCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZSECURITY;
+    
+    if( sqlca.sqlcode != 0)
+    {
+	    *SqlErr = sqlca.sqlcode;
+	    return -1;
+    }
+    else
+    	return reccount;
+}
+
+int getSecurityPropertyCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZSECURITYPROPERTY;
+    
+    if( sqlca.sqlcode != 0)
+    {
+	    *SqlErr = sqlca.sqlcode;
+	    return -1;
+    }
+    else
+    	return reccount;
+}
+
+int getHSMCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZHSMINFO;
+    
+    if( sqlca.sqlcode != 0)
+    {
+	    *SqlErr = sqlca.sqlcode;
+	    return -1;
+    }
+    else
+    	return reccount;
+}
+
+int LoadEzNetworkKey( struct EzNetworkKey *eznetworkkey_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+    	char NetworkId[ 17 ];
+        char NetworkMasterKey[ 65 ];
+        char NetworkAcqCommKey[ 65 ];
+        char NetworkIssCommKey[ 65 ];
+        int NetworkKeyLen;
+        char KeyProperty;
+    EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR NetworkId IS STRING(17);
+	EXEC SQL VAR NetworkMasterKey IS STRING(65);
+	EXEC SQL VAR NetworkAcqCommKey IS STRING(65);
+	EXEC SQL VAR NetworkIssCommKey IS STRING(65);
+	
+	EXEC SQL DECLARE eznetworkkey_cur CURSOR FOR
+	SELECT
+		RTRIM(NETWORKID),
+        RTRIM(NETWORKMASTERKEY),
+        RTRIM(NETWORKACQCOMMKEY),
+        RTRIM(NETWORKISSCOMMKEY),
+		NETWORKKEYLEN,
+		KEYPROPERTY
+	FROM EZNETWORKKEY;
+		
+	EXEC SQL OPEN eznetworkkey_cur;
+
+	while( 1 )
+	{
+		memset( NetworkId, 0, sizeof( NetworkId ) );
+		memset( NetworkMasterKey, 0, sizeof( NetworkMasterKey ) );
+		memset( NetworkAcqCommKey, 0, sizeof( NetworkAcqCommKey ) );
+		memset( NetworkIssCommKey, 0, sizeof( NetworkIssCommKey ) );
+		
+		EXEC SQL FETCH eznetworkkey_cur INTO
+		:NetworkId,
+		:NetworkMasterKey,
+		:NetworkAcqCommKey,
+		:NetworkIssCommKey,
+		:NetworkKeyLen,
+		:KeyProperty;
+		
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        memset( ( eznetworkkey_ptr + i ), 0, sizeof( struct EzNetworkKey ) );
+        
+        strcpy( ( eznetworkkey_ptr + i )->NetworkId, NetworkId );
+        strcpy( ( eznetworkkey_ptr + i )->NetworkMasterKey, NetworkMasterKey );
+        strcpy( ( eznetworkkey_ptr + i )->NetworkAcqCommKey, NetworkAcqCommKey );
+        strcpy( ( eznetworkkey_ptr + i )->NetworkIssCommKey, NetworkIssCommKey );
+        ( eznetworkkey_ptr + i )->NetworkKeyLen = NetworkKeyLen;
+        ( eznetworkkey_ptr + i )->KeyProperty = KeyProperty;
+		i++;
+	}
+	
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE eznetworkkey_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int LoadATMKey( struct EzATMKey *ezatmkey_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    char ATMId[ 33 ];
+        char ATMMasterKey[ 65 ];
+        char ATMCommKey[ 65 ];
+	    int ATMKeyLen;
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR ATMId IS STRING(33);
+	EXEC SQL VAR ATMMasterKey IS STRING(65);
+	EXEC SQL VAR ATMCommKey IS STRING(65);
+	
+	EXEC SQL DECLARE atmkey_cur CURSOR FOR
+    SELECT
+		RTRIM(ATMID),
+        RTRIM(ATMMASTERKEY),
+        RTRIM(ATMCOMMKEY),
+    	ATMKEYLEN
+	FROM EZATMINFO;
+		
+	EXEC SQL OPEN atmkey_cur;
+
+	while( 1 )
+	{
+		memset( ATMId, 0, sizeof( ATMId ) );
+		memset( ATMMasterKey, 0, sizeof( ATMMasterKey ) );
+		memset( ATMCommKey, 0, sizeof( ATMCommKey ) );
+			
+		EXEC SQL FETCH atmkey_cur INTO
+		:ATMId,
+		:ATMMasterKey,
+		:ATMCommKey,
+		:ATMKeyLen;
+		
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        memset( ( ezatmkey_ptr + i ), 0, sizeof( struct EzATMKey ) );
+        strcpy( ( ezatmkey_ptr + i )->ATMId, ATMId );
+        strcpy( ( ezatmkey_ptr + i )->ATMMasterKey, ATMMasterKey );
+        strcpy( ( ezatmkey_ptr + i )->ATMCommKey, ATMCommKey );
+        ( ezatmkey_ptr + i )->ATMKeyLen = ATMKeyLen;
+		i++;
+	}
+	
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE atmkey_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+
+int LoadDeviceKey( struct DeviceKey *ezdevicekey_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    char DeviceId[ 33 ];
+        char DeviceMasterKey[ 65 ];
+        char DeviceCommKey[ 65 ];
+	    int DeviceKeyLen;
+	    int i = 0;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR DeviceId IS STRING(33);
+	EXEC SQL VAR DeviceMasterKey IS STRING(65);
+	EXEC SQL VAR DeviceCommKey IS STRING(65);
+	
+	EXEC SQL DECLARE devicekey_cur CURSOR FOR
+    SELECT
+		RTRIM(DEVICEID),
+        RTRIM(DEVICEMASTERKEY),
+        RTRIM(DEVICECOMMKEY),
+    	DEVICEKEYLEN
+	FROM EZDEVICEKEY;
+		
+	EXEC SQL OPEN devicekey_cur;
+
+	while( 1 )
+	{
+		memset( DeviceId, 0, sizeof( DeviceId ) );
+		memset( DeviceMasterKey, 0, sizeof( DeviceMasterKey ) );
+		memset( DeviceCommKey, 0, sizeof( DeviceCommKey ) );
+			
+		EXEC SQL FETCH devicekey_cur INTO
+		:DeviceId,
+		:DeviceMasterKey,
+		:DeviceCommKey,
+		:DeviceKeyLen;
+		
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        memset( ( ezdevicekey_ptr + i ), 0, sizeof( struct DeviceKey ) );
+        
+        strcpy( ( ezdevicekey_ptr + i )->DeviceId, DeviceId );
+        strcpy( ( ezdevicekey_ptr + i )->DeviceMasterKey, DeviceMasterKey );
+        strcpy( ( ezdevicekey_ptr + i )->DeviceCommKey, DeviceCommKey );
+        ( ezdevicekey_ptr + i )->DeviceKeyLen = DeviceKeyLen;
+		i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE devicekey_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int LoadSecurity( struct EzSecurity *ezsecurity_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+        char SecurityId[ 11 ];
+        char PINVerificationMethod;
+        char EPVK[ 65 ];
+        char DecimilizationTable[ 17 ];
+        char PINPadChar;
+        char PANPadChar;
+        short PINLen;
+        short PANLen;
+        short PANValidationOffset;
+        char PINBlockFormat[ 3 ];
+        short PANValidationLength;
+        char CVKA[ 65 ];
+		char CVKB[ 65 ];
+        int i = 0;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR SecurityId IS STRING(17);
+	EXEC SQL VAR EPVK IS STRING(65);
+	EXEC SQL VAR DecimilizationTable IS STRING(17);
+	EXEC SQL VAR PINBlockFormat IS STRING(3);
+	EXEC SQL VAR CVKA IS STRING(65);
+	EXEC SQL VAR CVKB IS STRING(65);
+	
+	EXEC SQL DECLARE ezsecurity_cur CURSOR FOR
+	SELECT
+		RTRIM(SECURITYID),
+        PINVERIFICATIONMETHOD,
+        RTRIM(EPVK),
+        RTRIM(DECIMILIZATIONTABLE),
+        PINPADCHAR,
+		PANPADCHAR,
+		PINLEN,
+		PANLEN,
+		PANVALIDATIONOFFSET,
+		RTRIM(PINBLOCKFORMAT),
+		PANVALIDATIONLENGTH,
+		RTRIM(CVKA),
+		RTRIM(CVKB)
+    FROM EZSECURITY;
+		
+	EXEC SQL OPEN ezsecurity_cur;
+
+	while( 1 )
+	{
+		memset( SecurityId, 0, sizeof( SecurityId ) );
+		memset( EPVK, 0, sizeof( EPVK ) );
+		memset( DecimilizationTable, 0, sizeof( DecimilizationTable ) );
+		memset( PINBlockFormat, 0, sizeof( PINBlockFormat ) );
+		memset( CVKA, 0, sizeof( CVKA ) );
+		memset( CVKB, 0, sizeof( CVKB ) );
+		
+		EXEC SQL FETCH ezsecurity_cur INTO
+	        :SecurityId,
+	        :PINVerificationMethod,
+	        :EPVK,
+	        :DecimilizationTable,
+	        :PINPadChar,
+	        :PANPadChar,
+	        :PINLen,
+	        :PANLen,
+	        :PANValidationOffset,
+	        :PINBlockFormat,
+	        :PANValidationLength,
+	        :CVKA,
+	        :CVKB;
+		
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        memset( ( ezsecurity_ptr + i ), 0, sizeof( struct EzSecurity ) );
+        
+        strcpy( ( ezsecurity_ptr + i )->SecurityId, SecurityId );
+        ( ezsecurity_ptr + i )->PINVerificationMethod = PINVerificationMethod;
+        strcpy( ( ezsecurity_ptr + i )->EPVK, EPVK );
+        strcpy( ( ezsecurity_ptr + i )->DecimilizationTable, DecimilizationTable );
+        ( ezsecurity_ptr + i )->PINPadChar = PINPadChar;
+        ( ezsecurity_ptr + i )->PANPadChar = PANPadChar;
+        ( ezsecurity_ptr + i )->PINLen = PINLen;
+        ( ezsecurity_ptr + i )->PANLen = PANLen;
+        ( ezsecurity_ptr + i )->PANValidationOffset = PANValidationOffset;
+        strcpy( ( ezsecurity_ptr + i )->PINBlockFormat, PINBlockFormat );
+        ( ezsecurity_ptr + i )->PANValidationLength = PANValidationLength;
+		strcpy( ( ezsecurity_ptr + i )->CVKA, CVKA );
+		strcpy( ( ezsecurity_ptr + i )->CVKB, CVKB );
+		i++;
+	}
+	
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezsecurity_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int LoadSecurityProperty( struct EzSecurityProperty *ezsecurityproperty_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    char RecordId[ 11 ];
+		char InstSecurityGroupId[ 17 ];
+		char SecurityProtocol[ 17 ];
+		char SecurityChannel[ 33 ];
+		int Priority;
+	    int i = 0;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR RecordId IS STRING(11);
+	EXEC SQL VAR InstSecurityGroupId IS STRING(17);
+	EXEC SQL VAR SecurityProtocol IS STRING(17);
+	EXEC SQL VAR SecurityChannel IS STRING(33);
+	
+	EXEC SQL DECLARE ezsecurityproperty_cur CURSOR FOR
+	SELECT
+		RTRIM(RECORDID),
+        RTRIM(INSTSECURITYGROUPID),
+        RTRIM(SECURITYPROTOCOL),
+        RTRIM(SECURITYCHANNEL),
+        PRIORITY
+	FROM EZSECURITYPROPERTY;
+		
+	EXEC SQL OPEN ezsecurityproperty_cur;
+
+	while( 1 )
+	{
+		memset( RecordId, 0, sizeof( RecordId ) );
+		memset( InstSecurityGroupId, 0, sizeof( InstSecurityGroupId ) );
+		memset( SecurityProtocol, 0, sizeof( SecurityProtocol ) );
+		memset( SecurityChannel, 0, sizeof( SecurityChannel ) );
+		
+		EXEC SQL FETCH ezsecurityproperty_cur INTO
+	        :RecordId,
+	        :InstSecurityGroupId,
+	        :SecurityProtocol,
+	        :SecurityChannel,
+	        :Priority;
+		
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        memset( ( ezsecurityproperty_ptr + i ), 0, sizeof( struct EzSecurityProperty ) );
+        
+        strcpy( ( ezsecurityproperty_ptr + i )->RecordId, RecordId );
+        strcpy( ( ezsecurityproperty_ptr + i )->InstSecurityGroupId, InstSecurityGroupId );
+        strcpy( ( ezsecurityproperty_ptr + i )->SecurityProtocol, SecurityProtocol );
+        strcpy( ( ezsecurityproperty_ptr + i )->SecurityChannel, SecurityChannel );
+        ( ezsecurityproperty_ptr + i )->Priority = Priority;
+		i++;
+	}
+	
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezsecurityproperty_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int LoadHSMInfo( struct EzHSMInfo *ezhsminfo_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char HSMName[ 33 ];
+		char HSMProtocol[ 17 ];
+		char HSMType[ 17 ];
+		char HSMAddress[ 33 ];
+		int HSMPortNo;
+		int HeaderLen;
+		char HeaderType[ 9 ];
+		int HSMHeaderLen;
+		int HSMTimeOut;
+		int ConnectionInterval;
+		int HSMStatus;
+		int i = 0;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR HSMName IS STRING(33);
+	EXEC SQL VAR HSMProtocol IS STRING(17);
+	EXEC SQL VAR HSMType IS STRING(17);
+	EXEC SQL VAR HSMAddress IS STRING(33);
+	EXEC SQL VAR HeaderType IS STRING(9);
+	
+	EXEC SQL DECLARE ezhsminfo_cur CURSOR FOR
+	SELECT
+		RTRIM(HSMNAME),
+        RTRIM(HSMPROTOCOL),
+        RTRIM(HSMTYPE),
+        RTRIM(HSMADDRESS),
+        HSMPORT,
+        HEADERLEN,
+		RTRIM(HEADERTYPE),
+		HSMHEADERLEN,
+		HSMTIMEOUT,
+		CONNECTIONINTERVAL,
+		HSMSTATUS
+    FROM EZHSMINFO;
+		
+	EXEC SQL OPEN ezhsminfo_cur;
+
+	while( 1 )
+	{
+		memset( HSMName, 0, sizeof( HSMName ) );
+		memset( HSMProtocol, 0, sizeof( HSMProtocol ) );
+		memset( HSMType, 0, sizeof( HSMType ) );
+		memset( HSMAddress, 0, sizeof( HSMAddress ) );
+		memset( HeaderType, 0, sizeof( HeaderType ) );
+				
+		EXEC SQL FETCH ezhsminfo_cur INTO
+	        :HSMName,
+	        :HSMProtocol,
+	        :HSMType,
+	        :HSMAddress,
+	        :HSMPortNo,
+	        :HeaderLen,
+	        :HeaderType,
+	        :HSMHeaderLen,
+	        :HSMTimeOut,
+	        :ConnectionInterval,
+	        :HSMStatus;
+	   	
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        memset( ( ezhsminfo_ptr + i ), 0, sizeof( struct EzHSMInfo ) );
+        strcpy( ( ezhsminfo_ptr + i )->HSMName, HSMName );
+        strcpy( ( ezhsminfo_ptr + i )->HSMProtocol, HSMProtocol );
+        strcpy( ( ezhsminfo_ptr + i )->HSMType, HSMType );
+        strcpy( ( ezhsminfo_ptr + i )->HSMAddress, HSMAddress );
+        ( ezhsminfo_ptr + i )->HSMPortNo = HSMPortNo;
+        ( ezhsminfo_ptr + i )->HeaderLen = HeaderLen;
+        strcpy( ( ezhsminfo_ptr + i )->HeaderType, HeaderType );
+        ( ezhsminfo_ptr + i )->HSMHeaderLen = HSMHeaderLen;
+        ( ezhsminfo_ptr + i )->HSMTimeOut = HSMTimeOut;
+        ( ezhsminfo_ptr + i )->ConnectionInterval = ConnectionInterval;
+        ( ezhsminfo_ptr + i )->HSMStatus = 0;
+        i++;
+	}
+	
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezsecurity_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int updateEzNetworkAcqKeyTable( const char *I_NetworkId, const char * I_NetworkAcqCommKey, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		char NetworkAcqCommKey[ 65 ];
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR NetworkId IS STRING(17);
+	EXEC SQL VAR NetworkAcqCommKey IS STRING(65);
+	
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	memset( NetworkAcqCommKey, 0, sizeof( NetworkAcqCommKey ));
+	strcpy( NetworkId, I_NetworkId );
+	strcpy( NetworkAcqCommKey, I_NetworkAcqCommKey );
+	
+	EXEC SQL UPDATE EZNETWORKKEY SET NETWORKACQCOMMKEY=:NetworkAcqCommKey WHERE RTRIM(NETWORKID)=:NetworkId;
+	
+	if( sqlca.sqlcode != 0 )
+	{
+		*SqlErr = sqlca.sqlcode;
+		return -1;
+	}
+	else
+	{
+		EXEC SQL COMMIT;
+		if( sqlca.sqlcode != 0 )
+		{
+			*SqlErr = sqlca.sqlcode;
+			return -1;
+		}
+		return 1;
+	}
+}
+
+int updateEzNetworkIssKeyTable( const char *I_NetworkId, const char * I_NetworkIssCommKey, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		char NetworkIssCommKey[ 65 ];
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR NetworkId IS STRING(17);
+	EXEC SQL VAR NetworkIssCommKey IS STRING(65);
+	
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	memset( NetworkIssCommKey, 0, sizeof( NetworkIssCommKey ) );
+	strcpy( NetworkId, I_NetworkId );
+	strcpy( NetworkIssCommKey, NetworkIssCommKey );
+	
+	EXEC SQL UPDATE EZNETWORKKEY SET NETWORKISSCOMMKEY=:NetworkIssCommKey WHERE RTRIM(NETWORKID)=:NetworkId;
+	
+	if( sqlca.sqlcode != 0 )
+	{
+		*SqlErr = sqlca.sqlcode;
+		return -1;
+	}
+	else
+	{
+		EXEC SQL COMMIT;
+		if( sqlca.sqlcode != 0 )
+		{
+			*SqlErr = sqlca.sqlcode;
+			return -1;
+		}
+		return 1;
+	}
+}
+
+int updateDeviceKeyTable( const char *I_DeviceId, const char * I_DeviceCommKey, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char DeviceId[ 33 ];
+		char DeviceCommKey[ 65 ];
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR DeviceId IS STRING(33);
+	EXEC SQL VAR DeviceCommKey IS STRING(65);
+	
+	memset( DeviceId, 0, sizeof( DeviceId ) );
+	memset( DeviceCommKey, 0, sizeof( DeviceCommKey ) );
+	strcpy( DeviceId, I_DeviceId );
+	strcpy( DeviceCommKey,  I_DeviceCommKey );
+	
+	EXEC SQL UPDATE EZDEVICEKEY SET DEVICEOMMKEY=:DeviceCommKey WHERE RTRIM(DEVICEID)=:DeviceId;
+	
+	if( sqlca.sqlcode != 0 )
+	{
+		*SqlErr = sqlca.sqlcode;
+		return -1;
+	}
+	else
+	{
+		EXEC SQL COMMIT;
+		if( sqlca.sqlcode != 0 )
+		{
+			*SqlErr = sqlca.sqlcode;
+			return -1;
+		}
+		return 1;
+	}
+}
+
+int updateATMKeyTable( const char *I_ATMId, const char * I_ATMCommKey, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char ATMId[ 33 ];
+		char ATMCommKey[ 65 ];
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR ATMId IS STRING(33);
+	EXEC SQL VAR ATMCommKey IS STRING(65);
+	
+	memset( ATMId, 0, sizeof( ATMId ) );
+	memset( ATMCommKey, 0, sizeof( ATMCommKey ) );
+	strcpy( ATMId, I_ATMId );
+	strcpy( ATMCommKey,  I_ATMCommKey );
+	
+	EXEC SQL UPDATE EZATMINFO SET ATMCOMMKEY=:ATMCommKey WHERE RTRIM(ATMID)=:ATMId;
+	
+	if( sqlca.sqlcode != 0 )
+	{
+		*SqlErr = sqlca.sqlcode;
+		return -1;
+	}
+	else
+	{
+		EXEC SQL COMMIT;
+		if( sqlca.sqlcode != 0 )
+		{
+			*SqlErr = sqlca.sqlcode;
+			return -1;
+		}
+		return 1;
+	}
+}
+
+int updateHSMInfoTable( const char *I_HSMName, int I_HSMStatus, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char HSMName[ 33 ];
+		int HSMStatus;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR HSMName IS STRING(33);
+		
+	memset( HSMName, 0, sizeof( HSMName ) );
+	
+	strcpy( HSMName,  I_HSMName );
+	HSMStatus = I_HSMStatus;
+	
+	EXEC SQL UPDATE EZHSMINFO SET HSMSTATUS=:HSMStatus WHERE RTRIM(HSMNAME)=:HSMName;
+	
+	if( sqlca.sqlcode != 0 )
+	{
+		*SqlErr = sqlca.sqlcode;
+		return -1;
+	}
+	else
+	{
+		EXEC SQL COMMIT;
+		if( sqlca.sqlcode != 0 )
+		{
+			*SqlErr = sqlca.sqlcode;
+			return -1;
+		}
+		return 1;
+	}
+}
+

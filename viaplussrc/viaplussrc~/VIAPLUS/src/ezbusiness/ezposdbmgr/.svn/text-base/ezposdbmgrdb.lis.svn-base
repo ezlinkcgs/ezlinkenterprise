@@ -1,0 +1,13 @@
+
+Pro*C/C++: Release 10.2.0.1.0 - Production on Mon Jan 16 14:44:33 2012
+
+Copyright (c) 1982, 2005, Oracle.  All rights reserved.
+
+Error at line 5, column 10 in file ezposdbmgrdb.pc
+     5  #include <ezlink/ezlnkmsg.h>
+     5  .........1
+     5  PCC-S-02015, unable to open include file
+Error at line 6, column 10 in file ezposdbmgrdb.pc
+     6  #include <ezdb/ezposbatchinfo.h>
+     6  .........1
+     6  PCC-S-02015, unable to open include file

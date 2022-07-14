@@ -1,0 +1,894 @@
+#include <ezmms/ezmmsdbtypes.h>
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+int getEzMerchantProfileCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZMMS_MERCHANTPROFILE;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzMerchantProfile( struct EzMMSMerchantProfile *merchantprofile_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char MerchantId[ 16 ];
+		char MCCList[ 33 ];
+		char MerchantTypeId[ 17 ];
+		char ParentMerchantId[ 16 ];
+		char MerchantName[ 33 ];
+		char Addr1[ 65 ];
+		char Addr2[ 65 ];
+		char Status;
+		char DOB[ 11 ];
+		char PMobileNo[ 17 ];
+		char SMobileNo[ 17 ];
+		char PMailAddr[ 33 ];
+		char SMailAddr[ 33 ];
+		char SettCurrCode[ 5 ];
+		char CurrList[ 33 ];
+		char CardIssuanceFlag;
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR MCCList IS STRING(33);
+	EXEC SQL VAR MerchantTypeId IS STRING(17);
+	EXEC SQL VAR ParentMerchantId IS STRING(16);
+	EXEC SQL VAR MerchantName IS STRING(33);
+	EXEC SQL VAR Addr1 IS STRING(65);
+	EXEC SQL VAR Addr2 IS STRING(65);
+	EXEC SQL VAR DOB IS STRING(11);
+	EXEC SQL VAR PMobileNo IS STRING(17);
+	EXEC SQL VAR SMobileNo IS STRING(17);
+	EXEC SQL VAR PMailAddr IS STRING(33);
+	EXEC SQL VAR SMailAddr IS STRING(33);
+	EXEC SQL VAR SettCurrCode IS STRING(5);
+	EXEC SQL VAR CurrList IS STRING(33);
+		
+	EXEC SQL DECLARE ezmmsmerchantprofile_cur CURSOR FOR
+    SELECT
+    	RTRIM(INST_ID),
+    	RTRIM(MERCH_ID),
+    	RTRIM( NVL( MCC_LIST, 'NA' ) ),
+    	RTRIM( NVL( MERCH_TYPE_ID, 'NA' ) ),
+    	RTRIM( NVL( PARENT_MERCH_ID, 'NA' ) ),
+    	RTRIM( NVL( MERCH_NAME, 'NA' ) ),
+    	RTRIM( NVL( PRIM_MAIL_ADDR, 'NA' ) ),
+    	RTRIM( NVL( SEC_MAIL_ADDR, 'NA' ) ),
+    	NVL( STATUS, '0' ),
+    	RTRIM( NVL( TO_CHAR(DOB, 'DD-MM-YY' ), 'NA' ) ),
+    	RTRIM( NVL( PRIM_MOBILE_NO, 'NA' ) ),
+    	RTRIM( NVL( SEC_MOBILE_NO, 'NA' ) ),
+    	RTRIM( NVL( PRIM_EMAIL_ID, 'NA' ) ),
+    	RTRIM( NVL( SEC_EMAIL_ID, 'NA' ) ),
+    	RTRIM( NVL( SETT_CURR_CODE, 'NA' ) ),
+    	RTRIM( NVL( CURR_LIST, 'NA' ) ),
+    	NVL( CARD_ISSUED_FLAG, 'N' )
+    FROM EZMMS_MERCHANTPROFILE;
+		
+	EXEC SQL OPEN ezmmsmerchantprofile_cur;
+
+	while( 1 )
+	{
+		
+		memset( InstId, 0, sizeof( InstId ) );
+		memset( MerchantId, 0, sizeof( MerchantId ) );
+		memset( MCCList, 0, sizeof( MCCList ) );
+		memset( MerchantTypeId, 0, sizeof( MerchantTypeId ) );
+		memset( ParentMerchantId, 0, sizeof( ParentMerchantId ) );
+		memset( MerchantName, 0, sizeof( MerchantName ) );
+		memset( Addr1, 0, sizeof( Addr1 ) );
+		memset( Addr2, 0, sizeof( Addr2 ) );
+		memset( DOB, 0, sizeof( DOB ) );
+		memset( PMobileNo, 0, sizeof( PMobileNo ) );
+		memset( SMobileNo, 0, sizeof( SMobileNo ) );
+		memset( PMailAddr, 0, sizeof( PMailAddr ) );
+		memset( SMailAddr, 0, sizeof( SMailAddr ) );
+		memset( SettCurrCode, 0, sizeof( SettCurrCode ) );
+		memset( CurrList, 0, sizeof( CurrList ) );
+		
+		EXEC SQL FETCH ezmmsmerchantprofile_cur INTO
+			:InstId,
+			:MerchantId,
+			:MCCList,
+			:MerchantTypeId,
+			:ParentMerchantId,
+			:MerchantName,
+			:Addr1,
+			:Addr2,
+			:Status,
+			:DOB,
+			:PMobileNo,
+			:SMobileNo,
+			:PMailAddr,
+			:SMailAddr,
+			:SettCurrCode,
+			:CurrList,
+			:CardIssuanceFlag;
+							
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        	
+        memset( merchantprofile_ptr + i, 0, sizeof( struct EzMMSMerchantProfile ) );
+        strcpy( ( merchantprofile_ptr + i )->InstId, InstId );
+        strcpy( ( merchantprofile_ptr + i )->MerchantId, MerchantId );
+        strcpy( ( merchantprofile_ptr + i )->MCCList, MCCList );
+        strcpy( ( merchantprofile_ptr + i )->MerchantTypeId, MerchantTypeId );
+        strcpy( ( merchantprofile_ptr + i )->ParentMerchantId, ParentMerchantId );
+      	strcpy( ( merchantprofile_ptr + i )->MerchantName, MerchantName );
+      	strcpy( ( merchantprofile_ptr + i )->Addr1, Addr1 );
+      	strcpy( ( merchantprofile_ptr + i )->Addr2, Addr2 );
+      	( merchantprofile_ptr + i )->Status = Status;
+      	strcpy( ( merchantprofile_ptr + i )->DOB, DOB );
+      	strcpy( ( merchantprofile_ptr + i )->PMobileNo, PMobileNo );
+      	strcpy( ( merchantprofile_ptr + i )->SMobileNo, SMobileNo );
+      	strcpy( ( merchantprofile_ptr + i )->PMailAddr, PMailAddr );
+      	strcpy( ( merchantprofile_ptr + i )->SMailAddr, SMailAddr );
+      	strcpy( ( merchantprofile_ptr + i )->SettCurrCode, SettCurrCode );
+      	strcpy( ( merchantprofile_ptr + i )->CurrList, CurrList );
+      	( merchantprofile_ptr + i )->CardIssuanceFlag = CardIssuanceFlag;
+       	i++;
+	}
+	
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezmmsmerchantprofile_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int getEzMerchantTypeCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZMMS_MERCHANTTYPE;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzMerchantType( struct EzMMSMerchantType *merchanttype_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char MerchantTypeId[ 17 ];
+		char TxnAllowed[ 65 ];
+		char LoyaltyReq;
+		int MaxPINRetryCount;
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MerchantTypeId IS STRING(17);
+	EXEC SQL VAR TxnAllowed IS STRING(65);
+		
+	EXEC SQL DECLARE ezmmsmerchanttype_cur CURSOR FOR
+    SELECT
+    	RTRIM(INST_ID),
+    	RTRIM(MERCHANT_TYPE_ID),
+    	RTRIM( NVL( TXN_ALLOWED, 'NA' ) ),
+    	NVL( LOYALTY_PGM_REQ, 'N' ),
+    	NVL( MAX_PIN_RETRY_COUNT, '3' )
+    FROM EZMMS_MERCHANTTYPE;
+		
+	EXEC SQL OPEN ezmmsmerchanttype_cur;
+
+	while( 1 )
+	{
+		memset( InstId, 0, sizeof( InstId ) );
+		memset( MerchantTypeId, 0, sizeof( MerchantTypeId ) );
+		memset( TxnAllowed, 0, sizeof( TxnAllowed ) );
+		
+		EXEC SQL FETCH ezmmsmerchanttype_cur INTO
+			:InstId,
+			:MerchantTypeId,
+			:TxnAllowed,
+			:LoyaltyReq,
+			:MaxPINRetryCount;
+								
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        	
+        memset( merchanttype_ptr + i, 0, sizeof( struct EzMMSMerchantType ) );
+        strcpy( ( merchanttype_ptr + i )->InstId, InstId );
+        strcpy( ( merchanttype_ptr + i )->MerchantTypeId, MerchantTypeId );
+        strcpy( ( merchanttype_ptr + i )->TxnAllowed, TxnAllowed );
+     	( merchanttype_ptr + i )->LoyaltyReq = LoyaltyReq;
+     	( merchanttype_ptr + i )->MaxPINRetryCount = MaxPINRetryCount;
+       	i++;
+	}
+	
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezmmsmerchanttype_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int getEzStoreProfileCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZMMS_STOREPROFILE;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzStoreProfile( struct EzMMSStoreProfile *storeprofile_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char MerchantId[ 16 ];
+		char StoreId[ 33 ];
+		char TerminalId[ 9 ];
+		char Status;
+		char StoreName[ 33 ];
+		char StoreLocation[ 65 ];
+		char CityName[ 33 ];
+		char CityCode[ 17 ];
+		char StateName[ 33 ];
+		char CountryName[ 33 ];
+		char LandLine1[ 17 ];
+		char LandLine2[ 17 ];
+		char PMobileNo[ 17 ];
+		char SMobileNo[ 17 ];
+		int WorkingHrs;
+		char OpeningTime[ 7 ];
+		char ClosingTime[ 7 ];
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR StoreId IS STRING(33);
+	EXEC SQL VAR TerminalId IS STRING(9);
+	EXEC SQL VAR StoreName IS STRING(33);
+	EXEC SQL VAR StoreLocation IS STRING(65);
+	EXEC SQL VAR CityName IS STRING(33);
+	EXEC SQL VAR CityCode IS STRING(17);
+	EXEC SQL VAR StateName IS STRING(33);
+	EXEC SQL VAR CountryName IS STRING(33);
+	EXEC SQL VAR LandLine1 IS STRING(17);
+	EXEC SQL VAR LandLine2 IS STRING(17);
+	EXEC SQL VAR PMobileNo IS STRING(17);
+	EXEC SQL VAR SMobileNo IS STRING(17);
+	EXEC SQL VAR OpeningTime IS STRING(7);
+	EXEC SQL VAR ClosingTime IS STRING(7);
+	
+	EXEC SQL DECLARE ezmmsstoreprofile_cur CURSOR FOR
+    SELECT
+    	RTRIM(INST_ID),
+    	RTRIM(MERCH_ID),
+    	RTRIM(STORE_ID),
+    	RTRIM(TERMINAL_ID),
+    	NVL( STORE_STATUS, '0' ),
+    	RTRIM( NVL( STORE_NAME, 'NA' ) ),
+    	RTRIM( NVL( STORE_LOCATION, 'NA' ) ),
+    	RTRIM( NVL( CITY_NAME, 'NA' ) ),
+    	RTRIM( NVL( CITY_CODE, 'NA' ) ),
+    	RTRIM( NVL( STATE_NAME, 'NA' ) ),
+    	RTRIM( NVL( COUNTRY_NAME, 'NA' ) ),
+    	RTRIM( NVL( PRIM_LAND_LINE_NO, 'NA' ) ),
+    	RTRIM( NVL( SEC_LAND_LINE_NO, 'NA' ) ),
+    	RTRIM( NVL( PRIM_MOBILE_NUM, 'NA' ) ),
+    	RTRIM( NVL( SEC_MOBILE_NUM, 'NA' ) ),
+    	NVL( WORKING_HRS, '24' ),
+    	RTRIM( NVL( OPENING_TIME, '000000' ) ),
+    	RTRIM( NVL( CLOSING_TIME, '235959' ) )
+    FROM EZMMS_STOREPROFILE;
+		
+	EXEC SQL OPEN ezmmsstoreprofile_cur;
+
+	while( 1 )
+	{
+		memset( InstId, 0, sizeof( InstId ) );
+		memset( MerchantId, 0, sizeof( MerchantId ) );
+		memset( StoreId, 0, sizeof( StoreId ) );
+		memset( TerminalId, 0, sizeof( TerminalId ) );
+		memset( StoreName, 0, sizeof( StoreName ) );
+		memset( StoreLocation, 0, sizeof( StoreLocation ) );
+		memset( CityName, 0, sizeof( CityName ) );
+		memset( CityCode, 0, sizeof( CityCode ) );
+		memset( StateName, 0, sizeof( StateName ) );
+		memset( CountryName, 0, sizeof( CountryName ) );
+		memset( LandLine1, 0, sizeof( LandLine1 ) );
+		memset( LandLine2, 0, sizeof( LandLine2 ) );
+		memset( PMobileNo, 0, sizeof( PMobileNo ) );
+		memset( SMobileNo, 0, sizeof( SMobileNo ) );
+		memset( OpeningTime, 0, sizeof( OpeningTime ) );
+		memset( ClosingTime, 0, sizeof( ClosingTime ) );
+		
+		EXEC SQL FETCH ezmmsstoreprofile_cur INTO
+			:InstId,
+			:MerchantId,
+			:StoreId,
+			:TerminalId,
+			:Status,
+			:StoreName,
+			:StoreLocation,
+			:CityName,
+			:CityCode,
+			:StateName,
+			:CountryName,
+			:LandLine1,
+			:LandLine2,
+			:PMobileNo,
+			:SMobileNo,
+			:WorkingHrs,
+			:OpeningTime,
+			:ClosingTime;
+							
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        	
+        memset( storeprofile_ptr + i, 0, sizeof( struct EzMMSMerchantProfile ) );
+        strcpy( ( storeprofile_ptr + i )->InstId, InstId );
+        strcpy( ( storeprofile_ptr + i )->MerchantId, MerchantId );
+        strcpy( ( storeprofile_ptr + i )->StoreId, StoreId );
+        strcpy( ( storeprofile_ptr + i )->TerminalId, TerminalId );
+        ( storeprofile_ptr + i )->Status = Status;
+        strcpy( ( storeprofile_ptr + i )->StoreName, StoreName );
+        strcpy( ( storeprofile_ptr + i )->StoreLocation, StoreLocation );
+        strcpy( ( storeprofile_ptr + i )->CityName, CityName );
+        strcpy( ( storeprofile_ptr + i )->CityCode, CityCode );
+        strcpy( ( storeprofile_ptr + i )->StateName, StateName );
+        strcpy( ( storeprofile_ptr + i )->CountryName, CountryName );
+        strcpy( ( storeprofile_ptr + i )->LandLine1, LandLine1 );
+        strcpy( ( storeprofile_ptr + i )->LandLine2, LandLine2 );
+        strcpy( ( storeprofile_ptr + i )->PMobileNo, PMobileNo );
+        strcpy( ( storeprofile_ptr + i )->SMobileNo, SMobileNo );
+        ( storeprofile_ptr + i )->WorkingHrs = WorkingHrs;
+        strcpy( ( storeprofile_ptr + i )->OpeningTime, OpeningTime );
+        strcpy( ( storeprofile_ptr + i )->ClosingTime, ClosingTime );
+       	i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezmmsstoreprofile_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int getEzTerminalProfileCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZMMS_TERMINALPROFILE;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzTerminalProfile( struct EzMMSTerminalProfile *terminalprofile_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char MachineId[ 33 ];
+		char InstId[ 13 ];
+		char MerchantId[ 16 ];
+		char StoreId[ 33 ];
+		char TerminalId[ 9 ];
+		char TerminalName[ 33 ];
+		char TermLocation[ 65 ];
+		char TerminalStatus;
+		int WorkingHrs;
+		char OpeningTime[ 7 ];
+		char ClosingTime[ 7 ];
+		char CountryCode[ 5 ];
+		char TermMasterKey[ 65 ];
+		char TermPINKey[ 65 ];
+		char TermMACKey[ 65 ];
+		int KeyIntvl;
+		int TxnKeyIntvl;
+		int EchoIntvl;
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR MachineId IS STRING(33);
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR StoreId IS STRING(33);
+	EXEC SQL VAR TerminalId IS STRING(9);
+	EXEC SQL VAR TerminalName IS STRING(33);
+	EXEC SQL VAR TermLocation IS STRING(65);
+	EXEC SQL VAR OpeningTime IS STRING(7);
+	EXEC SQL VAR ClosingTime IS STRING(7);
+	EXEC SQL VAR CountryCode IS STRING(5);
+	EXEC SQL VAR TermMasterKey IS STRING(65);
+	EXEC SQL VAR TermPINKey IS STRING(65);
+	EXEC SQL VAR TermMACKey IS STRING(65);
+		
+	EXEC SQL DECLARE ezmmsterminalprofile_cur CURSOR FOR
+    SELECT
+    	RTRIM(MACHINE_ID),
+    	RTRIM(INST_ID),
+    	RTRIM(MERCH_ID),
+    	RTRIM(STORE_ID),
+    	RTRIM(TERMINAL_ID),
+    	RTRIM( NVL( TERMINAL_NAME, 'NA' ) ),
+    	RTRIM( NVL( TERMINAL_LOCATION, 'NA' ) ),
+    	NVL( TERMINAL_STATUS, '0' ),
+    	NVL( WORKING_HRS, '24' ),
+    	RTRIM( NVL( OPENING_TIME, '000000' ) ),
+    	RTRIM( NVL( CLOSING_TIME, '235959' ) ),
+    	RTRIM(COUNTRY_CODE),
+    	NVL( CHIP_ENABLED, 'N' ),
+    	RTRIM( TERM_MASTER_KEY ),
+    	RTRIM( NVL( TERM_PIN_KEY, '1111111111111111' ) ),
+    	RTRIM( NVL( TERM_MAC_KEY, '1111111111111111' ) )
+	NVL( KEY_INTVL, "30");
+	NVL( ECHO_INTVL, "30");
+	NVL( TXN_KEY_INTVL, "30");
+    FROM EZMMS_TERMINALPROFILE;
+		
+	EXEC SQL OPEN ezmmsterminalprofile_cur;
+
+	while( 1 )
+	{
+		memset( MachineId, 0, sizeof( MachineId ) );
+		memset( InstId, 0, sizeof( InstId ) );
+		memset( MerchantId, 0, sizeof( MerchantId ) );
+		memset( StoreId, 0, sizeof( StoreId ) );
+		memset( TerminalId, 0, sizeof( TerminalId ) );
+		memset( TerminalName, 0, sizeof( TerminalName ) );
+		memset( TermLocation, 0, sizeof( TermLocation ) );
+		memset( OpeningTime, 0, sizeof( OpeningTime ) );
+		memset( ClosingTime, 0, sizeof( ClosingTime ) );
+		memset( CountryCode, 0, sizeof( CountryCode ) );
+		memset( TermMasterKey, 0, sizeof( TermMasterKey ) );
+		memset( TermPINKey, 0, sizeof( TermPINKey ) );
+		memset( TermMACKey, 0, sizeof( TermMACKey ) );
+		
+		EXEC SQL FETCH ezmmsterminalprofile_cur INTO
+			:MachineId,
+			:InstId,
+			:MerchantId,
+			:StoreId,
+			:TerminalId,
+			:TerminalName,
+			:TermLocation,
+			:TerminalStatus,
+			:WorkingHrs,
+			:OpeningTime,
+			:ClosingTime,
+			:CountryCode,
+			:ChipEnabled,
+			:TermMasterKey,
+			:TermPINKey,
+			:TermMACKey;
+			:KeyIntvl;	
+			:EchoIntvl;
+			:TxnKeyIntvl;						
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        	
+        memset( terminalprofile_ptr + i, 0, sizeof( struct EzMMSMerchantProfile ) );
+        strcpy( ( terminalprofile_ptr + i )->MachineId, MachineId );
+        strcpy( ( terminalprofile_ptr + i )->InstId, InstId );
+        strcpy( ( terminalprofile_ptr + i )->MerchantId, MerchantId );
+        strcpy( ( terminalprofile_ptr + i )->StoreId, StoreId );
+        strcpy( ( terminalprofile_ptr + i )->TerminalId, TerminalId );
+        strcpy( ( terminalprofile_ptr + i )->TerminalName, TerminalName );
+        strcpy( ( terminalprofile_ptr + i )->TermLocation, TermLocation );
+       	( terminalprofile_ptr + i )->TerminalStatus = TerminalStatus;
+       	( terminalprofile_ptr + i )->WorkingHrs = WorkingHrs;
+       	strcpy( ( terminalprofile_ptr + i )->OpeningTime, OpeningTime );
+        strcpy( ( terminalprofile_ptr + i )->ClosingTime, ClosingTime );
+        ( terminalprofile_ptr + i )->ChipEnabled = ChipEnabled;
+        strcpy( ( terminalprofile_ptr + i )->CountryCode, CountryCode );
+        strcpy( ( terminalprofile_ptr + i )->TermMasterKey, TermMasterKey );
+        strcpy( ( terminalprofile_ptr + i )->TermPINKey, TermPINKey );
+        strcpy( ( terminalprofile_ptr + i )->TermMACKey, TermMACKey );
+	( terminalprofile_ptr + i )->KeyIntvl = KeyIntvl;
+ 	( terminalprofile_ptr + i )->EchoIntvl = EchoIntvl;
+ 	( terminalprofile_ptr + i )->TxnKeyIntvl = TxnKeyIntvl;
+
+        i++;
+    }
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezmmsterminalprofile_cur;
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int getEzMerchantRelationCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZMMS_RELATION;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzMerchantRelation( struct EzMMSMerchantRelation *merchantrelation_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char MerchantId[ 16 ];
+		char AccountNo[ 33 ];
+		char CurrCode[ 5 ];
+		char AccountStatus;
+		short AccountPriority;
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR AccountNo IS STRING(33);
+	EXEC SQL VAR CurrCode IS STRING(5);
+		
+	EXEC SQL DECLARE ezmmsrelation_cur CURSOR FOR
+    SELECT
+    	RTRIM(INST_ID),
+    	RTRIM(MERCH_ID),
+    	RTRIM(ACCT_NO),
+    	RTRIM(CURR_CODE),
+    	STATUS,
+    	PRIORITY
+    FROM EZMMS_RELATION;
+		
+	EXEC SQL OPEN ezmmsrelation_cur;
+
+	while( 1 )
+	{
+		memset( InstId, 0, sizeof( InstId ) );
+		memset( MerchantId, 0, sizeof( MerchantId ) );
+		memset( AccountNo, 0, sizeof( AccountNo ) );
+		memset( CurrCode, 0, sizeof( CurrCode ) );
+		
+		EXEC SQL FETCH ezmmsrelation_cur INTO
+			:InstId,
+			:MerchantId,
+			:AccountNo,
+			:CurrCode,
+			:AccountStatus,
+			:AccountPriority;
+							
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        	
+        memset( merchantrelation_ptr + i, 0, sizeof( struct EzMMSMerchantRelation ) );
+        strcpy( ( merchantrelation_ptr + i )->InstId, InstId );
+        strcpy( ( merchantrelation_ptr + i )->MerchantId, MerchantId );
+        strcpy( ( merchantrelation_ptr + i )->AccountNo, AccountNo );
+        strcpy( ( merchantrelation_ptr + i )->CurrCode, CurrCode );
+        ( merchantrelation_ptr + i )->AccountStatus = AccountStatus;
+        ( merchantrelation_ptr + i )->AccountPriority = AccountPriority;
+        i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezmmsrelation_cur;
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int getEzMMSFeeInfoCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZMMS_FEEINFO;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzMMSFeeInfo( struct EzMMSFeeInfo *feeinfo_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char FeeCode[ 17 ];
+		char FeeMode;
+		char FeeAmt[ 21 ];
+		char CurrCode[ 5 ];
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR FeeCode IS STRING(17);
+	EXEC SQL VAR FeeAmt IS STRING(21);
+	EXEC SQL VAR CurrCode IS STRING(5);
+		
+	EXEC SQL DECLARE ezmmsfeeinfo_cur CURSOR FOR
+    SELECT
+    	RTRIM(INST_ID),
+    	RTRIM(FEECODE),
+    	RTRIM(FEEAMT),
+    	FEEMODE,
+    	RTRIM(CURR_CODE)
+    FROM EZMMS_FEEINFO;
+		
+	EXEC SQL OPEN ezmmsfeeinfo_cur;
+
+	while( 1 )
+	{
+		memset( InstId, 0, sizeof( InstId ) );
+		memset( FeeCode, 0, sizeof( FeeCode ) );
+		memset( FeeAmt, 0, sizeof( FeeAmt ) );
+		memset( CurrCode, 0, sizeof( CurrCode ) );
+		
+		EXEC SQL FETCH ezmmsfeeinfo_cur INTO
+			:InstId,
+			:FeeCode,
+			:FeeAmt,
+			:FeeMode,
+			:CurrCode;
+							
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        	
+        memset( feeinfo_ptr + i, 0, sizeof( struct EzMMSFeeInfo ) );
+        strcpy( ( feeinfo_ptr + i )->InstId, InstId );
+        strcpy( ( feeinfo_ptr + i )->FeeCode, FeeCode );
+        strcpy( ( feeinfo_ptr + i )->FeeAmt, FeeAmt );
+        ( feeinfo_ptr + i )->FeeMode = FeeMode;
+        strcpy( ( feeinfo_ptr + i )->CurrCode, CurrCode );
+        i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezmmsfeeinfo_cur;
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int getEzMMSCommissionInfoCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZMMS_COMMISSIONINFO;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzMMSCommissionInfo( struct EzMMSCommissionInfo *commisioninfo_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char CommissionCode[ 17 ];
+		char CommissionMode;
+		char CommissionAmt[ 21 ];
+		char CurrCode[ 5 ];
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR CommissionCode IS STRING(17);
+	EXEC SQL VAR CommissionAmt IS STRING(21);
+	EXEC SQL VAR CurrCode IS STRING(5);
+		
+	EXEC SQL DECLARE ezmmscommisioninfo_cur CURSOR FOR
+    SELECT
+    	RTRIM(INST_ID),
+    	RTRIM(COMMISSIONCODE),
+    	RTRIM(COMMISSIONAMT),
+    	COMMISSIONMODE,
+    	RTRIM(CURR_CODE)
+    FROM EZMMS_COMMISSIONINFO;
+		
+	EXEC SQL OPEN ezmmscommisioninfo_cur;
+
+	while( 1 )
+	{
+		memset( InstId, 0, sizeof( InstId ) );
+		memset( CommissionCode, 0, sizeof( CommissionCode ) );
+		memset( CommissionAmt, 0, sizeof( CommissionAmt ) );
+		memset( CurrCode, 0, sizeof( CurrCode ) );
+		
+		EXEC SQL FETCH ezmmscommisioninfo_cur INTO
+			:InstId,
+			:CommissionCode,
+			:CommissionAmt,
+			:CommissionMode,
+			:CurrCode;
+							
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        	
+        memset( commisioninfo_ptr + i, 0, sizeof( struct EzMMSCommissionInfo ) );
+        strcpy( ( commisioninfo_ptr + i )->InstId, InstId );
+        strcpy( ( commisioninfo_ptr + i )->CommissionCode, CommissionCode );
+        strcpy( ( commisioninfo_ptr + i )->CommissionAmt, CommissionAmt );
+        ( commisioninfo_ptr + i )->CommissionMode = CommissionMode;
+        strcpy( ( commisioninfo_ptr + i )->CurrCode, CurrCode );
+        i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezmmscommisioninfo_cur;
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int getEzMMSMerchantTxnRuleCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZMMS_TXNRULE;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzMMSMerchantTxnRule( struct EzMMSMerchantTxnRule *txnruleinfo_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[ 17 ];
+		char InstId[ 13 ];
+		char MsgType[ 5 ];
+		char TxnCode[ 7 ];
+		char RespCode[ 4 ];
+		char MerchantTypeId[ 17 ];
+		char TxnSrc[ 33 ];
+		char Issuer[ 13 ];
+		char Acquirer[ 13 ];
+		char AuthList[ 129 ];
+		char FeeList[ 129 ];
+		char CommissionList[ 129 ];
+		char OperationType[ 3 ];
+		char TxnIndicator;
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MsgType IS STRING(5);
+	EXEC SQL VAR TxnCode IS STRING(7);
+	EXEC SQL VAR RespCode IS STRING(4);
+	EXEC SQL VAR MerchantTypeId IS STRING(17);
+	EXEC SQL VAR TxnSrc IS STRING(33);
+	EXEC SQL VAR Issuer IS STRING(13);
+	EXEC SQL VAR Acquirer IS STRING(13);
+	EXEC SQL VAR AuthList IS STRING(129);
+	EXEC SQL VAR FeeList IS STRING(129);
+	EXEC SQL VAR CommissionList IS STRING(129);
+	EXEC SQL VAR OperationType IS STRING(3);
+	
+	EXEC SQL DECLARE ezmmsmerchanttxnrule_cur CURSOR FOR
+    SELECT
+    	RTRIM(RECORDID),
+    	RTRIM(INST_ID),
+    	RTRIM(MSGTYPE),
+    	RTRIM(TXNCODE),
+    	RTRIM(RESPCODE),
+    	RTRIM(MERCHANTTYPEID),
+       	RTRIM(TXNSRC),
+    	RTRIM(ISSUER),
+    	RTRIM(ACQUIRER),
+    	RTRIM(AUTHLIST),
+    	RTRIM(FEE_LIST),
+    	RTRIM(COMMISSION_LIST),
+    	RTRIM(OPTYPE),
+    	TXNINDICATOR
+    FROM EZMMS_TXNRULE;
+		
+	EXEC SQL OPEN ezmmsmerchanttxnrule_cur;
+
+	while( 1 )
+	{
+		memset( RecordId, 0, sizeof( RecordId ) );
+		memset( InstId, 0, sizeof( InstId ) );
+		memset( MsgType, 0, sizeof( MsgType ) );
+		memset( TxnCode, 0, sizeof( TxnCode ) );
+		memset( RespCode, 0, sizeof( RespCode ) );
+		memset( MerchantTypeId, 0, sizeof( MerchantTypeId ) );
+		memset( TxnSrc, 0, sizeof( TxnSrc ) );
+		memset( Issuer, 0, sizeof( Issuer ) );
+		memset( Acquirer, 0, sizeof( Acquirer ) );
+		memset( AuthList, 0, sizeof( AuthList ) );
+		memset( FeeList, 0, sizeof( FeeList ) );
+		memset( CommissionList, 0, sizeof( CommissionList ) );
+		memset( OperationType, 0, sizeof( OperationType ) );
+		
+		EXEC SQL FETCH ezmmsmerchanttxnrule_cur INTO
+			:RecordId,
+			:InstId,
+			:MsgType,
+			:TxnCode,
+			:RespCode,
+			:MerchantTypeId,
+			:TxnSrc,
+			:Issuer,
+			:Acquirer,
+			:AuthList,
+			:FeeList,
+			:CommissionList,
+			:OperationType,
+			:TxnIndicator;
+							
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        	
+        memset( txnruleinfo_ptr + i, 0, sizeof( struct EzMMSCommissionInfo ) );
+        strcpy( ( txnruleinfo_ptr + i )->RecordId, RecordId );
+        strcpy( ( txnruleinfo_ptr + i )->InstId, InstId );
+        strcpy( ( txnruleinfo_ptr + i )->MsgType, MsgType );
+        strcpy( ( txnruleinfo_ptr + i )->TxnCode, TxnCode );
+        strcpy( ( txnruleinfo_ptr + i )->RespCode, RespCode );
+        strcpy( ( txnruleinfo_ptr + i )->MerchantTypeId, MerchantTypeId );
+        strcpy( ( txnruleinfo_ptr + i )->TxnSrc, TxnSrc );
+        strcpy( ( txnruleinfo_ptr + i )->Issuer, Issuer );
+        strcpy( ( txnruleinfo_ptr + i )->Acquirer, Acquirer );
+        strcpy( ( txnruleinfo_ptr + i )->AuthList, AuthList );
+        strcpy( ( txnruleinfo_ptr + i )->FeeList, FeeList );
+        strcpy( ( txnruleinfo_ptr + i )->CommissionList, CommissionList );
+        strcpy( ( txnruleinfo_ptr + i )->OperationType, OperationType );
+        ( txnruleinfo_ptr + i )->TxnIndicator = TxnIndicator;
+        i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezmmsmerchanttxnrule_cur;
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}

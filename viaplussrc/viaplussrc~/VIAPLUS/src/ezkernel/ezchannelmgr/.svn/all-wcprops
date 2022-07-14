@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/ezlinkenterprise/!svn/ver/2582/trunk/src/ezkernel/ezchannelmgr
+END
+ezipckeyutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/ezlinkenterprise/!svn/ver/437/trunk/src/ezkernel/ezchannelmgr/ezipckeyutil.cpp
+END
+ezchannelmgrutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/ezlinkenterprise/!svn/ver/2418/trunk/src/ezkernel/ezchannelmgr/ezchannelmgrutil.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/ezlinkenterprise/!svn/ver/2582/trunk/src/ezkernel/ezchannelmgr/Makefile
+END
+ezchannelmgr.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/ezlinkenterprise/!svn/ver/2582/trunk/src/ezkernel/ezchannelmgr/ezchannelmgr.cpp
+END

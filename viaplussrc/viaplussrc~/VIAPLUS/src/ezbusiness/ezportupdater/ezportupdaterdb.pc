@@ -1,0 +1,110 @@
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+int readPortStatus( const char *PortId, int *I_PortStatus )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char Input_PortName[ 17 ];
+		int PortStatus;
+    	short ind_var;
+    EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR Input_PortName IS STRING(17);
+	
+	memset( Input_PortName, 0, sizeof( Input_PortName ) );
+	strcpy( Input_PortName, PortId );
+	
+	EXEC SQL SELECT 
+		PORTSTATUS
+	INTO 
+		:PortStatus
+	FROM EZPORTCONNECTIONSTATUS WHERE TRIM(PORTID)=:Input_PortName;
+
+	if ( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+    {
+    	*I_PortStatus = PortStatus;	 
+		return sqlca.sqlcode;
+	}
+}
+
+int updatePortStatus( const char *PortId, int Status, char *LogDate, int LogTime )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char hPortId[ 17 ];
+		char hDate[ 7 ];  
+		int hTime;  
+		int hStatus;
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR hPortId IS STRING( 17 );
+	EXEC SQL VAR hDate IS STRING( 7 );
+	
+	memset( hPortId, 0, sizeof( hPortId ) );
+	memset( hDate, 0, sizeof( hDate ) );
+	
+	strcpy( hPortId, PortId );
+	strcpy( hDate, LogDate );
+	hTime = LogTime;
+	hStatus = Status;
+
+	EXEC SQL UPDATE EZPORTCONNECTIONSTATUS SET
+		PORTSTATUS=:hStatus,
+		LOGDATE=to_date( :hDate, 'dd-mm-yy' ),
+		LOGTIME=:hTime
+	WHERE RTRIM(PORTID)=:hPortId;
+
+	if ( sqlca.sqlcode != 0 )
+    	return ( sqlca.sqlcode );
+    else 
+    {	EXEC SQL COMMIT; 
+		return ( sqlca.sqlcode );
+	}
+}
+
+int insertPortHist( const char *PortId, int Status, char *LogDate, int LogTime )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char hPortId[ 17 ];
+		char hDate[ 7 ];  
+		int hTime;  
+		int hStatus;
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR hPortId IS STRING( 17 );
+	EXEC SQL VAR hDate IS STRING( 7 );
+	
+	memset( hPortId, 0, sizeof( hPortId ) );
+	memset( hDate, 0, sizeof( hDate ) );
+	
+	strcpy( hPortId, PortId );
+	strcpy( hDate, LogDate );
+	hTime = LogTime;
+	hStatus = Status;
+
+	EXEC SQL INSERT INTO EZPORTCONNECTIONHIST
+	( 
+		PORTID, 
+		PORTSTATUS, 
+		LOGDATE, 
+		LOGTIME 
+	)
+	VALUES 
+	( 
+		:hPortId,
+		:hStatus,
+		to_date( :hDate, 'dd-mm-yy' ),
+		:hTime
+	); 
+		
+	if ( sqlca.sqlcode != 0 )
+    	return ( sqlca.sqlcode );
+	else
+	{
+		EXEC SQL COMMIT; 
+		return ( sqlca.sqlcode );
+	}
+}

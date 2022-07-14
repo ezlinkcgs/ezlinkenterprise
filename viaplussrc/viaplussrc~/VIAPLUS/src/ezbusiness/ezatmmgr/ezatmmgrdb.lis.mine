@@ -1,0 +1,21 @@
+
+Pro*C/C++: Release 10.2.0.1.0 - Production on Thu Mar 15 15:28:12 2012
+
+Copyright (c) 1982, 2005, Oracle.  All rights reserved.
+
+Error at line 5, column 9 in file ezatmmgrdb.pc
+     5  #include<ezbusiness/ezatmmgrtypes.h>
+     5  ........1
+     5  PCC-S-02015, unable to open include file
+Error at line 6, column 9 in file ezatmmgrdb.pc
+     6  #include<ezbusiness/ezbusinesstypes.h>
+     6  ........1
+     6  PCC-S-02015, unable to open include file
+Error at line 7, column 10 in file ezatmmgrdb.pc
+     7  #include <ezdb/ezatmproperty.h>
+     7  .........1
+     7  PCC-S-02015, unable to open include file
+Error at line 8, column 10 in file ezatmmgrdb.pc
+     8  #include <ezdb/ezatmactionproperty.h>
+     8  .........1
+     8  PCC-S-02015, unable to open include file

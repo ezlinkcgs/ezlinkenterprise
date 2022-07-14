@@ -1,0 +1,116 @@
+#include <ezlink/eznetworktypes.h>
+#include <ezdb/eznetwork.h>
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+int readEzNetwork( const char *I_NetworkId, struct EzNetwork *eznetwork_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		char Input_NetworkId[ 17 ];
+		char NetworkName[ 33 ];
+		char NetworkPropertyId[ 11 ];
+		int TimeOut;
+		char ChannelName[ 33 ];
+		char PortName[ 33 ];
+		int NetworkStatus;
+		char InstId[ 13 ];
+		char KeyReq;
+		char CutOverReq;
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR NetworkId IS STRING(17);
+	EXEC SQL VAR Input_NetworkId IS STRING(17);
+	EXEC SQL VAR NetworkName IS STRING(33);
+	EXEC SQL VAR NetworkPropertyId IS STRING(11);
+	EXEC SQL VAR ChannelName IS STRING(33);
+	EXEC SQL VAR PortName IS STRING(33);
+	EXEC SQL VAR InstId IS STRING(13);
+	
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	memset( Input_NetworkId, 0, sizeof( Input_NetworkId ) );
+	memset( NetworkName, 0, sizeof( NetworkName ) );
+	memset( NetworkPropertyId, 0, sizeof( NetworkPropertyId ) );
+	memset( ChannelName, 0, sizeof( ChannelName ) );
+	memset( PortName, 0, sizeof( PortName ) );
+	memset( InstId, 0, sizeof( InstId ) );
+	
+	strcpy( Input_NetworkId, I_NetworkId );
+	
+	EXEC SQL SELECT
+		RTRIM(NETWORKID),
+		RTRIM(NETWORKNAME),
+		RTRIM(NETWORKPROPERTYID),
+		TIMEOUT,
+		RTRIM(CHANNELNAME),
+		RTRIM(PORTNAME),
+		NETWORKSTATUS,
+		RTRIM(INSTID),
+		KEYREQ,
+		CUTOVERREQ
+	INTO
+		:NetworkId,
+		:NetworkName,
+		:NetworkPropertyId,
+		:TimeOut,
+		:ChannelName,
+		:PortName,
+		:NetworkStatus,
+		:InstId,
+		:KeyReq,
+		:CutOverReq
+	FROM EZNETWORK WHERE RTRIM(NETWORKID)=:Input_NetworkId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+   
+	strcpy( eznetwork_ptr->NetworkId, NetworkId );
+	strcpy( eznetwork_ptr->NetworkName, NetworkName );
+	strcpy( eznetwork_ptr->NetworkPropertyId, NetworkPropertyId );
+	eznetwork_ptr->TimeOut = TimeOut;
+	strcpy( eznetwork_ptr->ChannelName, ChannelName );
+	strcpy( eznetwork_ptr->PortName, PortName );
+	eznetwork_ptr->NetworkStatus = NetworkStatus;
+	strcpy( eznetwork_ptr->InstId, InstId );
+	eznetwork_ptr->KeyReq = KeyReq;
+	eznetwork_ptr->CutOverReq = CutOverReq;
+	return sqlca.sqlcode;	
+}
+
+int updateEzNetworkStatus( const char *I_NetworkId, int I_NetworkStatus, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		int NetworkStatus;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR NetworkId IS STRING(17);
+	
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	strcpy( NetworkId, I_NetworkId );
+	NetworkStatus = I_NetworkStatus;
+	
+	EXEC SQL UPDATE EZNETWORK SET NETWORKSTATUS=:NetworkStatus WHERE RTRIM(NETWORKID)=:NetworkId;
+	
+	if( sqlca.sqlcode != 0 )
+	{
+		*SqlErr = sqlca.sqlcode;
+		return -1;
+	}
+	else
+	{
+		EXEC SQL COMMIT;
+		if( sqlca.sqlcode != 0 )
+		{
+			*SqlErr = sqlca.sqlcode;
+			return -1;
+		}
+		else
+			return 1;
+	}
+}
+

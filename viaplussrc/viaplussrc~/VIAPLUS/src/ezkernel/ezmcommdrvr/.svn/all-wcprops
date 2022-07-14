@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/ezlinkenterprise/!svn/ver/2582/trunk/src/ezkernel/ezmcommdrvr
+END
+ezmcommdrvrutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/ezlinkenterprise/!svn/ver/2578/trunk/src/ezkernel/ezmcommdrvr/ezmcommdrvrutil.cpp
+END
+ezmcommdrvr.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/ezlinkenterprise/!svn/ver/2582/trunk/src/ezkernel/ezmcommdrvr/ezmcommdrvr.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/ezlinkenterprise/!svn/ver/2582/trunk/src/ezkernel/ezmcommdrvr/Makefile
+END

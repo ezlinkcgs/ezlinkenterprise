@@ -1,0 +1,1 @@
+g++ -c ezmobile8583.cpp -I/home/mohanraj/HPSCB_setup/EzlinkEnterprise/include

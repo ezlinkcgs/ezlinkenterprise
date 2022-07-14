@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/ezlinkenterprise/!svn/ver/2553/trunk/src/ezlink/ezsafreader
+END
+ezsafreaderdb.c
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/ezlinkenterprise/!svn/ver/2553/trunk/src/ezlink/ezsafreader/ezsafreaderdb.c
+END
+ezsafreaderdb.pc
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/ezlinkenterprise/!svn/ver/2141/trunk/src/ezlink/ezsafreader/ezsafreaderdb.pc
+END
+ezsafreaderdb.lis
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/ezlinkenterprise/!svn/ver/2280/trunk/src/ezlink/ezsafreader/ezsafreaderdb.lis
+END
+ezsafreader.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/ezlinkenterprise/!svn/ver/2553/trunk/src/ezlink/ezsafreader/ezsafreader.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/ezlinkenterprise/!svn/ver/2400/trunk/src/ezlink/ezsafreader/Makefile
+END

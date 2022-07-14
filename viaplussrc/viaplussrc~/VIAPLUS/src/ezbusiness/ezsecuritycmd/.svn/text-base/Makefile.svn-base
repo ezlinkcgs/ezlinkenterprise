@@ -1,0 +1,33 @@
+BINDIR=${EZDIR_HOME}/bin
+LIBDIR=${EZDIR_HOME}/lib
+
+BINARY=ezseccmd
+
+OBJFILE=ezsecuritycmd.o
+SOURCE=ezsecuritycmd.cpp
+
+PROCSOURCE=ezsecuritycmddb.pc
+COBJFILE=ezsecuritycmddb.o
+CSOURCE=ezsecuritycmddb.c
+
+LIBLIST=-lezdebug_util -lezcmdutil -leztaskutil -lezchlocateutil -lezcfg_util -lezchanneltools -lezdbutil -lezsecuritydriverutil
+
+INCLUDEDIR=${EZDIR_HOME}/include
+
+
+${BINARY}	:	${OBJFILE}  ${COBJFILE}
+			g++ ${OBJFILE} ${COBJFILE} -L${LIBDIR} ${LIBLIST} -L${ORACLE_HOME}/lib -lclntsh -o ${BINARY}	
+
+${OBJFILE}	:	${SOURCE}
+			g++ -g -c ${SOURCE} -I${INCLUDEDIR}
+			
+${COBJFILE}	:	${PROCSOURCE}
+			proc ${PROCSOURCE}
+			cc -c ${CSOURCE} -I${ORACLE_HOME}/precomp/public -I${INCLUDEDIR}
+
+install		:
+			mv ${BINARY} ${BINDIR}
+
+clean		:
+			rm *.o
+			rm tp*

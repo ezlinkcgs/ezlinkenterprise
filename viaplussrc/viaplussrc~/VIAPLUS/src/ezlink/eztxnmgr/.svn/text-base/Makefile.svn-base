@@ -1,0 +1,21 @@
+BINDIR=${EZDIR_HOME}/bin
+LIBDIR=${EZDIR_HOME}/lib
+BINARY=EzTxnMgr
+OBJFILE=eztxnmgr.o
+SOURCE=eztxnmgr.cpp
+LIBLIST=-lezdebug_util -lezsigutil -leztaskutil -lezchannelutil -lezeventutil -lezeventtable -lezcfg_util -lezdbutil -lezmsgtypepropertyutil -lezinstprofileutil -lezinstselectutil -lezbinselectutil -lezbinprofileutil -lezbinrangeutil -leznetworkselectutil -leztxnrouteselectutil -leztxnrouteinfoutil -lezeventpropertyutil -leznetworkutil -lezmsgtranslateutil -leztxnrefselectutil -lezdatetimeutil -lezchanneltools  -lezsequtil -leztxnlogutil -leztxnsequtil -lezchannelpropertyutil -leztxnmgrutil -lezbranchprofileutil -lezsecurityutil -lezbusdayutil -lezinboundmsgpropertyutil -leztxnmsgorderutil -leztxnfldval -leztxnmoninfoutil -lezpadssutil -lssl
+INCLUDEDIR=${EZDIR_HOME}/include
+
+${BINARY}	:	${OBJFILE} 
+			g++ ${OBJFILE} -L${LIBDIR} ${LIBLIST} -o ${BINARY}	
+
+${OBJFILE}	:	${SOURCE}
+			g++ -c ${SOURCE} -I${INCLUDEDIR}
+			
+install		:
+			mv ${BINARY} ${BINDIR}
+
+clean		:
+			rm *.o
+			rm tp*
+				

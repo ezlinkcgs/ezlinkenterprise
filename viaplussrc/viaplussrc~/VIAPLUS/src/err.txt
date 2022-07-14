@@ -1,0 +1,584 @@
+ezd912driver.cpp: In member function ‘int EzD912::ServeStatusChangeMsg(char*, int, char*, char*)’:
+ezd912driver.cpp:1659: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1678: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1696: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1700: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1704: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1711: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1715: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1719: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1723: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1734: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1748: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1752: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1756: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1760: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1781: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1798: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1802: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1806: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1810: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1814: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1818: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1830: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1846: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1850: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1854: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1858: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1862: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1866: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1889: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1906: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1910: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1914: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1918: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1922: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1926: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1930: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1934: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1947: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1978: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1995: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:1999: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2003: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2007: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2011: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2015: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2019: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2032: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2049: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2053: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2066: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2082: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2099: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2112: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2130: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2134: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2138: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2142: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2146: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2150: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2154: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2158: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2178: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2182: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2186: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2190: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2194: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2198: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2217: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2221: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2225: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2229: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2233: warning: deprecated conversion from string constant to ‘char*’
+ezd912driver.cpp:2237: warning: deprecated conversion from string constant to ‘char*’
+ezdbloadcmd.cpp: In member function ‘void EzDBLoadCmd::ListEzTxnRouteInfoTable()’:
+ezdbloadcmd.cpp:1138: error: ‘struct EzTxnRouteInfo’ has no member named ‘PortName’
+ezdbloadcmd.cpp:1138: error: ‘struct EzTxnRouteInfo’ has no member named ‘BranchCode’
+ezdbloadcmd.cpp:1138: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldId1’
+ezdbloadcmd.cpp:1138: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldVal1’
+ezdbloadcmd.cpp:1138: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldId2’
+ezdbloadcmd.cpp:1138: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldVal2’
+ezdbloadcmd.cpp:1138: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldId3’
+ezdbloadcmd.cpp:1138: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldVal3’
+ezdbloadcmd.cpp:1138: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldId4’
+ezdbloadcmd.cpp:1138: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldVal4’
+ezdbloadcmd.cpp:1138: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldId5’
+ezdbloadcmd.cpp:1138: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldVal5’
+ezdbloadcmd.cpp:1138: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldId6’
+ezdbloadcmd.cpp:1138: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldVal6’
+ezdbloadcmd.cpp:1138: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteSelectId’
+ezdbloadcmd.cpp: In member function ‘void EzDBLoadCmd::ListEzTxnRouteInfoTable(const char*)’:
+ezdbloadcmd.cpp:1169: error: ‘struct EzTxnRouteInfo’ has no member named ‘PortName’
+ezdbloadcmd.cpp:1169: error: ‘struct EzTxnRouteInfo’ has no member named ‘BranchCode’
+ezdbloadcmd.cpp:1169: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldId1’
+ezdbloadcmd.cpp:1169: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldVal1’
+ezdbloadcmd.cpp:1169: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldId2’
+ezdbloadcmd.cpp:1169: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldVal2’
+ezdbloadcmd.cpp:1169: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldId3’
+ezdbloadcmd.cpp:1169: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldVal3’
+ezdbloadcmd.cpp:1169: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldId4’
+ezdbloadcmd.cpp:1169: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldVal4’
+ezdbloadcmd.cpp:1169: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldId5’
+ezdbloadcmd.cpp:1169: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldVal5’
+ezdbloadcmd.cpp:1169: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldId6’
+ezdbloadcmd.cpp:1169: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteFldVal6’
+ezdbloadcmd.cpp:1169: error: ‘struct EzTxnRouteInfo’ has no member named ‘RouteSelectId’
+ezdbloadcmd.cpp: In member function ‘void EzDBLoadCmd::ListEzTxnRouteSelectTable()’:
+ezdbloadcmd.cpp:1200: error: ‘struct EzTxnRouteSelect’ has no member named ‘InstId’
+ezdbloadcmd.cpp:1200: error: ‘struct EzTxnRouteSelect’ has no member named ‘SelectPriority’
+ezdbloadcmd.cpp:1200: error: ‘struct EzTxnRouteSelect’ has no member named ‘RoutePriority’
+ezdbloadcmd.cpp:1200: error: ‘struct EzTxnRouteSelect’ has no member named ‘NetworkFlag’
+ezdbloadcmd.cpp:1200: error: ‘struct EzTxnRouteSelect’ has no member named ‘NetworkId’
+ezdbloadcmd.cpp:1200: error: ‘struct EzTxnRouteSelect’ has no member named ‘NetworkLookUpFlag’
+ezdbloadcmd.cpp:1200: error: ‘struct EzTxnRouteSelect’ has no member named ‘EventPropertyId’
+ezdbloadcmd.cpp:1200: error: ‘struct EzTxnRouteSelect’ has no member named ‘NetworkPropertyId’
+ezdbloadcmd.cpp: In member function ‘void EzDBLoadCmd::ListEzTxnRouteSelectTable(const char*)’:
+ezdbloadcmd.cpp:1230: error: ‘struct EzTxnRouteSelect’ has no member named ‘InstId’
+ezdbloadcmd.cpp:1232: error: ‘struct EzTxnRouteSelect’ has no member named ‘InstId’
+ezdbloadcmd.cpp:1232: error: ‘struct EzTxnRouteSelect’ has no member named ‘SelectPriority’
+ezdbloadcmd.cpp:1232: error: ‘struct EzTxnRouteSelect’ has no member named ‘RoutePriority’
+ezdbloadcmd.cpp:1232: error: ‘struct EzTxnRouteSelect’ has no member named ‘NetworkFlag’
+ezdbloadcmd.cpp:1232: error: ‘struct EzTxnRouteSelect’ has no member named ‘NetworkId’
+ezdbloadcmd.cpp:1232: error: ‘struct EzTxnRouteSelect’ has no member named ‘NetworkLookUpFlag’
+ezdbloadcmd.cpp:1232: error: ‘struct EzTxnRouteSelect’ has no member named ‘EventPropertyId’
+ezdbloadcmd.cpp:1232: error: ‘struct EzTxnRouteSelect’ has no member named ‘NetworkPropertyId’
+ezdbloadcmd.cpp: In member function ‘void EzDBLoadCmd::ListEzTxnRouteFldTable()’:
+ezdbloadcmd.cpp:1273: error: ‘struct EzTxnRouteFld’ has no member named ‘InstId’
+ezdbloadcmd.cpp: In member function ‘void EzDBLoadCmd::ListEzTxnRouteFldTable(const char*)’:
+ezdbloadcmd.cpp:1303: error: ‘struct EzTxnRouteFld’ has no member named ‘InstId’
+ezdbloadcmd.cpp:1305: error: ‘struct EzTxnRouteFld’ has no member named ‘InstId’
+ezdbloadcmd.cpp: In member function ‘void EzDBLoadCmd::ListEzNetworkPropertyTable()’:
+ezdbloadcmd.cpp:1346: error: ‘struct EzNetworkProperty’ has no member named ‘InstId’
+ezdbloadcmd.cpp:1346: error: ‘struct EzNetworkProperty’ has no member named ‘FromMsgType’
+ezdbloadcmd.cpp:1346: error: ‘struct EzNetworkProperty’ has no member named ‘ToMsgType’
+ezdbloadcmd.cpp:1346: error: ‘struct EzNetworkProperty’ has no member named ‘FromTxnCode’
+ezdbloadcmd.cpp:1346: error: ‘struct EzNetworkProperty’ has no member named ‘ToTxnCode’
+ezdbloadcmd.cpp:1346: error: ‘struct EzNetworkProperty’ has no member named ‘FromRespCode’
+ezdbloadcmd.cpp:1346: error: ‘struct EzNetworkProperty’ has no member named ‘ToRespCode’
+ezdbloadcmd.cpp: In member function ‘void EzDBLoadCmd::ListEzNetworkPropertyTable(const char*)’:
+ezdbloadcmd.cpp:1376: error: ‘struct EzNetworkProperty’ has no member named ‘InstId’
+ezdbloadcmd.cpp:1378: error: ‘struct EzNetworkProperty’ has no member named ‘InstId’
+ezdbloadcmd.cpp:1378: error: ‘struct EzNetworkProperty’ has no member named ‘FromMsgType’
+ezdbloadcmd.cpp:1378: error: ‘struct EzNetworkProperty’ has no member named ‘ToMsgType’
+ezdbloadcmd.cpp:1378: error: ‘struct EzNetworkProperty’ has no member named ‘FromTxnCode’
+ezdbloadcmd.cpp:1378: error: ‘struct EzNetworkProperty’ has no member named ‘ToTxnCode’
+ezdbloadcmd.cpp:1378: error: ‘struct EzNetworkProperty’ has no member named ‘FromRespCode’
+ezdbloadcmd.cpp:1378: error: ‘struct EzNetworkProperty’ has no member named ‘ToRespCode’
+ezdbloadcmd.cpp: In member function ‘void EzDBLoadCmd::ListEzEventPropertyTable()’:
+ezdbloadcmd.cpp:1419: error: ‘struct EzEventProperty’ has no member named ‘InstId’
+ezdbloadcmd.cpp:1419: error: ‘struct EzEventProperty’ has no member named ‘EventPropertyId’
+ezdbloadcmd.cpp:1419: error: ‘struct EzEventProperty’ has no member named ‘BuildReversal’
+ezdbloadcmd.cpp:1419: error: ‘struct EzEventProperty’ has no member named ‘EventAction’
+ezdbloadcmd.cpp: In member function ‘void EzDBLoadCmd::ListEzEventPropertyTable(const char*)’:
+ezdbloadcmd.cpp:1449: error: ‘struct EzEventProperty’ has no member named ‘InstId’
+ezdbloadcmd.cpp:1451: error: ‘struct EzEventProperty’ has no member named ‘InstId’
+ezdbloadcmd.cpp:1451: error: ‘struct EzEventProperty’ has no member named ‘EventPropertyId’
+ezdbloadcmd.cpp:1451: error: ‘struct EzEventProperty’ has no member named ‘BuildReversal’
+ezdbloadcmd.cpp:1451: error: ‘struct EzEventProperty’ has no member named ‘EventAction’
+ezdbloadcmd.cpp: In member function ‘void EzDBLoadCmd::ListEzInstSelectTable()’:
+ezdbloadcmd.cpp:1492: error: ‘struct EzInstSelect’ has no member named ‘InstSelectId’
+ezdbloadcmd.cpp: In member function ‘void EzDBLoadCmd::ListEzInstSelectTable(const char*)’:
+ezdbloadcmd.cpp:1522: error: ‘struct EzInstSelect’ has no member named ‘InstSelectId’
+ezdbloadcmd.cpp:1524: error: ‘struct EzInstSelect’ has no member named ‘InstSelectId’
+ezdbloadcmd.cpp: In member function ‘void EzDBLoadCmd::ListEzNetworkTable()’:
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘InstId’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘EventPropertyId’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘PinInfoId’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘MaxPinRetries’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘AuthFlag’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘SafFlag’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘PinVerReq’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘KeyReq’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘CheckCardExpiry’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘CheckServiceCode’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘CheckCVV’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘CurrencyCode’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘MinTxnAmount’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘MaxWithdrawalAmount’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘MaxWithdrawalAmountSaf’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘EventReq’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘EchoFlag’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘EchoInterval’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘ReplayInterval’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘MasterKey’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘AcqWorkingKey’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘IssWorkingKey’
+ezdbloadcmd.cpp:1564: error: ‘struct EzNetwork’ has no member named ‘KeyLen’
+ezdbloadcmd.cpp: In member function ‘void EzDBLoadCmd::ListEzNetworkTable(const char*)’:
+ezdbloadcmd.cpp:1594: error: ‘struct EzNetwork’ has no member named ‘InstId’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘InstId’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘EventPropertyId’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘PinInfoId’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘MaxPinRetries’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘AuthFlag’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘SafFlag’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘PinVerReq’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘KeyReq’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘CheckCardExpiry’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘CheckServiceCode’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘CheckCVV’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘CurrencyCode’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘MinTxnAmount’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘MaxWithdrawalAmount’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘MaxWithdrawalAmountSaf’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘EventReq’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘EchoFlag’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘EchoInterval’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘ReplayInterval’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘MasterKey’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘AcqWorkingKey’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘IssWorkingKey’
+ezdbloadcmd.cpp:1596: error: ‘struct EzNetwork’ has no member named ‘KeyLen’
+make[1]: *** [ezdbloadcmd.o] Error 1
+ezdbloadmgrutil.cpp: In member function ‘int EzDBLoadMgrUtil::LoadTable(const char*, int)’:
+ezdbloadmgrutil.cpp:1067: error: ‘struct EzNetwork’ has no member named ‘InstId’
+ezdbloadmgrutil.cpp: In member function ‘int EzDBLoadMgrUtil::ModifyRecord(const char*, char*, int)’:
+ezdbloadmgrutil.cpp:3016: error: ‘struct EzNetwork’ has no member named ‘InstId’
+ezdbloadmgrutil.cpp:3069: error: ‘struct EzNetwork’ has no member named ‘InstId’
+make[1]: *** [ezdbloadmgrutil.o] Error 1
+ezauthmgr.cpp: In member function ‘void EzAuthMgr::InitEzAuthMgr(const char*)’:
+ezauthmgr.cpp:96: error: ‘DEBUG_CRITICIAL’ was not declared in this scope
+ezauthmgr.cpp:104: error: ‘DEBUG_CRITICIAL’ was not declared in this scope
+make[1]: *** [ezauthmgr.o] Error 1
+In file included from /home/mohanraj/EzlinkEnterprise/include/ezlink/eznetcmd.h:11,
+                 from eznetcmd.cpp:1:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:9:35: error: ezlink/eznetworktypes.h: No such file or directory
+In file included from /home/mohanraj/EzlinkEnterprise/include/ezlink/eznetcmd.h:11,
+                 from eznetcmd.cpp:1:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: field ‘eznetworkmem_rec’ has incomplete type
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkId()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:27: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘int EzNetworkUtil::getNetworkStatus()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:31: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘int EzNetworkUtil::getNetworkTimeOut()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:35: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkChannelName()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:39: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkPortName()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:43: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkName()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:47: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkPropertyId()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:51: error: ‘eznetworkmem_rec’ was not declared in this scope
+eznetcmd.cpp: In member function ‘void EzNetCmd::InitEzNetCmd(const char*)’:
+eznetcmd.cpp:59: error: ‘InitEzNetworkUtil’ was not declared in this scope
+eznetcmd.cpp: In member function ‘int EzNetCmd::ListNetworkTable()’:
+eznetcmd.cpp:132: error: ‘NetworkMemoryCount’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:16: error: ‘int EzNetworkUtil::NetworkMemorySemid’ is private
+eznetcmd.cpp:133: error: within this context
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:16: error: ‘int EzNetworkUtil::NetworkMemorySemid’ is private
+eznetcmd.cpp:140: error: within this context
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: ‘EzNetworkMemory* EzNetworkUtil::NetworkMemoryShmPtr’ is private
+eznetcmd.cpp:146: error: within this context
+eznetcmd.cpp:146: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+eznetcmd.cpp:146: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: ‘EzNetworkMemory* EzNetworkUtil::NetworkMemoryShmPtr’ is private
+eznetcmd.cpp:149: error: within this context
+eznetcmd.cpp:149: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+eznetcmd.cpp:149: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: ‘EzNetworkMemory* EzNetworkUtil::NetworkMemoryShmPtr’ is private
+eznetcmd.cpp:151: error: within this context
+eznetcmd.cpp:151: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+eznetcmd.cpp:151: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: ‘EzNetworkMemory* EzNetworkUtil::NetworkMemoryShmPtr’ is private
+eznetcmd.cpp:158: error: within this context
+eznetcmd.cpp:158: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+eznetcmd.cpp:158: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: ‘EzNetworkMemory* EzNetworkUtil::NetworkMemoryShmPtr’ is private
+eznetcmd.cpp:164: error: within this context
+eznetcmd.cpp:164: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+eznetcmd.cpp:164: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: ‘EzNetworkMemory* EzNetworkUtil::NetworkMemoryShmPtr’ is private
+eznetcmd.cpp:164: error: within this context
+eznetcmd.cpp:164: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+eznetcmd.cpp:164: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:16: error: ‘int EzNetworkUtil::NetworkMemorySemid’ is private
+eznetcmd.cpp:168: error: within this context
+eznetcmd.cpp: In member function ‘int EzNetCmd::ListNetworkTable(const char*, const char*)’:
+eznetcmd.cpp:183: error: ‘NetworkMemoryCount’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:16: error: ‘int EzNetworkUtil::NetworkMemorySemid’ is private
+eznetcmd.cpp:184: error: within this context
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:16: error: ‘int EzNetworkUtil::NetworkMemorySemid’ is private
+eznetcmd.cpp:194: error: within this context
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: ‘EzNetworkMemory* EzNetworkUtil::NetworkMemoryShmPtr’ is private
+eznetcmd.cpp:199: error: within this context
+eznetcmd.cpp:199: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+eznetcmd.cpp:199: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: ‘EzNetworkMemory* EzNetworkUtil::NetworkMemoryShmPtr’ is private
+eznetcmd.cpp:201: error: within this context
+eznetcmd.cpp:201: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+eznetcmd.cpp:201: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: ‘EzNetworkMemory* EzNetworkUtil::NetworkMemoryShmPtr’ is private
+eznetcmd.cpp:201: error: within this context
+eznetcmd.cpp:201: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+eznetcmd.cpp:201: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: ‘EzNetworkMemory* EzNetworkUtil::NetworkMemoryShmPtr’ is private
+eznetcmd.cpp:204: error: within this context
+eznetcmd.cpp:204: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+eznetcmd.cpp:204: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: ‘EzNetworkMemory* EzNetworkUtil::NetworkMemoryShmPtr’ is private
+eznetcmd.cpp:206: error: within this context
+eznetcmd.cpp:206: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+eznetcmd.cpp:206: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: ‘EzNetworkMemory* EzNetworkUtil::NetworkMemoryShmPtr’ is private
+eznetcmd.cpp:213: error: within this context
+eznetcmd.cpp:213: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+eznetcmd.cpp:213: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: ‘EzNetworkMemory* EzNetworkUtil::NetworkMemoryShmPtr’ is private
+eznetcmd.cpp:219: error: within this context
+eznetcmd.cpp:219: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+eznetcmd.cpp:219: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: ‘EzNetworkMemory* EzNetworkUtil::NetworkMemoryShmPtr’ is private
+eznetcmd.cpp:219: error: within this context
+eznetcmd.cpp:219: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+eznetcmd.cpp:219: error: invalid use of incomplete type ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: forward declaration of ‘struct EzNetworkMemory’
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:16: error: ‘int EzNetworkUtil::NetworkMemorySemid’ is private
+eznetcmd.cpp:221: error: within this context
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:16: error: ‘int EzNetworkUtil::NetworkMemorySemid’ is private
+eznetcmd.cpp:231: error: within this context
+eznetcmd.cpp: In member function ‘void EzNetCmd::ServiceNetworkCommands(int, char**)’:
+eznetcmd.cpp:300: error: ‘UpdateNetworkStatus’ was not declared in this scope
+eznetcmd.cpp:302: error: ‘UpdateNetworkStatus’ was not declared in this scope
+make[1]: *** [eznetcmd.o] Error 1
+In file included from /home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkmgr.h:14,
+                 from eznetworkmgr.cpp:1:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:9:35: error: ezlink/eznetworktypes.h: No such file or directory
+In file included from /home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkmgr.h:14,
+                 from eznetworkmgr.cpp:1:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: field ‘eznetworkmem_rec’ has incomplete type
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkId()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:27: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘int EzNetworkUtil::getNetworkStatus()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:31: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘int EzNetworkUtil::getNetworkTimeOut()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:35: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkChannelName()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:39: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkPortName()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:43: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkName()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:47: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkPropertyId()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:51: error: ‘eznetworkmem_rec’ was not declared in this scope
+eznetworkmgr.cpp: In member function ‘void EzNetworkMgr::InitEzNetworkMgr(const char*)’:
+eznetworkmgr.cpp:79: error: ‘InitEzNetworkUtil’ was not declared in this scope
+eznetworkmgr.cpp: In function ‘void* ServiceNetworkThread(void*)’:
+eznetworkmgr.cpp:121: error: ‘class EzNetworkMgr’ has no member named ‘ReadEzNetworkTable’
+eznetworkmgr.cpp:127: error: ‘struct EzNetwork’ has no member named ‘EchoFlag’
+eznetworkmgr.cpp:136: error: ‘struct EzNetwork’ has no member named ‘EchoFlag’
+eznetworkmgr.cpp:138: error: ‘class EzNetworkMgr’ has no member named ‘IsNetworkUp’
+eznetworkmgr.cpp: In member function ‘int EzNetworkMgr::StartNetworkThreads()’:
+eznetworkmgr.cpp:234: error: ‘NetworkSlots’ was not declared in this scope
+eznetworkmgr.cpp:239: error: ‘NetworkTableSemid’ was not declared in this scope
+eznetworkmgr.cpp:244: error: ‘NetworkTableShmPtr’ was not declared in this scope
+eznetworkmgr.cpp:251: error: ‘NetworkTableSemid’ was not declared in this scope
+eznetworkmgr.cpp: In member function ‘int EzNetworkMgr::ProcessNetworkRequest(EzTxnMsg*)’:
+eznetworkmgr.cpp:292: error: ‘ReadEzNetworkTable’ was not declared in this scope
+eznetworkmgr.cpp:300: error: ‘UpdateNetworkStatus’ was not declared in this scope
+eznetworkmgr.cpp:316: error: ‘ReadEzNetworkTable’ was not declared in this scope
+eznetworkmgr.cpp:324: error: ‘UpdateNetworkStatus’ was not declared in this scope
+eznetworkmgr.cpp: In member function ‘int EzNetworkMgr::ProcessNetworkResponse(EzTxnMsg*)’:
+eznetworkmgr.cpp:359: error: ‘ReadEzNetworkTable’ was not declared in this scope
+eznetworkmgr.cpp:365: error: ‘UpdateNetworkStatus’ was not declared in this scope
+eznetworkmgr.cpp:377: error: ‘ReadEzNetworkTable’ was not declared in this scope
+eznetworkmgr.cpp:383: error: ‘UpdateNetworkStatus’ was not declared in this scope
+eznetworkmgr.cpp: In member function ‘void EzNetworkMgr::ServiceRequest()’:
+eznetworkmgr.cpp:432: error: ‘ReadEzNetworkTable’ was not declared in this scope
+eznetworkmgr.cpp:452: error: ‘ReadEzNetworkTable’ was not declared in this scope
+make[1]: *** [eznetworkmgr.o] Error 1
+In file included from /home/mohanraj/EzlinkEnterprise/include/ezlink/ezsafreader.h:12,
+                 from ezsafreader.cpp:1:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:9:35: error: ezlink/eznetworktypes.h: No such file or directory
+In file included from /home/mohanraj/EzlinkEnterprise/include/ezlink/ezsafreader.h:12,
+                 from ezsafreader.cpp:1:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: field ‘eznetworkmem_rec’ has incomplete type
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkId()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:27: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘int EzNetworkUtil::getNetworkStatus()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:31: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘int EzNetworkUtil::getNetworkTimeOut()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:35: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkChannelName()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:39: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkPortName()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:43: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkName()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:47: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkPropertyId()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:51: error: ‘eznetworkmem_rec’ was not declared in this scope
+ezsafreader.cpp: At global scope:
+ezsafreader.cpp:13: error: no ‘void EzSafReader::initEzSafReader(const char*)’ member function declared in class ‘EzSafReader’
+ezsafreader.cpp: In function ‘void* ServiceReplayThread(void*)’:
+ezsafreader.cpp:180: error: ‘safreader’ was not declared in this scope
+ezsafreader.cpp:186: error: ‘ReplaySemaphore’ was not declared in this scope
+ezsafreader.cpp:186: error: ‘sem_post’ was not declared in this scope
+ezsafreader.cpp:188: error: ‘MaxNetworks’ was not declared in this scope
+ezsafreader.cpp:190: error: ‘ReplayMemoryMutex’ was not declared in this scope
+ezsafreader.cpp:191: error: expected unqualified-id before ‘(’ token
+ezsafreader.cpp:191: error: ‘ezreplaymem_ptr’ was not declared in this scope
+ezsafreader.cpp:194: error: expected unqualified-id before ‘(’ token
+ezsafreader.cpp:196: error: expected unqualified-id before ‘(’ token
+ezsafreader.cpp:197: error: expected unqualified-id before ‘(’ token
+ezsafreader.cpp:198: error: expected unqualified-id before ‘(’ token
+ezsafreader.cpp:198: error: ‘REPLAY_STATUS_RUNNING’ was not declared in this scope
+ezsafreader.cpp:199: error: expected unqualified-id before ‘(’ token
+ezsafreader.cpp:199: error: ‘REPLAY_STATUS_IDLE’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/ezsafreader.h:21: error: ‘int EzSafReader::DefaultReplayInterval’ is private
+ezsafreader.cpp:214: error: within this context
+/home/mohanraj/EzlinkEnterprise/include/ezlink/ezsafreader.h:21: error: ‘int EzSafReader::DefaultReplayInterval’ is private
+ezsafreader.cpp:215: error: within this context
+ezsafreader.cpp:230: error: ‘MaxNetworks’ was not declared in this scope
+ezsafreader.cpp:232: error: ‘ReplayMemoryMutex’ was not declared in this scope
+ezsafreader.cpp:233: error: expected unqualified-id before ‘(’ token
+ezsafreader.cpp:233: error: ‘ezreplaymem_ptr’ was not declared in this scope
+ezsafreader.cpp:237: error: expected unqualified-id before ‘(’ token
+ezsafreader.cpp:238: error: expected unqualified-id before ‘(’ token
+ezsafreader.cpp:239: error: ‘ReplayStatus’ was not declared in this scope
+ezsafreader.cpp:239: error: expected unqualified-id before ‘(’ token
+ezsafreader.cpp:240: error: ‘Status’ was not declared in this scope
+ezsafreader.cpp:240: error: expected unqualified-id before ‘(’ token
+ezsafreader.cpp:253: error: ‘Status’ was not declared in this scope
+ezsafreader.cpp:253: error: ‘REPLAY_THREAD_RUNNING’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/ezsafutil.h:34: error: too few arguments to function ‘int SelectEzSafDB(const char*, const char*)’
+ezsafreader.cpp:260: error: at this point in file
+/home/mohanraj/EzlinkEnterprise/include/ezlink/ezsafutil.h:35: error: too few arguments to function ‘int IsAllDone(const char*, const char*)’
+ezsafreader.cpp:270: error: at this point in file
+/home/mohanraj/EzlinkEnterprise/include/ezlink/ezsafutil.h:36: error: too few arguments to function ‘int RemoveEzSafDB(const char*, const char*)’
+ezsafreader.cpp:278: error: at this point in file
+ezsafreader.cpp:286: error: ‘MaxNetworks’ was not declared in this scope
+ezsafreader.cpp:288: error: ‘ReplayMemoryMutex’ was not declared in this scope
+ezsafreader.cpp:289: error: expected unqualified-id before ‘(’ token
+ezsafreader.cpp:289: error: ‘ezreplaymem_ptr’ was not declared in this scope
+ezsafreader.cpp:292: error: expected unqualified-id before ‘(’ token
+ezsafreader.cpp:292: error: ‘REPLAY_IDLE’ was not declared in this scope
+ezsafreader.cpp:303: error: ‘txnmsg’ was not declared in this scope
+ezsafreader.cpp:310: error: ‘thmsg’ was not declared in this scope
+ezsafreader.cpp:313: error: ‘networkptr’ was not declared in this scope
+ezsafreader.cpp:314: error: ‘thmsg’ was not declared in this scope
+ezsafreader.cpp:314: error: ‘replaymsg_ptr’ was not declared in this scope
+ezsafreader.cpp:319: error: ‘thmsg’ was not declared in this scope
+ezsafreader.cpp:319: error: ‘replaymsg_ptr’ was not declared in this scope
+ezsafreader.cpp: At global scope:
+ezsafreader.cpp:333: error: no ‘void EzSafReader::startAllReplayThreads()’ member function declared in class ‘EzSafReader’
+ezsafreader.cpp:357: error: no ‘int EzSafReader::addReplayThread(const char*, int, int)’ member function declared in class ‘EzSafReader’
+ezsafreader.cpp:420: error: no ‘int EzSafReader::startReplayThread(const char*, int, int)’ member function declared in class ‘EzSafReader’
+ezsafreader.cpp:471: error: no ‘int EzSafReader::stopReplayThread(const char*)’ member function declared in class ‘EzSafReader’
+ezsafreader.cpp:506: error: no ‘int EzSafReader::removeReplayThread(const char*)’ member function declared in class ‘EzSafReader’
+ezsafreader.cpp:533: error: no ‘void EzSafReader::serviceRequest()’ member function declared in class ‘EzSafReader’
+ezsafreader.cpp: In function ‘int main(int, char**)’:
+ezsafreader.cpp:561: error: ‘class EzSafReader’ has no member named ‘initEzSafReader’
+ezsafreader.cpp:562: error: ‘class EzSafReader’ has no member named ‘startAllReplayThreads’
+ezsafreader.cpp:563: error: ‘class EzSafReader’ has no member named ‘serviceRequest’
+make[1]: *** [ezsafreader.o] Error 1
+In file included from /home/mohanraj/EzlinkEnterprise/include/ezlink/ezsafwriter.h:15,
+                 from ezsafwriter.cpp:1:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:9:35: error: ezlink/eznetworktypes.h: No such file or directory
+In file included from ezsafwriter.cpp:1:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/ezsafwriter.h:17:33: error: ezlink/eztxnrefutil.h: No such file or directory
+In file included from /home/mohanraj/EzlinkEnterprise/include/ezlink/ezsafwriter.h:15,
+                 from ezsafwriter.cpp:1:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: field ‘eznetworkmem_rec’ has incomplete type
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkId()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:27: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘int EzNetworkUtil::getNetworkStatus()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:31: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘int EzNetworkUtil::getNetworkTimeOut()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:35: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkChannelName()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:39: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkPortName()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:43: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkName()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:47: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkPropertyId()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:51: error: ‘eznetworkmem_rec’ was not declared in this scope
+In file included from ezsafwriter.cpp:1:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/ezsafwriter.h: At global scope:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/ezsafwriter.h:20: error: expected class-name before ‘{’ token
+ezsafwriter.cpp: In member function ‘void EzSafWriter::InitEzSafWriter(const char*)’:
+ezsafwriter.cpp:82: error: ‘InitEzNetworkUtil’ was not declared in this scope
+ezsafwriter.cpp:101: error: ‘InitEzTxnRefUtil’ was not declared in this scope
+ezsafwriter.cpp: In member function ‘void EzSafWriter::ServiceRequest()’:
+ezsafwriter.cpp:143: error: ‘GetTxnRefNum’ was not declared in this scope
+ezsafwriter.cpp:231: error: ‘ReadEzNetworkTable’ was not declared in this scope
+make[1]: *** [ezsafwriter.o] Error 1
+In file included from eztxnmgr.cpp:1:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:17:37: error: ezlink/ezinstselectutil.h: No such file or directory
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:18:40: error: ezlink/eznetworkselectutil.h: No such file or directory
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:19:39: error: ezlink/eztxnrouteinfoutil.h: No such file or directory
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:20:41: error: ezlink/eztxnrouteselectutil.h: No such file or directory
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:21:40: error: ezlink/ezeventpropertyutil.h: No such file or directory
+In file included from /home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:22,
+                 from eztxnmgr.cpp:1:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:9:35: error: ezlink/eznetworktypes.h: No such file or directory
+In file included from eztxnmgr.cpp:1:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:24:42: error: ezlink/eznetworkpropertyutil.h: No such file or directory
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:26:32: error: ezlink/eztxnfldval.h: No such file or directory
+In file included from /home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:22,
+                 from eztxnmgr.cpp:1:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:15: error: field ‘eznetworkmem_rec’ has incomplete type
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkId()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:27: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘int EzNetworkUtil::getNetworkStatus()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:31: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘int EzNetworkUtil::getNetworkTimeOut()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:35: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkChannelName()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:39: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkPortName()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:43: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkName()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:47: error: ‘eznetworkmem_rec’ was not declared in this scope
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h: In member function ‘char* EzNetworkUtil::getNetworkPropertyId()’:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eznetworkutil.h:51: error: ‘eznetworkmem_rec’ was not declared in this scope
+In file included from eztxnmgr.cpp:1:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h: At global scope:
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:32: error: ‘EzInstSelectUtil’ does not name a type
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:33: error: ‘EzNetworkSelectUtil’ does not name a type
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:34: error: ‘EzTxnRouteInfoUtil’ does not name a type
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:35: error: ‘EzTxnRouteSelectUtil’ does not name a type
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:36: error: ‘EzEventPropertyUtil’ does not name a type
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:39: error: ‘EzNetworkPropertyUtil’ does not name a type
+/home/mohanraj/EzlinkEnterprise/include/ezlink/eztxnmgr.h:40: error: ‘EzTxnFldVal’ does not name a type
+eztxnmgr.cpp: In member function ‘void EzTxnMgr::initEzTxnMgr(const char*)’:
+eztxnmgr.cpp:96: error: ‘ezinstselectutil’ was not declared in this scope
+eztxnmgr.cpp:104: error: ‘eznetworkselectutil’ was not declared in this scope
+eztxnmgr.cpp:112: error: ‘eztxnrouteinfoutil’ was not declared in this scope
+eztxnmgr.cpp:120: error: ‘eztxnrouteselectutil’ was not declared in this scope
+eztxnmgr.cpp:128: error: ‘ezeventpropertyutil’ was not declared in this scope
+eztxnmgr.cpp:144: error: ‘eznetworkpropertyutil’ was not declared in this scope
+eztxnmgr.cpp: In member function ‘void EzTxnMgr::ServiceRequest()’:
+eztxnmgr.cpp:196: error: ‘ezinstselectutil’ was not declared in this scope
+eztxnmgr.cpp:217: error: ‘eznetworkselectutil’ was not declared in this scope
+eztxnmgr.cpp:231: error: ‘NETWORK_DOWN’ was not declared in this scope
+eztxnmgr.cpp:250: error: ‘eznetworkselectutil’ was not declared in this scope
+eztxnmgr.cpp:264: error: ‘NETWORK_DOWN’ was not declared in this scope
+eztxnmgr.cpp:282: error: ‘eznetworkselectutil’ was not declared in this scope
+eztxnmgr.cpp:296: error: ‘NETWORK_DOWN’ was not declared in this scope
+eztxnmgr.cpp:314: error: ‘eznetworkselectutil’ was not declared in this scope
+eztxnmgr.cpp:328: error: ‘NETWORK_DOWN’ was not declared in this scope
+eztxnmgr.cpp:347: error: ‘ezeventpropertyutil’ was not declared in this scope
+eztxnmgr.cpp:353: error: ‘ezeventpropertyutil’ was not declared in this scope
+eztxnmgr.cpp:374: error: ‘eztxnrouteinfoutil’ was not declared in this scope
+eztxnmgr.cpp:382: error: ‘eztxnfldval’ was not declared in this scope
+eztxnmgr.cpp:392: error: ‘eztxnrouteselectutil’ was not declared in this scope
+eztxnmgr.cpp:500: error: ‘eznetworkpropertyutil’ was not declared in this scope
+eztxnmgr.cpp:506: error: ‘eznetworkpropertyutil’ was not declared in this scope
+eztxnmgr.cpp:508: error: expected `;' before ‘)’ token
+eztxnmgr.cpp:512: error: ‘eztxncheckutil’ was not declared in this scope
+eztxnmgr.cpp:518: error: ‘eztxnlogutil’ was not declared in this scope
+eztxnmgr.cpp:531: error: ‘ezeventpropertyutil’ was not declared in this scope
+eztxnmgr.cpp:538: error: no matching function for call to ‘EzTxnMgr::CreateEvent(char [256], EzTxnMsg*, unsigned int, int&)’
+/home/mohanraj/EzlinkEnterprise/include/ezkernel/ezeventutil.h:25: note: candidates are: int EzEventUtil::CreateEvent(const char*, char*, int, int)
+eztxnmgr.cpp:542: error: expected `;' before ‘}’ token
+make[1]: *** [eztxnmgr.o] Error 1
+make: *** [all] Error 2

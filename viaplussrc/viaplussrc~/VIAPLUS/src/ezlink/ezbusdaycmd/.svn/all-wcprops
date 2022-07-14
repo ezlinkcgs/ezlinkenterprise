@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/ezlinkenterprise/!svn/ver/2579/trunk/src/ezlink/ezbusdaycmd
+END
+ezbusdaycmddb.c
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/ezlinkenterprise/!svn/ver/2232/trunk/src/ezlink/ezbusdaycmd/ezbusdaycmddb.c
+END
+ezbusdaycmddb.pc
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/ezlinkenterprise/!svn/ver/2099/trunk/src/ezlink/ezbusdaycmd/ezbusdaycmddb.pc
+END
+ezbusdaycmddb.lis
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/ezlinkenterprise/!svn/ver/2280/trunk/src/ezlink/ezbusdaycmd/ezbusdaycmddb.lis
+END
+ezbusdaycmd.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/ezlinkenterprise/!svn/ver/2579/trunk/src/ezlink/ezbusdaycmd/ezbusdaycmd.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/ezlinkenterprise/!svn/ver/2099/trunk/src/ezlink/ezbusdaycmd/Makefile
+END

@@ -1,0 +1,29 @@
+BINDIR=${EZDIR_HOME}/bin
+LIBDIR=-L${EZDIR_HOME}/lib -L${ORACLE_HOME}/lib
+BINARY=EzSafUploader
+OBJFILE=ezsafuploader.o
+SOURCE=ezsafuploader.cpp
+OBJFILE2=ezsafuploaderdb.o
+SOURCE2=ezsafuploaderdb.c
+SOURCEPC=ezsafuploaderdb.pc
+LIBLIST=-lezdebug_util -lezsigutil -leztaskutil -lezchannelutil -lezcfg_util -lezdbutil -lpthread -lclntsh -leznetworkutil -lezchanneltools
+INCLUDEDIR=${EZDIR_HOME}/include
+OINCLUDEDIR=${ORACLE_HOME}/precomp/public
+
+${BINARY}	:	${OBJFILE} ${OBJFILE2}
+			g++ ${OBJFILE} ${OBJFILE2} ${LIBDIR} ${LIBLIST} -o ${BINARY}	
+
+${OBJFILE}		:	${SOURCE}
+					g++ -c ${SOURCE} -I${INCLUDEDIR}
+
+${OBJFILE2}		:	${SOURCEPC}
+					proc ${SOURCEPC}
+					cc -c ${SOURCE2} -I${INCLUDEDIR} -I${OINCLUDEDIR}
+			
+install		:
+			mv ${BINARY} ${BINDIR}
+
+clean		:
+			rm *.o
+			rm tp*
+				

@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/ezlinkenterprise/!svn/ver/2582/trunk/src/ezkernel/eztaskmgr
+END
+eztaskmgrutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/ezlinkenterprise/!svn/ver/2354/trunk/src/ezkernel/eztaskmgr/eztaskmgrutil.cpp
+END
+eztaskmgr.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/ezlinkenterprise/!svn/ver/2582/trunk/src/ezkernel/eztaskmgr/eztaskmgr.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/ezlinkenterprise/!svn/ver/2582/trunk/src/ezkernel/eztaskmgr/Makefile
+END

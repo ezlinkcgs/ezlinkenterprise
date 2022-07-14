@@ -1,0 +1,26 @@
+
+Pro*C/C++: Release 10.1.0.3.0 - Production on Fri Jan 16 12:48:51 2009
+
+Copyright (c) 1982, 2004, Oracle.  All rights reserved.
+
+Error at line 22, column 7 in file /home/mohanraj/workspace/ezlinkenterprise/in
+clude/ezlink/eznetworktypes.h
+    22  #endif
+    22  ......1
+    22  PCC-S-02014, Encountered the symbol "<eof>" when expecting one of the f
+        ollowing:
+        
+           ; { } , = : ( ) [ ] * ? | & < > + - / % ~ ! . # @ ^ *= /= %=
+           += -= <<= >>= &&= ||= ^= ~= := | & == != <= >= << >> ++ -- ->
+           ... .. <> ** => an identifier, a string, a numeric constant,
+           newline, a sql string, misc. punctuation, newline, define,
+           elif, else, endif, error, if, ifdef, ifndef, include, line,
+           pragma, undef, exec, sql, begin, end, var, type, oracle,
+           an immediate preprocessor command, a C token, exec sql,
+           exec sql include, exec sql var, exec sql begin, exec sql end,
+           end-exec, exec sql type, exec oracle, exec oracle else,
+           exec oracle endif, exec oracle begin, a sql hint, create,
+           function, package, procedure, trigger, or, replace,
+           a C++ token,
+        The symbol "newline," was substituted for "<eof>" to continue.
+        

@@ -1,0 +1,778 @@
+#include <ezagenttms/ezagenttmsdbtypes.h>
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+int getEzTMSTxnRelCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZTMSTXNREL;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzTMSTxnRel( struct EzTMSTxnRel *eztmstxnrel_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[ 17 ];
+		char TerminalType[ 17 ];
+		char MsgType[ 5 ];
+		char TxnCode[ 7 ];
+		char RelatedTxnCode[ 7 ];
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR TerminalType IS STRING(17);
+	EXEC SQL VAR MsgType IS STRING(5);
+	EXEC SQL VAR TxnCode IS STRING(7);
+	EXEC SQL VAR RelatedTxnCode IS STRING(7);
+			
+	EXEC SQL DECLARE eztmstxnrel_cur CURSOR FOR
+    SELECT
+    	RTRIM(RECORDID),
+    	RTRIM(TERMINALTYPE),
+    	RTRIM(MSGTYPE),
+    	RTRIM(TXNCODE),
+    	RTRIM(RELATEDTXNCODE)
+    FROM EZTMSTXNREL;
+		
+	EXEC SQL OPEN eztmstxnrel_cur;
+
+	while( 1 )
+	{
+		memset( RecordId, 0, sizeof( RecordId ) );
+		memset( TerminalType, 0, sizeof( TerminalType ) );
+		memset( MsgType, 0, sizeof( MsgType ) );
+		memset( TxnCode, 0, sizeof( TxnCode ) );
+		memset( RelatedTxnCode, 0, sizeof( RelatedTxnCode ) );
+		
+		EXEC SQL FETCH eztmstxnrel_cur INTO
+		:RecordId,
+		:TerminalType,
+		:MsgType,
+		:TxnCode,
+		:RelatedTxnCode;
+										
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        strcpy( ( eztmstxnrel_ptr + i )->RecordId, RecordId );
+        strcpy( ( eztmstxnrel_ptr + i )->TerminalType, TerminalType );
+        strcpy( ( eztmstxnrel_ptr + i )->MsgType, MsgType );
+        strcpy( ( eztmstxnrel_ptr + i )->TxnCode, TxnCode );
+        strcpy( ( eztmstxnrel_ptr + i )->RelatedTxnCode, RelatedTxnCode );
+        i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE eztmstxnrel_cur;
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int getTMSTerminalProfileCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZMMSTERMINALPROFILE;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+
+int LoadTMSTerminalProfile( struct EzTMSTerminalProfile *eztmsterminalprofile_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char MachineId[ 33 ];
+		char InstId[ 13 ];
+		char MerchantId[ 16 ];
+		char StoreId[ 33 ];
+		char TerminalId[ 9 ];
+		char TerminalType[ 17 ];
+		char TerminalLocation[ 65 ];
+		int BusinessStartTime;
+		int BusinessEndTime;
+		char TerminalStatus;
+		char TermMasterKey[ 65 ];
+		char TermPINKey[ 65 ];
+		char TermMACKey[ 65 ];
+		int TerminalCurrencyCode;
+		int CountryCode;
+		int PinCapCode;
+		char BatchId[ 13 ];
+		char ConfigId[ 13 ];
+		int KeyIntvl;
+		int EchoIntvl;
+		int TxnKeyIntvl;
+	EXEC SQL END DECLARE SECTION;
+	
+	int i = 0;
+	
+	EXEC SQL VAR MachineId IS STRING(33);
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR StoreId IS STRING(33);
+	EXEC SQL VAR TerminalId IS STRING(9);
+	EXEC SQL VAR TerminalType IS STRING(17);
+	EXEC SQL VAR TerminalLocation IS STRING(65);
+	EXEC SQL VAR TermMasterKey IS STRING(65);
+	EXEC SQL VAR TermPINKey IS STRING(65);
+	EXEC SQL VAR TermMACKey IS STRING(65);
+	EXEC SQL VAR BatchId IS STRING(13);
+	EXEC SQL VAR ConfigId IS STRING(13);
+	
+	EXEC SQL DECLARE eztmsterminalprofile_cur CURSOR FOR
+    SELECT
+    	RTRIM(MACHINEID),
+    	RTRIM(INSTID),
+    	RTRIM(MERCHANTID),
+    	RTRIM(STOREID),
+    	RTRIM(TERMINALID),
+    	RTRIM(TERMINALTYPE),
+    	RTRIM(TERMLOC),
+    	STARTTIME,
+    	ENDTIME,
+    	STATUS,
+    	RTRIM(MASTERKEY),
+    	RTRIM(PINKEY),
+    	RTRIM(MACKEY),
+    	CURRENCYCODE,
+    	COUNTRYCODE,
+    	PINCAPCODE,
+    	RTRIM(BATCHID),
+    	RTRIM(CONFIGID),
+	KEY_INTVL,
+	ECHO_INTVL,
+	TXN_KEY_INTVL
+    FROM EZMMSTERMINALPROFILE;
+	
+	EXEC SQL OPEN eztmsterminalprofile_cur;
+
+	while( 1 )
+	{
+		memset( MachineId, 0, sizeof( MachineId ) );
+		memset( InstId, 0, sizeof( InstId ) );
+		memset( MerchantId, 0, sizeof( MerchantId ) );
+		memset( StoreId, 0, sizeof( StoreId ) );
+		memset( TerminalId, 0, sizeof( TerminalId ) );
+		memset( TerminalType, 0, sizeof( TerminalType ) );
+		memset( TerminalLocation, 0, sizeof( TerminalLocation ) );
+		memset( TermMasterKey, 0, sizeof( TermMasterKey ) );
+		memset( TermPINKey, 0, sizeof( TermPINKey ) );
+		memset( TermMACKey, 0, sizeof( TermMACKey ) );
+		memset( BatchId, 0, sizeof( BatchId ) );
+		memset( ConfigId, 0, sizeof( ConfigId ) );
+		
+		EXEC SQL FETCH eztmsterminalprofile_cur INTO
+		:MachineId,
+		:InstId,
+		:MerchantId,
+		:StoreId,
+		:TerminalId,
+		:TerminalType,
+		:TerminalLocation,
+		:BusinessStartTime,
+		:BusinessEndTime,
+		:TerminalStatus,
+		:TermMasterKey,
+		:TermPINKey,
+		:TermMACKey,
+		:TerminalCurrencyCode,
+		:CountryCode,
+		:PinCapCode,
+		:BatchId,
+		:ConfigId,
+		:KeyIntvl,
+		:EchoIntvl,
+		:TxnKeyIntvl;
+										
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        strcpy( ( eztmsterminalprofile_ptr + i )->MachineId, MachineId );
+        strcpy( ( eztmsterminalprofile_ptr + i )->InstId, InstId );
+        strcpy( ( eztmsterminalprofile_ptr + i )->MerchantId, MerchantId );
+        strcpy( ( eztmsterminalprofile_ptr + i )->StoreId, StoreId );
+        strcpy( ( eztmsterminalprofile_ptr + i )->TerminalId, TerminalId );
+        strcpy( ( eztmsterminalprofile_ptr + i )->TerminalType, TerminalType );
+        strcpy( ( eztmsterminalprofile_ptr + i )->TerminalLocation, TerminalLocation );
+        ( eztmsterminalprofile_ptr + i )->BusinessStartTime = BusinessStartTime;
+        ( eztmsterminalprofile_ptr + i )->BusinessEndTime = BusinessEndTime;
+        ( eztmsterminalprofile_ptr + i )->TerminalStatus = TerminalStatus;
+        strcpy( ( eztmsterminalprofile_ptr + i )->TermMasterKey, TermMasterKey );
+        strcpy( ( eztmsterminalprofile_ptr + i )->TermPINKey, TermPINKey );
+        strcpy( ( eztmsterminalprofile_ptr + i )->TermMACKey, TermMACKey );
+        ( eztmsterminalprofile_ptr + i )->TerminalCurrencyCode = TerminalCurrencyCode;
+        ( eztmsterminalprofile_ptr + i )->CountryCode = CountryCode;
+        ( eztmsterminalprofile_ptr + i )->PinCapCode = PinCapCode;
+        strcpy( ( eztmsterminalprofile_ptr + i )->BatchId, BatchId );
+        strcpy( ( eztmsterminalprofile_ptr + i )->ConfigId, ConfigId );
+	( eztmsterminalprofile_ptr + i )->KeyIntvl = KeyIntvl;
+	( eztmsterminalprofile_ptr + i )->EchoIntvl = EchoIntvl;
+	( eztmsterminalprofile_ptr + i )->TxnKeyIntvl = TxnKeyIntvl;
+        i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE eztmsterminalprofile_cur;
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int getCurrencyCodeList( struct EzTMSTerminalProfile *eztmsterminalprofile_ptr, char *CurrencyList )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+    	char InstId[ 13 ];
+    	char MerchantId[ 16 ];
+    	char MerchantType[ 17 ];
+    	char CurrencyCode[ 65 ];
+    	short MCC;
+    	short ind_var;
+    EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR MerchantType IS STRING(17);
+	EXEC SQL VAR CurrencyCode IS STRING(65)     ;
+	
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( MerchantId, 0, sizeof( MerchantId ) );
+	memset( MerchantType, 0, sizeof( MerchantType ) );
+    memset( CurrencyCode, 0, sizeof( CurrencyCode ) );
+    
+    strcpy( InstId, eztmsterminalprofile_ptr->InstId );
+    strcpy( MerchantId, eztmsterminalprofile_ptr->MerchantId );
+	
+	EXEC SQL SELECT 
+		TRIM(MERCHANTTYPE),
+		MCC
+	INTO 
+		:MerchantType,
+		:MCC
+	FROM EZMMSMERCHANTPROFILE WHERE TRIM(INSTID)=:InstId AND TRIM(MERCHANTID)=:MerchantId;
+
+    if ( sqlca.sqlcode != 0 )
+            return sqlca.sqlcode ;
+            
+	EXEC SQL SELECT 
+		TRIM(CURRENCYCODE)
+	INTO 
+		:CurrencyCode
+	FROM EZMMSMERCHANTTYPE WHERE TRIM(INSTID)=:InstId AND TRIM(MERCHANTTYPE)=:MerchantType;
+
+    if ( sqlca.sqlcode != 0 )
+            return sqlca.sqlcode ;
+	strcpy( eztmsterminalprofile_ptr->CurrencyList, CurrencyCode );
+	strcpy( eztmsterminalprofile_ptr->MerchantType, MerchantType );
+	eztmsterminalprofile_ptr->MCC = MCC;
+	return sqlca.sqlcode ;
+}
+	
+int getEzTMSChannelPropertyCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZTMSCHANNELPROPERTY;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzTMSChannelProperty( struct EzTMSChannelProperty *eztmschannelproperty_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char ChannelName[ 33 ];
+		char ChannelType[ 17 ];
+		char TMSProtocol[ 17 ];
+		char CommunicationType[ 11 ];
+		char TerminalFlag;
+		char ExternalFlag;
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR ChannelName IS STRING(33);
+	EXEC SQL VAR ChannelType IS STRING(17);
+	EXEC SQL VAR TMSProtocol IS STRING(17);
+	EXEC SQL VAR CommunicationType IS STRING(11);
+		
+	EXEC SQL DECLARE eztmschannelproperty_cur CURSOR FOR
+    SELECT
+    	RTRIM(CHANNELNAME),
+    	RTRIM(CHANNELTYPE),
+    	RTRIM(TMSPROTOCOL),
+    	RTRIM(COMMTYPE),
+    	TERMINALFLAG,
+    	EXTERNALFLAG
+    FROM EZTMSCHANNELPROPERTY;
+		
+	EXEC SQL OPEN eztmschannelproperty_cur;
+
+	while( 1 )
+	{
+		memset( ChannelName, 0, sizeof( ChannelName ) );
+		memset( ChannelType, 0, sizeof( ChannelType ) );
+		memset( TMSProtocol, 0, sizeof( TMSProtocol ) );
+		memset( CommunicationType, 0, sizeof( CommunicationType ) );
+		
+		EXEC SQL FETCH eztmschannelproperty_cur INTO
+		:ChannelName,
+		:ChannelType,
+		:TMSProtocol,
+		:CommunicationType,
+		:TerminalFlag,
+		:ExternalFlag;
+										
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        strcpy( ( eztmschannelproperty_ptr + i )->ChannelName, ChannelName );
+        strcpy( ( eztmschannelproperty_ptr + i )->ChannelType, ChannelType );
+        strcpy( ( eztmschannelproperty_ptr + i )->TMSProtocol, TMSProtocol );
+        strcpy( ( eztmschannelproperty_ptr + i )->CommunicationType, CommunicationType );
+        ( eztmschannelproperty_ptr + i )->TerminalFlag = TerminalFlag;
+        ( eztmschannelproperty_ptr + i )->ExternalFlag = ExternalFlag;
+        i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE eztmschannelproperty_cur;
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int getEzTMSInBoundPropertyCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZTMSINBOUNDPROPERTY;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzTMSInBoundProperty( struct EzTMSInBoundProperty *eztmsinboundproperty_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[ 17 ];
+		char MsgType[ 5 ];
+		char TxnCode[ 7 ];
+		char ChannelName[ 33 ];
+		char MsgFlag;
+		char MsgProcessFlag;
+		char LogFlag;
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR MsgType IS STRING(5);
+	EXEC SQL VAR TxnCode IS STRING(7);
+	EXEC SQL VAR ChannelName IS STRING(33);
+			
+	EXEC SQL DECLARE eztmsinboundproperty_cur CURSOR FOR
+    SELECT
+    	RTRIM(RECORDID),
+    	RTRIM(MSGTYPE),
+    	RTRIM(TXNCODE),
+    	RTRIM(CHANNELNAME),
+    	MSGFLAG,
+    	MSGPROCESSFLAG,
+    	LOGFLAG
+    FROM EZTMSINBOUNDPROPERTY;
+		
+	EXEC SQL OPEN eztmsinboundproperty_cur;
+
+	while( 1 )
+	{
+		memset( RecordId, 0, sizeof( RecordId ) );
+		memset( MsgType, 0, sizeof( MsgType ) );
+		memset( TxnCode, 0, sizeof( TxnCode ) );
+		memset( ChannelName, 0, sizeof( ChannelName ) );
+			
+		EXEC SQL FETCH eztmsinboundproperty_cur INTO
+		:RecordId,
+		:MsgType,
+		:TxnCode,
+		:ChannelName,
+		:MsgFlag,
+		:MsgProcessFlag,
+		:LogFlag;
+								
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        strcpy( ( eztmsinboundproperty_ptr + i )->RecordId, RecordId );
+        strcpy( ( eztmsinboundproperty_ptr + i )->MsgType, MsgType );
+        strcpy( ( eztmsinboundproperty_ptr + i )->TxnCode, TxnCode );
+        strcpy( ( eztmsinboundproperty_ptr + i )->ChannelName, ChannelName );
+        ( eztmsinboundproperty_ptr + i )->MsgFlag = MsgFlag;
+        ( eztmsinboundproperty_ptr + i )->MsgProcessFlag = MsgProcessFlag;
+        ( eztmsinboundproperty_ptr + i )->LogFlag = LogFlag;
+        i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE eztmsinboundproperty_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int getEzTMSRouteInfoCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZTMSROUTEINFO;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzTMSRouteInfo( struct EzTMSRouteInfo *eztmsrouteprofile_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[ 129 ];
+		char InstId[ 13 ];
+		char TerminalType[ 17 ];
+		char MsgType[ 65 ];
+		char TxnCode[ 129 ];
+		char RespCode[ 65 ];
+		char RouteExp1[ 129 ];
+		int RouteExpPriority1;
+		char RouteExp2[ 129 ];
+		int RouteExpPriority2;
+		char ChannelName[ 65 ];
+		char RouteSelectList[ 129 ];
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR RecordId IS STRING(129);
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR TerminalType IS STRING(17);
+	EXEC SQL VAR MsgType IS STRING(65);
+	EXEC SQL VAR TxnCode IS STRING(129);
+	EXEC SQL VAR RespCode IS STRING(65);
+	EXEC SQL VAR RouteExp1 IS STRING(129);
+	EXEC SQL VAR RouteExp2 IS STRING(129);
+	EXEC SQL VAR ChannelName IS STRING(65);
+	EXEC SQL VAR RouteSelectList IS STRING(129);
+	
+	EXEC SQL DECLARE eztmsrouteinfo_cur CURSOR FOR
+    SELECT
+    	RTRIM(RECORDID),
+    	RTRIM(INSTID),
+    	RTRIM(TERMINALTYPE),
+    	RTRIM(MSGTYPE),
+    	RTRIM(TXNCODE),
+    	RTRIM(RESPCODE),
+    	RTRIM(ROUTEEXP1),
+    	ROUTEEXPPRIORITY1,
+    	RTRIM(ROUTEEXP2),
+    	ROUTEEXPPRIORITY2,
+    	RTRIM(CHANNELNAME),
+    	RTRIM(ROUTESELECTLIST)
+    FROM EZTMSROUTEINFO;
+		
+	EXEC SQL OPEN eztmsrouteinfo_cur;
+
+	while( 1 )
+	{
+		memset( RecordId, 0, sizeof( RecordId ) );
+		memset( InstId, 0, sizeof( InstId ) );
+		memset( TerminalType, 0, sizeof( TerminalType ) );
+		memset( MsgType, 0, sizeof( MsgType ) );
+		memset( TxnCode, 0, sizeof( TxnCode ) );
+		memset( RespCode, 0, sizeof( RespCode ) );
+		memset( RouteExp1, 0, sizeof( RouteExp1 ) );
+		memset( RouteExp2, 0, sizeof( RouteExp2 ) );
+		memset( ChannelName, 0, sizeof( ChannelName ) );
+		memset( RouteSelectList, 0, sizeof( RouteSelectList ) );
+		
+		EXEC SQL FETCH eztmsrouteinfo_cur INTO
+		:RecordId,
+		:InstId,
+		:TerminalType,
+		:MsgType,
+		:TxnCode,
+		:RespCode,
+		:RouteExp1,
+		:RouteExpPriority1,
+		:RouteExp2,
+		:RouteExpPriority2,
+		:ChannelName,
+		:RouteSelectList;
+										
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        strcpy( ( eztmsrouteprofile_ptr + i )->RecordId, RecordId );
+        strcpy( ( eztmsrouteprofile_ptr + i )->InstId, InstId );
+        strcpy( ( eztmsrouteprofile_ptr + i )->TerminalType, TerminalType );
+        strcpy( ( eztmsrouteprofile_ptr + i )->MsgType, MsgType );
+        strcpy( ( eztmsrouteprofile_ptr + i )->TxnCode, TxnCode );
+        strcpy( ( eztmsrouteprofile_ptr + i )->RespCode, RespCode );
+        strcpy( ( eztmsrouteprofile_ptr + i )->RouteExp1, RouteExp1 );
+        ( eztmsrouteprofile_ptr + i )->RouteExpPriority1 = RouteExpPriority1;
+        strcpy( ( eztmsrouteprofile_ptr + i )->RouteExp2, RouteExp2 );
+        ( eztmsrouteprofile_ptr + i )->RouteExpPriority2 = RouteExpPriority2;
+        strcpy( ( eztmsrouteprofile_ptr + i )->ChannelName, ChannelName );
+        strcpy( ( eztmsrouteprofile_ptr + i )->RouteSelectList, RouteSelectList );
+        i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE eztmsrouteinfo_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int getEzTMSRouteSelectCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZTMSROUTESELECT;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzTMSRouteSelect( struct EzTMSRouteSelect *eztmsrouteselect_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RouteSelectId[ 17 ];
+		char ChannelName[ 33 ];
+		char MsgTranslateId[ 17 ];
+		char LogFlag;
+		char LogBatchReq;
+		char LogTotReq;
+		char LogTxnReq;
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR RouteSelectId IS STRING(17);
+	EXEC SQL VAR ChannelName IS STRING(33);
+	EXEC SQL VAR MsgTranslateId IS STRING(17);
+	
+	EXEC SQL DECLARE eztmsrouteselect_cur CURSOR FOR
+    SELECT
+    	RTRIM(ROUTESELECTID),
+    	RTRIM(CHANNELNAME),
+    	RTRIM(MSGTRANSLATEID),
+    	LOGFLAG,
+    	LOGBATCHREQ,
+    	LOGTOTREQ,
+    	LOGTXNREQ
+    FROM EZTMSROUTESELECT;
+		
+	EXEC SQL OPEN eztmsrouteselect_cur;
+
+	while( 1 )
+	{
+		memset( RouteSelectId, 0, sizeof( RouteSelectId ) );
+		memset( ChannelName, 0, sizeof( ChannelName ) );
+		memset( MsgTranslateId, 0, sizeof( MsgTranslateId ) );
+		
+		EXEC SQL FETCH eztmsrouteselect_cur INTO
+		:RouteSelectId,
+		:ChannelName,
+		:MsgTranslateId,
+		:LogFlag,
+		:LogBatchReq,
+		:LogTotReq,
+		:LogTxnReq;
+								
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        strcpy( ( eztmsrouteselect_ptr + i )->RouteSelectId, RouteSelectId );
+        strcpy( ( eztmsrouteselect_ptr + i )->ChannelName, ChannelName );
+        strcpy( ( eztmsrouteselect_ptr + i )->MsgTranslateId, MsgTranslateId );
+        ( eztmsrouteselect_ptr + i )->LogFlag = LogFlag;
+        ( eztmsrouteselect_ptr + i )->LogBatchReq = LogBatchReq;
+        ( eztmsrouteselect_ptr + i )->LogTotReq = LogTotReq;
+        ( eztmsrouteselect_ptr + i )->LogTxnReq = LogTxnReq;
+        i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE eztmsrouteselect_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int getEzTMSMsgTranslateCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZTMSMSGTRANSLATE;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzTMSMsgTranslate( struct EzTMSMsgTranslate *eztmsmsgtranslate_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char MsgTranslateId[ 17 ];
+		char TranslateDesc[ 256 ];
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR MsgTranslateId IS STRING(17);
+	EXEC SQL VAR TranslateDesc IS STRING(256);
+		
+	EXEC SQL DECLARE eztmsmsgtranslate_cur CURSOR FOR
+    SELECT
+    	RTRIM(MSGTRANSLATEID),
+    	RTRIM(TRANSLATEDESC)
+    FROM EZTMSMSGTRANSLATE;
+		
+	EXEC SQL OPEN eztmsmsgtranslate_cur;
+
+	while( 1 )
+	{
+		memset( MsgTranslateId, 0, sizeof( MsgTranslateId ) );
+		memset( TranslateDesc, 0, sizeof( TranslateDesc ) );
+				
+		EXEC SQL FETCH eztmsmsgtranslate_cur INTO
+		:MsgTranslateId,
+		:TranslateDesc;
+										
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        strcpy( ( eztmsmsgtranslate_ptr + i )->MsgTranslateId, MsgTranslateId );
+        strcpy( ( eztmsmsgtranslate_ptr + i )->TranslateDesc, TranslateDesc );
+        i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE eztmsmsgtranslate_cur;
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int getEzTMSTxnRefSelectCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZTMSTXNREFSELECT;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzTMSTxnRefSelect( struct EzTMSTxnRefSelect *eztmstxnrefselect_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[ 17 ];
+		char MsgType[ 5 ];
+		char TxnCode[ 7 ];
+		char KeyFields[ 151 ];
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR MsgType IS STRING(5);
+	EXEC SQL VAR TxnCode IS STRING(7);
+	EXEC SQL VAR KeyFields IS STRING(151);
+		
+	EXEC SQL DECLARE eztmstxnrefselect_cur CURSOR FOR
+    SELECT
+    	RTRIM(RECORDID),
+    	RTRIM(MSGTYPE),
+    	RTRIM(TXNCODE),
+    	RTRIM(KEYFIELDS)
+    FROM EZTMSTXNREFSELECT;
+		
+	EXEC SQL OPEN eztmstxnrefselect_cur;
+
+	while( 1 )
+	{
+		memset( RecordId, 0, sizeof( RecordId ) );
+		memset( MsgType, 0, sizeof( MsgType ) );
+		memset( TxnCode, 0, sizeof( TxnCode ) );
+		memset( KeyFields, 0, sizeof( KeyFields ) );
+		
+		EXEC SQL FETCH eztmstxnrefselect_cur INTO
+		:RecordId,
+		:MsgType,
+		:TxnCode,
+		:KeyFields;
+										
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        strcpy( ( eztmstxnrefselect_ptr + i )->RecordId, RecordId );
+        strcpy( ( eztmstxnrefselect_ptr + i )->MsgType, MsgType );
+        strcpy( ( eztmstxnrefselect_ptr + i )->TxnCode, TxnCode );
+        strcpy( ( eztmstxnrefselect_ptr + i )->KeyFields, KeyFields );
+        i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE eztmstxnrefselect_cur;
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}

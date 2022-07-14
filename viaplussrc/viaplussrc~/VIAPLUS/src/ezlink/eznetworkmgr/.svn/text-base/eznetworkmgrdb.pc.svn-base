@@ -1,0 +1,390 @@
+#include <ezlink/eznetworktypes.h>
+#include <ezdb/eznetwork.h>
+#include <ezlink/ezechotypes.h>
+#include <ezdb/eznetworkreplay.h>
+#include <ezdb/eznetworkbusday.h>
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <ezlink/eznetworkdef.h>
+
+int getEzNetworkCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZNETWORK;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzNetwork( struct EzNetworkMemory *eznetwork_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		char NetworkName[ 33 ];
+		char NetworkPropertyId[ 11 ];
+		int TimeOut;
+		char ChannelName[ 33 ];
+		char PortName[ 33 ];
+		int NetworkStatus;
+		char InstId[ 13 ];
+		char KeyReq;
+		char CutOverReq;
+		short ind_var;
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR NetworkId IS STRING(17);
+	EXEC SQL VAR NetworkName IS STRING(33);
+	EXEC SQL VAR NetworkPropertyId IS STRING(11);
+	EXEC SQL VAR ChannelName IS STRING(33);
+	EXEC SQL VAR PortName IS STRING(33);
+	EXEC SQL VAR InstId IS STRING(13);
+	
+	EXEC SQL DECLARE eznetwork_cur CURSOR FOR
+    SELECT
+		RTRIM(NETWORKID),
+        RTRIM(NETWORKNAME),
+        RTRIM(NETWORKPROPERTYID),
+        TIMEOUT,
+        RTRIM(CHANNELNAME),
+        RTRIM(PORTNAME),
+        NETWORKSTATUS,
+        RTRIM(INSTID),
+        KEYREQ,
+        CUTOVERREQ
+    FROM EZNETWORK;
+		
+	EXEC SQL OPEN eznetwork_cur;
+
+	while( 1 )
+	{
+		memset( NetworkId, 0, sizeof( NetworkId ) );
+		memset( NetworkName, 0, sizeof( NetworkName ) );
+		memset( NetworkPropertyId, 0, sizeof( NetworkPropertyId ) );
+		memset( ChannelName, 0, sizeof( ChannelName ) );
+		memset( PortName, 0, sizeof( PortName ) );
+		memset( InstId, 0, sizeof( InstId ) );
+		
+		EXEC SQL FETCH eznetwork_cur INTO
+		:NetworkId:ind_var,
+		:NetworkName:ind_var,
+		:NetworkPropertyId:ind_var,
+		:TimeOut:ind_var,
+		:ChannelName:ind_var,
+		:PortName:ind_var,
+		:NetworkStatus:ind_var,
+		:InstId:ind_var,
+		:KeyReq:ind_var,
+		:CutOverReq:ind_var;
+		
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        memset( ( eznetwork_ptr + i ), 0, sizeof( struct EzNetworkMemory ) );
+        
+        strcpy( ( eznetwork_ptr + i )->NetworkId, NetworkId );
+        strcpy( ( eznetwork_ptr + i )->NetworkName, NetworkName );
+        strcpy( ( eznetwork_ptr + i )->NetworkPropertyId, NetworkPropertyId );
+        ( eznetwork_ptr + i )->TimeOut = TimeOut;
+        strcpy( ( eznetwork_ptr + i )->ChannelName, ChannelName );
+        strcpy( ( eznetwork_ptr + i )->PortName, PortName );
+        strcpy( ( eznetwork_ptr + i )->InstId, InstId );
+        if( NetworkStatus == NETWORK_STATUS_UP )
+        	( eznetwork_ptr + i )->NetworkStatus = NETWORK_STATUS_DOWN;
+        else
+        	( eznetwork_ptr + i )->NetworkStatus = NetworkStatus;
+        ( eznetwork_ptr + i )->KeyReq = KeyReq;
+        ( eznetwork_ptr + i )->CutOverReq = CutOverReq;
+		i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE eznetwork_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int updateEzNetworkStatus( const char *I_NetworkId, int I_NetworkStatus, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		int NetworkStatus;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR NetworkId IS STRING(17);
+	
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	strcpy( NetworkId, I_NetworkId );
+	NetworkStatus = I_NetworkStatus;
+	
+	EXEC SQL UPDATE EZNETWORK SET NETWORKSTATUS=:NetworkStatus WHERE RTRIM(NETWORKID)=:NetworkId;
+	
+	if( sqlca.sqlcode != 0 )
+	{
+		*SqlErr = sqlca.sqlcode;
+		return -1;
+	}
+	else
+	{
+		EXEC SQL COMMIT;
+		if( sqlca.sqlcode != 0 )
+		{
+			*SqlErr = sqlca.sqlcode;
+			return -1;
+		}
+		else
+			return 1;
+	}
+}
+
+int getEzNetworkEchoCount( int *SqlErr )
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+    	int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZNETWORKECHO;
+
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzNetworkEcho( struct EzEchoTable *ezechotable_ptr, int *SqlErr )
+{
+   EXEC SQL BEGIN DECLARE SECTION;
+     	char NetworkId[ 17 ];
+		char EchoProperty;
+		char LogOnReq;
+		int EchoInterval;
+    EXEC SQL END DECLARE SECTION;
+
+    int i = 0;
+
+	EXEC SQL VAR NetworkId IS STRING(17);
+	
+	EXEC SQL DECLARE eznetworkecho_cur CURSOR FOR
+    SELECT
+            RTRIM(NETWORKID),
+            ECHOPROPERTY,
+            LOGONREQ,
+            ECHOINTERVAL
+    FROM EZNETWORKECHO;
+
+    EXEC SQL OPEN eznetworkecho_cur;
+
+    while( 1 )
+    {
+        memset( NetworkId, 0, sizeof( NetworkId ) );
+       
+        EXEC SQL FETCH eznetworkecho_cur INTO
+        :NetworkId,
+        :EchoProperty,
+        :LogOnReq,
+        :EchoInterval;
+
+        if ( sqlca.sqlcode == 1403 )
+        break;
+
+        if ( sqlca.sqlcode != 0 )
+        break;
+
+        memset( ( ezechotable_ptr + i ), 0, sizeof( struct EzEchoTable ) );
+        strcpy( ( ezechotable_ptr + i )->NetworkId, NetworkId );
+      	( ezechotable_ptr + i )->EchoProperty = EchoProperty;
+        ( ezechotable_ptr + i )->LogOnReq = LogOnReq;
+        ( ezechotable_ptr + i )->EchoInterval = EchoInterval;
+        i++;
+	}
+    *SqlErr = sqlca.sqlcode;
+    EXEC SQL CLOSE eznetworkecho_cur;
+                                                             
+	if( *SqlErr != 1403 )
+    	return -1;
+    else
+    	return 1;
+}
+
+int getEzNetworkReplayCount( int *SqlErr )
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+    	int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZNETWORKREPLAY;
+
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzNetworkReplay( struct EzNetworkReplay *eznetworkreplay_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		int ReplayInterval;
+		int ReplayLookUpInterval;
+		char ReplayProperty;
+		char ReplayAction;
+	EXEC SQL END DECLARE SECTION;
+
+    int i = 0;
+
+    EXEC SQL VAR NetworkId IS STRING(17);
+
+    EXEC SQL DECLARE eznetworkreplay_cur CURSOR FOR
+	SELECT
+		RTRIM(NETWORKID),
+		REPLAYINTERVAL,
+		REPLAYLOOKUPINTERVAL,
+		REPLAYPROPERTY,
+		REPLAYACTION 
+	FROM EZNETWORKREPLAY;
+
+    EXEC SQL OPEN eznetworkreplay_cur;
+
+	while( 1 )
+    {
+		memset( NetworkId, 0, sizeof( NetworkId ) );
+
+        EXEC SQL FETCH eznetworkreplay_cur INTO
+        :NetworkId,
+        :ReplayInterval,
+        :ReplayLookUpInterval,
+        :ReplayProperty,
+		:ReplayAction;
+		
+        if ( sqlca.sqlcode == 1403 )
+        break;
+
+        if ( sqlca.sqlcode != 0 )
+        break;
+
+		memset( ( eznetworkreplay_ptr + i ), 0, sizeof( struct EzNetworkReplay ) );
+		strcpy( ( eznetworkreplay_ptr + i )->NetworkId, NetworkId );
+		( eznetworkreplay_ptr + i )->ReplayInterval = ReplayInterval;
+		( eznetworkreplay_ptr + i )->ReplayLookUpInterval = ReplayLookUpInterval;
+		( eznetworkreplay_ptr + i )->ReplayProperty = ReplayProperty;
+		( eznetworkreplay_ptr + i )->ReplayAction = ReplayAction;
+		i++;
+    }
+        
+    *SqlErr = sqlca.sqlcode;
+    EXEC SQL CLOSE eznetworkreplay_cur;
+
+    if( *SqlErr != 1403 )
+            return -1;
+    else
+            return 1;
+}
+
+int getEzNetworkBusDayCount( int *SqlErr )
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+    	int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZNETWORKBUSDAY;
+
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzNetworkBusDay( struct EzNetworkBusDay *eznetworkbusday_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		char CutOverUseFlag;
+		int CutOverDate;
+		int CutOverTime;
+	EXEC SQL END DECLARE SECTION;
+
+    int i = 0;
+
+    EXEC SQL VAR NetworkId IS STRING(17);
+    
+    EXEC SQL DECLARE eznetworkbusday_cur CURSOR FOR
+	SELECT
+		RTRIM(NETWORKID),
+		CUTOVERUSEFLAG,
+		CUTOVERDATE,
+		CUTOVERTIME
+	FROM EZNETWORKBUSDAY;
+
+    EXEC SQL OPEN eznetworkbusday_cur;
+
+	while( 1 )
+    {
+		memset( NetworkId, 0, sizeof( NetworkId ) );
+
+        EXEC SQL FETCH eznetworkbusday_cur INTO
+        :NetworkId,
+        :CutOverUseFlag,
+        :CutOverDate,
+        :CutOverTime;
+				
+        if ( sqlca.sqlcode == 1403 )
+        break;
+
+        if ( sqlca.sqlcode != 0 )
+        break;
+
+		memset( ( eznetworkbusday_ptr + i ), 0, sizeof( struct EzNetworkBusDay ) );
+		strcpy( ( eznetworkbusday_ptr + i )->NetworkId, NetworkId );
+		( eznetworkbusday_ptr + i )->CutOverUseFlag = CutOverUseFlag;
+		( eznetworkbusday_ptr + i )->CutOverDate = CutOverDate;
+		( eznetworkbusday_ptr + i )->CutOverTime = CutOverTime;
+		i++;
+    }
+        
+    *SqlErr = sqlca.sqlcode;
+    EXEC SQL CLOSE eznetworkbusday_cur;
+
+    if( *SqlErr != 1403 )
+        return -1;
+    else
+        return 1;
+}
+
+int updateEzNetworkBusDay( const char *I_NetworkId, int I_CutOverDate, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		int CutOverDate;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR NetworkId IS STRING(17);
+	
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	strcpy( NetworkId, I_NetworkId );
+	CutOverDate = I_CutOverDate;
+	
+	EXEC SQL UPDATE EZNETWORKBUSDAY SET CUTOVERDATE=:CutOverDate WHERE RTRIM(NETWORKID)=:NetworkId;
+	
+	if( sqlca.sqlcode != 0 )
+	{
+		*SqlErr = sqlca.sqlcode;
+		return -1;
+	}
+	else
+	{
+		EXEC SQL COMMIT;
+		if( sqlca.sqlcode != 0 )
+		{
+			*SqlErr = sqlca.sqlcode;
+			return -1;
+		}
+		else
+			return 1;
+	}
+}
+

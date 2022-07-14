@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/ezlinkenterprise/!svn/ver/1153/trunk/src/ezbusiness/ezsmsdriver
+END
+ezsmsinfoqueue.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/ezlinkenterprise/!svn/ver/1064/trunk/src/ezbusiness/ezsmsdriver/ezsmsinfoqueue.cpp
+END
+ezsmsdriverutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/ezlinkenterprise/!svn/ver/1059/trunk/src/ezbusiness/ezsmsdriver/ezsmsdriverutil.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/ezlinkenterprise/!svn/ver/1061/trunk/src/ezbusiness/ezsmsdriver/Makefile
+END
+ezsmsdriver.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/ezlinkenterprise/!svn/ver/1153/trunk/src/ezbusiness/ezsmsdriver/ezsmsdriver.cpp
+END

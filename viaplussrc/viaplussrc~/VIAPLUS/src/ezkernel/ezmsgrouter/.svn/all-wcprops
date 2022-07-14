@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/ezlinkenterprise/!svn/ver/2582/trunk/src/ezkernel/ezmsgrouter
+END
+ezmsgrouterutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/ezlinkenterprise/!svn/ver/2578/trunk/src/ezkernel/ezmsgrouter/ezmsgrouterutil.cpp
+END
+ezmsgrouter.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/ezlinkenterprise/!svn/ver/2582/trunk/src/ezkernel/ezmsgrouter/ezmsgrouter.cpp
+END
+Makefile.util
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/ezlinkenterprise/!svn/ver/2/trunk/src/ezkernel/ezmsgrouter/Makefile.util
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/ezlinkenterprise/!svn/ver/2582/trunk/src/ezkernel/ezmsgrouter/Makefile
+END

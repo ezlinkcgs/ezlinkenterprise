@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/ezlinkenterprise/!svn/ver/2579/trunk/src/ezlink/ezalertcmd
+END
+ezalertcmddb.c
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/ezlinkenterprise/!svn/ver/2536/trunk/src/ezlink/ezalertcmd/ezalertcmddb.c
+END
+ezalertcmddb.pc
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/ezlinkenterprise/!svn/ver/2284/trunk/src/ezlink/ezalertcmd/ezalertcmddb.pc
+END
+ezalertcmddb.lis
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/ezlinkenterprise/!svn/ver/2280/trunk/src/ezlink/ezalertcmd/ezalertcmddb.lis
+END
+ezalertcmd.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/ezlinkenterprise/!svn/ver/2579/trunk/src/ezlink/ezalertcmd/ezalertcmd.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/ezlinkenterprise/!svn/ver/2284/trunk/src/ezlink/ezalertcmd/Makefile
+END

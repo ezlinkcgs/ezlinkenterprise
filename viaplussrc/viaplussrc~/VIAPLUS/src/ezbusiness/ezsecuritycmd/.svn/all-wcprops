@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/ezlinkenterprise/!svn/ver/2580/trunk/src/ezbusiness/ezsecuritycmd
+END
+ezsecuritycmddb.c
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/ezlinkenterprise/!svn/ver/2580/trunk/src/ezbusiness/ezsecuritycmd/ezsecuritycmddb.c
+END
+ezsecuritycmddb.pc
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/ezlinkenterprise/!svn/ver/2072/trunk/src/ezbusiness/ezsecuritycmd/ezsecuritycmddb.pc
+END
+ezsecuritycmddb.lis
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/ezlinkenterprise/!svn/ver/2279/trunk/src/ezbusiness/ezsecuritycmd/ezsecuritycmddb.lis
+END
+ezsecuritycmd.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/ezlinkenterprise/!svn/ver/2580/trunk/src/ezbusiness/ezsecuritycmd/ezsecuritycmd.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/ezlinkenterprise/!svn/ver/1353/trunk/src/ezbusiness/ezsecuritycmd/Makefile
+END

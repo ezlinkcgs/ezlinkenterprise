@@ -1,0 +1,13 @@
+
+Pro*C/C++: Release 10.2.0.1.0 - Production on Thu Mar 15 15:28:21 2012
+
+Copyright (c) 1982, 2005, Oracle.  All rights reserved.
+
+Error at line 1, column 10 in file ezechocmddb.pc
+     1  #include <ezdb/eznetworkecho.h>
+     1  .........1
+     1  PCC-S-02015, unable to open include file
+Error at line 2, column 10 in file ezechocmddb.pc
+     2  #include <ezdb/ezechoproperty.h>
+     2  .........1
+     2  PCC-S-02015, unable to open include file

@@ -1,0 +1,359 @@
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ezbusiness/ezatmkey.h>
+#include <ezdb/ezdevicekey.h>
+#include <ezdb/eznetworkkey.h>
+#include <ezdb/ezsecurity.h>
+#include <ezdb/ezhsminfo.h>
+#include <ezdb/ezsecurityproperty.h>
+
+int readEzATMKeyTable( const char *I_ATMId, struct EzATMKey *atmkey_rec )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char ATMId[ 33 ];
+		char Input_ATMId[ 33 ];
+		char ATMMasterKey[ 65 ];
+		char ATMCommKey[ 65 ];
+		int ATMKeyLen;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR ATMId IS STRING(33);
+	EXEC SQL VAR Input_ATMId IS STRING(33);
+	EXEC SQL VAR ATMMasterKey IS STRING(65);
+	EXEC SQL VAR ATMCommKey IS STRING(65);
+	
+	memset( ATMId, 0, sizeof( ATMId ) );
+	memset( Input_ATMId, 0, sizeof( Input_ATMId ) );
+	memset( ATMMasterKey, 0, sizeof( ATMMasterKey ) );
+	memset( ATMCommKey, 0, sizeof( ATMCommKey ) );
+	
+	strcpy( Input_ATMId, I_ATMId );
+	
+	EXEC SQL SELECT
+		RTRIM(ATMID),
+		RTRIM(ATMMASTERKEY),
+		RTRIM(ATMCOMMKEY),
+		ATMKEYLEN
+	INTO
+		:ATMId,
+		:ATMMasterKey,
+		:ATMCommKey,
+		:ATMKeyLen
+	FROM EZATMINFO WHERE RTRIM(ATMID)=:Input_ATMId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+
+	strcpy( atmkey_rec->ATMId, ATMId );
+	strcpy( atmkey_rec->ATMMasterKey, ATMMasterKey );
+	strcpy( atmkey_rec->ATMCommKey, ATMCommKey );
+	atmkey_rec->ATMKeyLen = ATMKeyLen; 
+	
+	return sqlca.sqlcode;
+}
+
+int readDeviceKeyTable( const char *I_DeviceId, struct DeviceKey *devicekey_rec )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char DeviceId[ 33 ];
+		char Input_DeviceId[ 33 ];
+		char DeviceMasterKey[ 65 ];
+		char DeviceCommKey[ 65 ];
+		int DeviceKeyLen;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR DeviceId IS STRING(33);
+	EXEC SQL VAR Input_DeviceId IS STRING(33);
+	EXEC SQL VAR DeviceMasterKey IS STRING(65);
+	EXEC SQL VAR DeviceCommKey IS STRING(65);
+	
+	memset( DeviceId, 0, sizeof( DeviceId ) );
+	memset( Input_DeviceId, 0, sizeof( Input_DeviceId ) );
+	memset( DeviceMasterKey, 0, sizeof( DeviceMasterKey ) );
+	memset( DeviceCommKey, 0, sizeof( DeviceCommKey ) );
+	
+	strcpy( Input_DeviceId, I_DeviceId );
+	
+	EXEC SQL SELECT
+		RTRIM(DEVICEID),
+		RTRIM(DEVICEMASTERKEY),
+		RTRIM(DEVICECOMMKEY),
+		DEVICEKEYLEN
+	INTO
+		:DeviceId,
+		:DeviceMasterKey,
+		:DeviceCommKey,
+		:DeviceKeyLen
+	FROM EZDEVICEKEY WHERE RTRIM(DEVICEID)=:Input_DeviceId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+
+	strcpy( devicekey_rec->DeviceId, DeviceId );
+	strcpy( devicekey_rec->DeviceMasterKey, DeviceMasterKey );
+	strcpy( devicekey_rec->DeviceCommKey, DeviceCommKey );
+	devicekey_rec->DeviceKeyLen = DeviceKeyLen; 
+	
+	return sqlca.sqlcode;
+}
+
+int readEzNetworkKeyTable( const char *I_NetworkId, struct EzNetworkKey *ntwkkey_rec )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		char Input_NetworkId[ 17 ];
+		char NetworkMasterKey[ 65 ];
+		char NetworkAcqCommKey[ 65 ];
+		char NetworkIssCommKey[ 65 ];
+		int NetworkKeyLen;
+		char KeyProperty;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR NetworkId IS STRING(17);
+	EXEC SQL VAR Input_NetworkId IS STRING(17);
+	EXEC SQL VAR NetworkMasterKey IS STRING(65);
+	EXEC SQL VAR NetworkAcqCommKey IS STRING(65);
+	EXEC SQL VAR NetworkIssCommKey IS STRING(65);
+	
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	memset( Input_NetworkId, 0, sizeof( Input_NetworkId ) );
+	memset( NetworkMasterKey, 0, sizeof( NetworkMasterKey ) );
+	memset( NetworkAcqCommKey, 0, sizeof( NetworkAcqCommKey ) );
+	memset( NetworkIssCommKey, 0, sizeof( NetworkIssCommKey ) );
+	
+	strcpy( Input_NetworkId, I_NetworkId );
+	
+	EXEC SQL SELECT
+		RTRIM(NETWORKID),
+		RTRIM(NETWORKMASTERKEY),
+		RTRIM(NETWORKACQCOMMKEY),
+		RTRIM(NETWORKISSCOMMKEY),
+		NETWORKKEYLEN,
+		KEYPROPERTY
+	INTO
+		:NetworkId,
+		:NetworkMasterKey,
+		:NetworkAcqCommKey,
+		:NetworkIssCommKey,
+		:NetworkKeyLen,
+		:KeyProperty
+	FROM EZNETWORKKEY WHERE RTRIM(NETWORKID)=:Input_NetworkId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+
+	strcpy( ntwkkey_rec->NetworkId, NetworkId );
+	strcpy( ntwkkey_rec->NetworkMasterKey, NetworkMasterKey );
+	strcpy( ntwkkey_rec->NetworkAcqCommKey, NetworkAcqCommKey );
+	strcpy( ntwkkey_rec->NetworkIssCommKey, NetworkIssCommKey );
+	ntwkkey_rec->NetworkKeyLen = NetworkKeyLen; 
+	ntwkkey_rec->KeyProperty = KeyProperty;
+	
+	return sqlca.sqlcode;
+}
+
+
+int readEzSecurityTable( const char *I_SecurityId, struct EzSecurity *ezsecurity_rec )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char SecurityId[ 11 ];
+		char Input_SecurityId[ 11 ];
+		char PINVerificationMethod;
+		char EPVK[ 65 ];
+		char DecimilizationTable[ 17 ];
+		char PINPadChar;
+		char PANPadChar;
+		short PINLen;
+		short PANLen;
+		short PANValidationOffset;
+		char PINBlockFormat[ 3 ];
+		short PANValidationLength;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR SecurityId IS STRING(11);
+	EXEC SQL VAR Input_SecurityId IS STRING(11);
+	EXEC SQL VAR EPVK IS STRING(65);
+	EXEC SQL VAR DecimilizationTable IS STRING(17);
+	EXEC SQL VAR PINBlockFormat IS STRING(3);
+	
+	memset( SecurityId, 0, sizeof( SecurityId ) );
+	memset( Input_SecurityId, 0, sizeof( Input_SecurityId ) );
+	memset( EPVK, 0, sizeof( EPVK ) );
+	memset( DecimilizationTable, 0, sizeof( DecimilizationTable ) );
+	memset( PINBlockFormat, 0, sizeof( PINBlockFormat ) );
+	
+	strcpy( Input_SecurityId, I_SecurityId );
+	
+	EXEC SQL SELECT
+		RTRIM(SECURITYID),
+        PINVERIFICATIONMETHOD,
+        RTRIM(EPVK),
+        RTRIM(DECIMILIZATIONTABLE),
+        PINPADCHAR,
+		PANPADCHAR,
+		PINLEN,
+		PANLEN,
+		PANVALIDATIONOFFSET,
+		RTRIM(PINBLOCKFORMAT),
+		PANVALIDATIONLENGTH
+	INTO
+		:SecurityId,
+		:PINVerificationMethod,
+		:EPVK,
+		:DecimilizationTable,
+		:PINPadChar,
+		:PANPadChar,
+		:PINLen,
+		:PANLen,
+		:PANValidationOffset,
+		:PINBlockFormat,
+		:PANValidationLength
+	FROM EZSECURITY WHERE RTRIM(SECURITYID)=:Input_SecurityId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+
+	strcpy( ezsecurity_rec->SecurityId, SecurityId );
+	ezsecurity_rec->PINVerificationMethod = PINVerificationMethod;
+	strcpy( ezsecurity_rec->EPVK, EPVK );
+	strcpy( ezsecurity_rec->DecimilizationTable, DecimilizationTable );
+	ezsecurity_rec->PINPadChar = PINPadChar;
+	ezsecurity_rec->PANPadChar = PANPadChar;
+	ezsecurity_rec->PINLen = PINLen;
+	ezsecurity_rec->PANLen = PANLen;
+	ezsecurity_rec->PANValidationOffset = PANValidationOffset;
+	strcpy( ezsecurity_rec->PINBlockFormat, PINBlockFormat );
+	ezsecurity_rec->PANValidationLength = PANValidationLength;
+	
+	return sqlca.sqlcode;
+}
+
+int readEzSecurityPropertyTable( const char *I_RecordId, struct EzSecurityProperty *securityproperty_rec )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[ 11 ];
+		char Input_RecordId[ 11 ];
+		char InstSecurityGroupId[ 17 ];
+		char SecurityProtocol[ 17 ];
+		char SecurityChannel[ 33 ];
+		int Priority;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR RecordId IS STRING(11);
+	EXEC SQL VAR Input_RecordId IS STRING(11);
+	EXEC SQL VAR InstSecurityGroupId IS STRING(17);
+	EXEC SQL VAR SecurityProtocol IS STRING(17);
+	EXEC SQL VAR SecurityChannel IS STRING(33);
+	
+	memset( RecordId, 0, sizeof( RecordId ) );
+	memset( Input_RecordId, 0, sizeof( Input_RecordId ) );
+	memset( InstSecurityGroupId, 0, sizeof( InstSecurityGroupId ) );
+	memset( SecurityProtocol, 0, sizeof( SecurityProtocol ) );
+	memset( SecurityChannel, 0, sizeof( SecurityChannel ) );
+	
+	strcpy( Input_RecordId, I_RecordId );
+	
+	EXEC SQL SELECT
+		RTRIM(RECORDID),
+        RTRIM(INSTSECURITYGROUPID),
+        RTRIM(SECURITYPROTOCOL),
+        RTRIM(SECURITYCHANNEL),
+        PRIORITY
+	INTO
+		:RecordId,
+        :InstSecurityGroupId,
+        :SecurityProtocol,
+        :SecurityChannel,
+        :Priority
+	FROM EZSECURITYPROPERTY WHERE RTRIM(RECORDID)=:Input_RecordId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+		
+	strcpy( securityproperty_rec->RecordId, RecordId );
+	strcpy( securityproperty_rec->InstSecurityGroupId, InstSecurityGroupId );
+	strcpy( securityproperty_rec->SecurityProtocol, SecurityProtocol );
+	strcpy( securityproperty_rec->SecurityChannel, SecurityChannel );
+	securityproperty_rec->Priority = Priority;
+	
+	return sqlca.sqlcode;
+}
+
+int readEzHSMInfoTable( const char *I_HSMName, struct EzHSMInfo *hsminfo_rec )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char HSMName[ 33 ];
+		char Input_HSMName[ 33 ];
+		char HSMProtocol[ 17 ];
+		char HSMType[ 17 ];
+		char HSMAddress[ 33 ];
+		int HSMPortNo;
+		int HeaderLen;
+		char HeaderType[ 9 ];
+		int HSMHeaderLen;
+		int HSMTimeOut;
+		int ConnectionInterval;
+		int HSMStatus;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR HSMName IS STRING(33);
+	EXEC SQL VAR Input_HSMName IS STRING(33);
+	EXEC SQL VAR HSMProtocol IS STRING(17);
+	EXEC SQL VAR HSMType IS STRING(17);
+	EXEC SQL VAR HSMAddress IS STRING(33);
+	EXEC SQL VAR HeaderType IS STRING(9);
+	
+	memset( HSMName, 0, sizeof( HSMName ) );
+	memset( Input_HSMName, 0, sizeof( Input_HSMName ) );
+	memset( HSMProtocol, 0, sizeof( HSMProtocol ) );
+	memset( HSMType, 0, sizeof( HSMType ) );
+	memset( HSMAddress, 0, sizeof( HSMAddress ) );
+	memset( HeaderType, 0, sizeof( HeaderType ) );
+	
+	strcpy( Input_HSMName, I_HSMName );
+	
+	EXEC SQL SELECT
+		RTRIM(HSMNAME),
+        RTRIM(HSMPROTOCOL),
+        RTRIM(HSMTYPE),
+        RTRIM(HSMADDRESS),
+        HSMPORT,
+        HEADERLEN,
+		RTRIM(HEADERTYPE),
+		HSMHEADERLEN,
+		HSMTIMEOUT,
+		CONNECTIONINTERVAL,
+		HSMSTATUS
+	INTO
+		:HSMName,
+        :HSMProtocol,
+        :HSMType,
+        :HSMAddress,
+        :HSMPortNo,
+        :HeaderLen,
+        :HeaderType,
+        :HSMHeaderLen,
+        :HSMTimeOut,
+        :ConnectionInterval,
+        :HSMStatus
+	FROM EZHSMINFO WHERE RTRIM(HSMNAME)=:Input_HSMName;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+
+	strcpy( hsminfo_rec->HSMName, HSMName );
+    strcpy( hsminfo_rec->HSMProtocol, HSMProtocol );
+    strcpy( hsminfo_rec->HSMType, HSMType );
+    strcpy( hsminfo_rec->HSMAddress, HSMAddress );
+    hsminfo_rec->HSMPortNo = HSMPortNo;
+    hsminfo_rec->HeaderLen = HeaderLen;
+    strcpy( hsminfo_rec->HeaderType, HeaderType );
+    hsminfo_rec->HSMHeaderLen = HSMHeaderLen;
+    hsminfo_rec->HSMTimeOut = HSMTimeOut;
+    hsminfo_rec->ConnectionInterval = ConnectionInterval;
+    hsminfo_rec->HSMStatus = HSMStatus;
+	
+	return sqlca.sqlcode;
+}
+

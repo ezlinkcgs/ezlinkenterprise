@@ -1,0 +1,87 @@
+#include <ezdb/eznetworkecho.h>
+#include <ezdb/ezechoproperty.h>
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+int readEzNetworkEcho( const char *I_NetworkId, struct EzNetworkEcho *eznetworkecho_ptr )
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char NetworkId[ 17 ];
+        char Input_NetworkId[ 17 ];
+        char EchoPropertyId[ 17 ];
+        char EchoProperty;
+        char LogOnReq;
+    EXEC SQL END DECLARE SECTION;
+
+    int i = 0;
+
+    EXEC SQL VAR NetworkId IS STRING(17);
+    EXEC SQL VAR Input_NetworkId IS STRING(17);
+	EXEC SQL VAR EchoPropertyId IS STRING(17);
+	
+    memset( NetworkId, 0, sizeof( NetworkId ) );
+    memset( Input_NetworkId, 0, sizeof( Input_NetworkId ) );
+    memset( EchoPropertyId, 0, sizeof( EchoPropertyId ) );
+
+    strcpy( Input_NetworkId, I_NetworkId );
+
+    EXEC SQL SELECT
+        RTRIM(NETWORKID),
+        RTRIM(ECHOPROPERTYID),
+        ECHOPROPERTY,
+        LOGONREQ
+    INTO
+        :NetworkId,
+        :EchoPropertyId,
+        :EchoProperty,
+        :LogOnReq
+	FROM EZNETWORKECHO WHERE RTRIM(NETWORKID)=:Input_NetworkId;
+
+    if( sqlca.sqlcode != 0 )
+        return sqlca.sqlcode;
+
+    strcpy( eznetworkecho_ptr->NetworkId, NetworkId );
+    strcpy( eznetworkecho_ptr->EchoPropertyId, EchoPropertyId ); 
+    eznetworkecho_ptr->EchoProperty = EchoProperty;
+	eznetworkecho_ptr->LogOnReq = LogOnReq;
+    return 0;
+
+}
+                                                                                       
+int readEzEchoProperty( const char *I_EchoPropertyId, struct EzEchoProperty *ezechoproperty_ptr )
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char EchoPropertyId[ 17 ];
+        char Input_EchoPropertyId[ 17 ];
+        int EchoInterval;
+   	EXEC SQL END DECLARE SECTION;
+
+    int i = 0;
+
+    EXEC SQL VAR EchoPropertyId IS STRING(17);
+    EXEC SQL VAR Input_EchoPropertyId IS STRING(17);
+	
+	memset( EchoPropertyId, 0, sizeof( EchoPropertyId ) );
+	memset( Input_EchoPropertyId, 0, sizeof( Input_EchoPropertyId ) );
+    
+    strcpy( Input_EchoPropertyId, I_EchoPropertyId );
+
+    EXEC SQL SELECT
+        RTRIM(ECHOPROPERTYID),
+        ECHOINTERVAL
+    INTO
+        :EchoPropertyId,
+        :EchoInterval
+	FROM EZECHOPROPERTY WHERE RTRIM(ECHOPROPERTYID)=:Input_EchoPropertyId;
+
+    if( sqlca.sqlcode != 0 )
+        return sqlca.sqlcode;
+
+    strcpy( ezechoproperty_ptr->EchoPropertyId, EchoPropertyId );
+    ezechoproperty_ptr->EchoInterval = EchoInterval;
+
+    return 0;
+}
+

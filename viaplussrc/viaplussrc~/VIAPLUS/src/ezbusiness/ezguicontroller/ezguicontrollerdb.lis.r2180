@@ -1,0 +1,53 @@
+
+Pro*C/C++: Release 10.2.0.1.0 - Production on Thu Apr 7 16:55:32 2011
+
+Copyright (c) 1982, 2005, Oracle.  All rights reserved.
+
+Error at line 1, column 10 in file ezguicontrollerdb.pc
+     1  #include <ezdb/eznetwork.h>
+     1  .........1
+     1  PCC-S-02015, unable to open include file
+Error at line 2, column 10 in file ezguicontrollerdb.pc
+     2  #include <ezdb/eznetworkecho.h>
+     2  .........1
+     2  PCC-S-02015, unable to open include file
+Error at line 3, column 10 in file ezguicontrollerdb.pc
+     3  #include <ezdb/eznetworkreplay.h>
+     3  .........1
+     3  PCC-S-02015, unable to open include file
+Error at line 4, column 10 in file ezguicontrollerdb.pc
+     4  #include <ezdb/ezechoproperty.h>
+     4  .........1
+     4  PCC-S-02015, unable to open include file
+Error at line 5, column 10 in file ezguicontrollerdb.pc
+     5  #include <ezdb/eznetworkbusday.h>
+     5  .........1
+     5  PCC-S-02015, unable to open include file
+Error at line 6, column 10 in file ezguicontrollerdb.pc
+     6  #include <ezbusiness/ezbusinesstypes.h>
+     6  .........1
+     6  PCC-S-02015, unable to open include file
+Error at line 7, column 10 in file ezguicontrollerdb.pc
+     7  #include <ezlink/ezinstdbtypes.h>
+     7  .........1
+     7  PCC-S-02015, unable to open include file
+Error at line 12, column 10 in file ezguicontrollerdb.pc
+    12  #include <ezdb/eznetworkkey.h>
+    12  .........1
+    12  PCC-S-02015, unable to open include file
+Error at line 13, column 10 in file ezguicontrollerdb.pc
+    13  #include <ezdb/ezsecurity.h>
+    13  .........1
+    13  PCC-S-02015, unable to open include file
+Error at line 14, column 10 in file ezguicontrollerdb.pc
+    14  #include <ezbusiness/ezatmkey.h>
+    14  .........1
+    14  PCC-S-02015, unable to open include file
+Error at line 15, column 10 in file ezguicontrollerdb.pc
+    15  #include <ezdb/ezatmdenomstatus.h>
+    15  .........1
+    15  PCC-S-02015, unable to open include file
+Error at line 16, column 10 in file ezguicontrollerdb.pc
+    16  #include <ezbusiness/ezposdbtypes.h>
+    16  .........1
+    16  PCC-S-02015, unable to open include file

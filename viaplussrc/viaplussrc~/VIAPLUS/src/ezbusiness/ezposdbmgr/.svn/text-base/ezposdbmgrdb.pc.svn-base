@@ -1,0 +1,437 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<sqlca.h>
+#include <ezlink/ezlnkmsg.h>
+#include <ezdb/ezposbatchinfo.h>
+
+int insertPosTxnLog( const char *I_POSId, struct EzTxnMsg *txnmsg, const char *I_POSTxnRefNum )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char POSId[ 33 ];
+		char TermId[ 9 ];
+		char MerchantId[ 16 ];
+		char BatchId[ 13 ];
+		char POSTxnRefNum[ 151 ];
+		int MsgType;
+		int TxnCode;
+		char chn[ 20 ];
+		char TermLoc[ 65 ];
+		int TraceNo;
+		char AuthNum[ 13 ];
+		char RefNum[ 13 ];
+		char TranDate[ 7 ];
+		int TranTime;
+		char LocalDate[ 7 ];
+		int LocalTime;
+		int RespCode;
+		int AuthCode;
+		int CurrencyCode;
+		int MCC;
+		char TxnAmount[ 16 ];
+		short ind_var;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR POSId IS STRING(33);
+	EXEC SQL VAR TermId IS STRING(9);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR BatchId IS STRING(13);
+	EXEC SQL VAR POSTxnRefNum IS STRING(151);
+	EXEC SQL VAR chn IS STRING(20);
+	EXEC SQL VAR TermLoc IS STRING(65);
+	EXEC SQL VAR AuthNum IS STRING(13);
+	EXEC SQL VAR RefNum IS STRING(13);
+	EXEC SQL VAR TranDate IS STRING(7);
+	EXEC SQL VAR LocalDate IS STRING(7);
+	EXEC SQL VAR TxnAmount IS STRING(16);
+	
+	
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( POSId, 0, sizeof( POSId ) );
+	memset( TermId, 0, sizeof( TermId ) );
+	memset( MerchantId, 0, sizeof( MerchantId ) );
+	memset( BatchId, 0, sizeof( BatchId ) );
+	memset( POSTxnRefNum, 0, sizeof( POSTxnRefNum ) );
+	memset( chn, 0, sizeof( chn ) );
+	memset( TermLoc, 0, sizeof( TermLoc ) );
+	memset( AuthNum, 0, sizeof( AuthNum ) );
+	memset( RefNum, 0, sizeof( RefNum ) );
+	memset( TranDate, 0, sizeof( TranDate ) );
+	memset( LocalDate, 0, sizeof( LocalDate ) );
+	memset( TxnAmount, 0, sizeof( TxnAmount ) );
+	
+	strcpy( InstId, txnmsg->AcquirerInst );
+	strcpy( POSId, I_POSId );
+	strcpy( TermId, txnmsg->TerminalId );
+	strcpy( MerchantId, txnmsg->AcceptorId );
+	strcpy( BatchId, txnmsg->BatchId );
+	strcpy( POSTxnRefNum, I_POSTxnRefNum );
+	MsgType = txnmsg->MsgType;
+	TxnCode = txnmsg->TxnCode;
+	strcpy( chn, txnmsg->chn );
+	strcpy( TermLoc, txnmsg->TerminalLocation );
+	TraceNo = txnmsg->TraceNo;
+	strcpy( AuthNum, txnmsg->AuthNum );
+	strcpy( RefNum, txnmsg->RefNum );
+	sprintf( TranDate, "%06d", txnmsg->TranDate );
+	TranTime = txnmsg->TranTime;
+	sprintf( LocalDate, "%06d", txnmsg->LocalDate );
+	LocalTime = txnmsg->LocalTime;
+	RespCode = txnmsg->RespCode;
+	AuthCode = txnmsg->AuthCode;
+	CurrencyCode = txnmsg->AcqCurrencyCode;
+	MCC = txnmsg->MerchantType;
+	strcpy( TxnAmount, txnmsg->Amount );
+	
+	EXEC SQL INSERT INTO EZPOSTXNLOG
+	(
+		INSTID,
+		POSID,
+		TERMID,
+		MERCHANTID,
+		BATCHID,
+		POSTXNREFNUM,
+		MSGTYPE,
+		TXNCODE,
+		CHN,
+		TERMLOC,
+		TRACENO,
+		AUTHNUM,
+		REFNUM,
+		TRANDATE,
+		TRANTIME,
+		LOCALDATE,
+		LOCALTIME,
+		RESPCODE,
+		AUTHCODE,
+		CURRENCYCODE,
+		MCC,
+		TXNAMOUNT
+	)
+	VALUES
+	(
+		:InstId,
+		:POSId,
+		:TermId,
+        :MerchantId,
+        :BatchId,
+        :POSTxnRefNum,
+        :MsgType,
+        :TxnCode,
+        :chn,
+        :TermLoc,
+        :TraceNo,
+        :AuthNum,
+        :RefNum,
+        to_date( :TranDate, 'dd-mm-yy' ),
+        :TranTime,
+        to_date( :LocalDate, 'dd-mm-yy' ),
+        :LocalTime,
+        :RespCode,
+        :AuthCode,
+        :CurrencyCode,
+        :MCC,
+        :TxnAmount
+    );
+	
+	if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+    {
+            EXEC SQL COMMIT;
+            return sqlca.sqlcode;
+    }
+}
+
+int insertPosBatchTxnInfo( const char *I_POSId, struct EzTxnMsg *txnmsg, const char *I_POSTxnRefNum )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char POSId[ 33 ];
+		char TermId[ 9 ];
+		char MerchantId[ 16 ];
+		char BatchId[ 13 ];
+		char POSTxnRefNum[ 151 ];
+		int MsgType;
+		int TxnCode;
+		char chn[ 20 ];
+		char TermLoc[ 65 ];
+		int TraceNo;
+		char AuthNum[ 13 ];
+		char RefNum[ 13 ];
+		char TranDate[ 7 ];
+		int TranTime;
+		char LocalDate[ 7 ];
+		int LocalTime;
+		int RespCode;
+		int AuthCode;
+		int CurrencyCode;
+		int MCC;
+		char TxnAmount[ 16 ];
+		char TermAmount[ 16 ];
+		char MatchFlag;
+		char MatchDesc[ 33 ];
+		short ind_var;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR POSId IS STRING(33);
+	EXEC SQL VAR TermId IS STRING(9);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR BatchId IS STRING(13);
+	EXEC SQL VAR POSTxnRefNum IS STRING(151);
+	EXEC SQL VAR chn IS STRING(20);
+	EXEC SQL VAR TermLoc IS STRING(65);
+	EXEC SQL VAR AuthNum IS STRING(13);
+	EXEC SQL VAR RefNum IS STRING(13);
+	EXEC SQL VAR TranDate IS STRING(7);
+	EXEC SQL VAR LocalDate IS STRING(7);
+	EXEC SQL VAR TxnAmount IS STRING(16);
+	EXEC SQL VAR TermAmount IS STRING(16);
+	EXEC SQL VAR MatchDesc IS STRING(33);
+	
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( POSId, 0, sizeof( POSId ) );
+	memset( TermId, 0, sizeof( TermId ) );
+	memset( MerchantId, 0, sizeof( MerchantId ) );
+	memset( BatchId, 0, sizeof( BatchId ) );
+	memset( POSTxnRefNum, 0, sizeof( POSTxnRefNum ) );
+	memset( chn, 0, sizeof( chn ) );
+	memset( TermLoc, 0, sizeof( TermLoc ) );
+	memset( AuthNum, 0, sizeof( AuthNum ) );
+	memset( RefNum, 0, sizeof( RefNum ) );
+	memset( TranDate, 0, sizeof( TranDate ) );
+	memset( LocalDate, 0, sizeof( LocalDate ) );
+	memset( TxnAmount, 0, sizeof( TxnAmount ) );
+	memset( TermAmount, 0, sizeof( TermAmount ) );
+	memset( MatchDesc, 0, sizeof( MatchDesc ) );
+	
+	strcpy( InstId, txnmsg->AcquirerInst );
+	strcpy( POSId, I_POSId );
+	strcpy( TermId, txnmsg->TerminalId );
+	strcpy( MerchantId, txnmsg->AcceptorId );
+	strcpy( BatchId, txnmsg->BatchId );
+	strcpy( POSTxnRefNum, I_POSTxnRefNum );
+	MsgType = txnmsg->MsgType;
+	TxnCode = txnmsg->TxnCode;
+	strcpy( chn, txnmsg->chn );
+	strcpy( TermLoc, txnmsg->TerminalLocation );
+	TraceNo = txnmsg->TraceNo;
+	strcpy( AuthNum, txnmsg->AuthNum );
+	strcpy( RefNum, txnmsg->RefNum );
+	sprintf( TranDate, "%06d", txnmsg->TranDate );
+	TranTime = txnmsg->TranTime;
+	sprintf( LocalDate, "%06d", txnmsg->LocalDate );
+	LocalTime = txnmsg->LocalTime;
+	RespCode = txnmsg->RespCode;
+	AuthCode = txnmsg->AuthCode;
+	CurrencyCode = txnmsg->AcqCurrencyCode;
+	MCC = txnmsg->MerchantType;
+	strcpy( TxnAmount, txnmsg->Amount );
+	strcpy( TermAmount, txnmsg->Amount );
+	MatchFlag = 'M';
+	strcpy( MatchDesc, "MATCHED" );
+	
+	EXEC SQL INSERT INTO EZPOSBATCHTXNINFO
+	(
+		INSTID,
+		POSID,	
+		TERMID,
+		MERCHANTID,
+		BATCHID,
+		POSTXNREFNUM,
+		MSGTYPE,
+		TXNCODE,
+		CHN,
+		TERMLOC,
+		TRACENO,
+		AUTHNUM,
+		REFNUM,
+		TRANDATE,
+		TRANTIME,
+		LOCALDATE,
+		LOCALTIME,
+		RESPCODE,
+		AUTHCODE,
+		CURRENCYCODE,
+		MCC,
+		TXNAMOUNT,
+		TERMAMOUNT,
+		MATCHFLAG,
+		MATCHDESC
+	)
+	VALUES
+	(
+		:InstId,
+		:POSId,
+		:TermId,
+        :MerchantId,
+        :BatchId,
+        :POSTxnRefNum,
+        :MsgType,
+        :TxnCode,
+        :chn,
+        :TermLoc,
+        :TraceNo,
+        :AuthNum,
+        :RefNum,
+        to_date( :TranDate, 'dd-mm-yy' ),
+        :TranTime,
+        to_date( :LocalDate, 'dd-mm-yy' ),
+        :LocalTime,
+        :RespCode,
+        :AuthCode,
+        :CurrencyCode,
+        :MCC,
+        :TxnAmount,
+        :TermAmount,
+        :MatchFlag,
+        :MatchDesc
+    );
+	
+	if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+    {
+            EXEC SQL COMMIT;
+            return sqlca.sqlcode;
+    }
+}
+
+int readPOSBatchInfo( const char *I_POSId, struct EzPOSBatchInfo *posbatchinfo_rec )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char BatchId[ 13 ];
+		char InstId[ 13 ];
+		char POSId[ 33 ];
+		char Termid[ 9 ];
+		char MerchantId[ 16 ];
+		char OpenDate[ 7 ];
+		int OpenTime;
+		char OpenSource;
+		int SaleCount;
+		double SaleAmount;
+		int VoidCount;
+		double VoidAmount;
+		int AuthCount;
+		double AuthAmount;
+		short ind_var;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR BatchId IS STRING(13);
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR POSId IS STRING(33);
+	EXEC SQL VAR Termid IS STRING(9);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR OpenDate IS STRING(7);
+	
+	memset( BatchId, 0, sizeof( BatchId ) );
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( POSId, 0, sizeof( POSId ) );
+	memset( Termid, 0, sizeof( Termid ) );
+	memset( MerchantId, 0, sizeof( MerchantId ) );
+	memset( OpenDate, 0, sizeof( OpenDate ) );
+	
+	strcpy( POSId, I_POSId );
+	
+	EXEC SQL SELECT 
+		RTRIM(INSTID),
+		RTRIM(BATCHID),
+		RTRIM(TERMID),
+		RTRIM(MERCHANTID),
+		TO_CHAR(OPENDATE, 'DDMMYY' ),
+		OPENTIME,
+		SALECOUNT,
+		SALEAMOUNT,
+		VOIDCOUNT,
+		VOIDAMOUNT,
+		AUTHCOUNT,
+		AUTHAMOUNT
+	INTO 
+		:InstId:ind_var,
+		:BatchId:ind_var,
+		:Termid: ind_var,
+		:MerchantId:ind_var,
+		:OpenDate:ind_var,
+		:OpenTime:ind_var,
+		:SaleCount:ind_var,
+		:SaleAmount:ind_var,
+		:VoidCount:ind_var,
+		:VoidAmount:ind_var,
+		:AuthCount:ind_var,
+		:AuthAmount:ind_var
+	FROM EZPOSBATCHINFO WHERE RTRIM(POSID) =:I_POSId; 
+	
+	if( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	
+	strcpy( posbatchinfo_rec->POSId, POSId );
+	strcpy( posbatchinfo_rec->BatchId, BatchId );
+	strcpy( posbatchinfo_rec->Termid, Termid );
+	strcpy( posbatchinfo_rec->MerchantId, MerchantId );
+	strcpy( posbatchinfo_rec->OpenDate, OpenDate );
+	posbatchinfo_rec->OpenTime = OpenTime;
+	posbatchinfo_rec->SaleCount = SaleCount;
+	posbatchinfo_rec->SaleAmount = SaleAmount;
+	posbatchinfo_rec->VoidCount = VoidCount;
+	posbatchinfo_rec->VoidAmount = VoidAmount;
+	posbatchinfo_rec->AuthCount = AuthCount;
+	posbatchinfo_rec->AuthAmount = AuthAmount;
+	return sqlca.sqlcode;
+}
+
+int updateSaleTxn( const char *I_POSId, double I_TxnAmount, int I_TxnCount )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char POSId[ 33 ];
+		double TxnAmount;
+		int TxnCount;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR POSId IS STRING(33);
+	
+	memset( POSId, 0, sizeof( POSId ) );
+	strcpy( POSId, I_POSId );
+	TxnAmount = I_TxnAmount;
+	TxnCount = I_TxnCount;
+	
+	EXEC SQL UPDATE EZPOSBATCHINFO SET SALECOUNT = :TxnCount, SALEAMOUNT = :TxnAmount WHERE RTRIM(POSID) = :POSId;
+			
+	if( sqlca.sqlcode != 0 )
+	   	return sqlca.sqlcode;
+    else
+    {
+	    EXEC SQL COMMIT;
+        if( sqlca.sqlcode != 0 )
+	   		return sqlca.sqlcode;
+	}
+}
+
+int updateVoidTxn( const char *I_POSId, double I_TxnAmount, int I_TxnCount )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char POSId[ 33 ];
+		double TxnAmount;
+		int TxnCount;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR POSId IS STRING(33);
+	
+	memset( POSId, 0, sizeof( POSId ) );
+	strcpy( POSId, I_POSId );
+	TxnAmount = I_TxnAmount;
+	TxnCount = I_TxnCount;
+	
+	EXEC SQL UPDATE EZPOSBATCHINFO SET VOIDCOUNT = :TxnCount, VOIDAMOUNT = :TxnAmount WHERE RTRIM(POSID) = :POSId;
+			
+	if( sqlca.sqlcode != 0 )
+	   	return sqlca.sqlcode;
+    else
+    {
+	    EXEC SQL COMMIT;
+        if( sqlca.sqlcode != 0 )
+	   		return sqlca.sqlcode;
+	}
+}

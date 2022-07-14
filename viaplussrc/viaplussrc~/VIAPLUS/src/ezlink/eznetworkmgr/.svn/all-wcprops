@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/ezlinkenterprise/!svn/ver/2579/trunk/src/ezlink/eznetworkmgr
+END
+eznetworkmgr.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/ezlinkenterprise/!svn/ver/2398/trunk/src/ezlink/eznetworkmgr/eznetworkmgr.cpp
+END
+eznetworkmgrdb.lis.2.mine
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/ezlinkenterprise/!svn/ver/274/trunk/src/ezlink/eznetworkmgr/eznetworkmgrdb.lis.2.mine
+END
+eznetworkmgrdb.lis.mine
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/ezlinkenterprise/!svn/ver/284/trunk/src/ezlink/eznetworkmgr/eznetworkmgrdb.lis.mine
+END
+eznetworkmgrdb.lis.3.mine
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/ezlinkenterprise/!svn/ver/284/trunk/src/ezlink/eznetworkmgr/eznetworkmgrdb.lis.3.mine
+END
+eznetworkmgrdb.lis.2.r234
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/ezlinkenterprise/!svn/ver/274/trunk/src/ezlink/eznetworkmgr/eznetworkmgrdb.lis.2.r234
+END
+eznetworkmgrdb.c
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/ezlinkenterprise/!svn/ver/2579/trunk/src/ezlink/eznetworkmgr/eznetworkmgrdb.c
+END
+eznetworkmgrdb.pc
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/ezlinkenterprise/!svn/ver/2398/trunk/src/ezlink/eznetworkmgr/eznetworkmgrdb.pc
+END
+eznetworkmgrdb.lis
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/ezlinkenterprise/!svn/ver/2258/trunk/src/ezlink/eznetworkmgr/eznetworkmgrdb.lis
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/ezlinkenterprise/!svn/ver/1007/trunk/src/ezlink/eznetworkmgr/Makefile
+END
+eznetworkmgrutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/ezlinkenterprise/!svn/ver/2398/trunk/src/ezlink/eznetworkmgr/eznetworkmgrutil.cpp
+END

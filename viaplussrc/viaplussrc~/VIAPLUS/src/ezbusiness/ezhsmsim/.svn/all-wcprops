@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/ezlinkenterprise/!svn/ver/1431/trunk/src/ezbusiness/ezhsmsim
+END
+ezhsmsim.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/ezlinkenterprise/!svn/ver/1431/trunk/src/ezbusiness/ezhsmsim/ezhsmsim.cpp
+END
+ezcfg_util.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/ezlinkenterprise/!svn/ver/1431/trunk/src/ezbusiness/ezhsmsim/ezcfg_util.h
+END
+ezdebugutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/ezlinkenterprise/!svn/ver/1431/trunk/src/ezbusiness/ezhsmsim/ezdebugutil.cpp
+END
+ezhsmsim.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/ezlinkenterprise/!svn/ver/1431/trunk/src/ezbusiness/ezhsmsim/ezhsmsim.h
+END
+ezdebugutil.h
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/ezlinkenterprise/!svn/ver/1431/trunk/src/ezbusiness/ezhsmsim/ezdebugutil.h
+END
+ezcfg_util.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/ezlinkenterprise/!svn/ver/1431/trunk/src/ezbusiness/ezhsmsim/ezcfg_util.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/ezlinkenterprise/!svn/ver/1431/trunk/src/ezbusiness/ezhsmsim/Makefile
+END

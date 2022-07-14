@@ -1,0 +1,9 @@
+
+Pro*C/C++: Release 11.2.0.1.0 - Production on Sun Jan 31 06:20:30 2021
+
+Copyright (c) 1982, 2009, Oracle and/or its affiliates.  All rights reserved.
+
+Error at line 1, column 10 in file ezagenttmsmgrdb.pc
+     1  #include <ezagenttms/ezagenttmsdbtypes.h>
+     1  .........1
+     1  PCC-S-02015, unable to open include file

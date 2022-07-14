@@ -1,0 +1,11 @@
+BINDIR=${EZDIR_HOME}/bin
+LIBDIR=${EZDIR_HOME}/lib
+OBJFILE=ezcommmgrutil.o
+SOURCE=ezcommmgrutil.cpp
+INCLUDEDIR=${EZDIR_HOME}/include
+
+${OBJFILE}	:	${SOURCE}
+			g++ -c ${SOURCE} -I${INCLUDEDIR}
+
+clean		:
+			rm *.o
