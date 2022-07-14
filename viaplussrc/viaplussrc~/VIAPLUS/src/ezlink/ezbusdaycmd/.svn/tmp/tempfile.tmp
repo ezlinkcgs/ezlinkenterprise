@@ -1,0 +1,13 @@
+
+<<<<<<< .mine
+Pro*C/C++: Release 10.2.0.1.0 - Production on Thu Mar 15 15:28:24 2012
+=======
+Pro*C/C++: Release 11.2.0.1.0 - Production on Thu Sep 22 14:27:09 2011
+>>>>>>> .r2582
+
+Copyright (c) 1982, 2005, Oracle.  All rights reserved.
+
+Error at line 1, column 10 in file ezbusdaycmddb.pc
+     1  #include <ezdb/eznetworkbusday.h>
+     1  .........1
+     1  PCC-S-02015, unable to open include file

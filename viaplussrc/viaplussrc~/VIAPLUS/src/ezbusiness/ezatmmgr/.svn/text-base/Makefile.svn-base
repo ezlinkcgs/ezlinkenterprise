@@ -1,0 +1,36 @@
+BINDIR=${EZDIR_HOME}/bin
+LIBDIR=${EZDIR_HOME}/lib
+OLIBDIR=${ORACLE_HOME}/lib
+BINARY=EzAtmMgr
+OBJFILE=ezatmmgr.o
+SOURCE=ezatmmgr.cpp
+UTILOBJFILE=ezatmmgrutil.o
+UTILSOURCE=ezatmmgrutil.cpp
+PROCSOURCE=ezatmmgrdb.pc
+COBJFILE=ezatmmgrdb.o
+CSOURCE=ezatmmgrdb.c
+
+LIBLIST=-lezdebug_util -lezsigutil -leztaskutil -lezchannelutil -lezcfg_util -lezdbutil -lezdatetimeutil -lezchanneltools -lpthread -lezinstprofileutil -lezlicenseutil -lezsecuritydriverutil
+INCLUDEDIR=${EZDIR_HOME}/include
+
+${BINARY}	:	${OBJFILE} ${UTILOBJFILE}  ${COBJFILE}
+			g++ ${OBJFILE} ${UTILOBJFILE} ${COBJFILE} -L${LIBDIR} ${LIBLIST} -L${OLIBDIR} -lclntsh -o ${BINARY} 	
+
+${OBJFILE}	:	${SOURCE}
+			g++ -c ${SOURCE} -I${INCLUDEDIR} 
+
+${UTILOBJFILE}	:	${UTILSOURCE}
+			g++ -c ${UTILSOURCE} -I${INCLUDEDIR}
+			
+
+${COBJFILE}	:	${PROCSOURCE}
+			proc ${PROCSOURCE}
+			cc -c ${CSOURCE} -I${ORACLE_HOME}/precomp/public -I${INCLUDEDIR} 
+			
+install		:
+			mv ${BINARY} ${BINDIR}
+
+clean		:
+			rm *.o
+			rm tp*
+				

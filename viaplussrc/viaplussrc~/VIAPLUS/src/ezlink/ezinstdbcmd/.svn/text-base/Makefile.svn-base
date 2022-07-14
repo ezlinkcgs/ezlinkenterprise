@@ -1,0 +1,29 @@
+BINDIR=${EZDIR_HOME}/bin
+LIBDIR=-L${EZDIR_HOME}/lib -L${ORACLE_HOME}/lib
+BINARY=ezinstdbcmd
+OBJFILE=ezinstdbcmd.o
+SOURCE=ezinstdbcmd.cpp
+OBJFILE2=ezinstdbcmddb.o
+SOURCE2=ezinstdbcmddb.c
+SOURCEPC=ezinstdbcmddb.pc
+LIBLIST=-lezdebug_util -lezdbutil -lclntsh -lezcmdutil -lezinstroutetypeutil -lezinstprofileutil -lezinstselectutil -lezbinselectutil -lezbinprofileutil -lezbranchprofileutil -leznetworkselectutil -lezdevicetypemaputil -leznetworkutil -lezauthpropertyutil -lezchannelpropertyutil -leztxnrefselectutil -leztxnrouteinfoutil -leztxnrouteselectutil -lezinboundmsgpropertyutil -lezeventpropertyutil -lezmsgtypepropertyutil -lezmsgtranslateutil -lezdatetimeutil -leztxnsequtil -lezsequtil -leztxnmsgorderutil -lezinstextntwkprofileutil -lezextntwkprofileutil
+INCLUDEDIR=${EZDIR_HOME}/include
+OINCLUDEDIR=${ORACLE_HOME}/precomp/public
+
+${BINARY}	:	${OBJFILE} ${OBJFILE2}
+			g++ ${OBJFILE} ${OBJFILE2} ${LIBDIR} ${LIBLIST} -o ${BINARY}	
+
+${OBJFILE}		:	${SOURCE}
+					g++ -c ${SOURCE} -I${INCLUDEDIR}
+
+${OBJFILE2}		:	${SOURCEPC}
+					proc ${SOURCEPC}
+					cc -c ${SOURCE2} -I${INCLUDEDIR} -I${OINCLUDEDIR}
+			
+install		:
+			mv ${BINARY} ${BINDIR}
+
+clean		:
+			rm *.o
+			rm tp*
+				

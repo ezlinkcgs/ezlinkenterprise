@@ -1,0 +1,9 @@
+
+Pro*C/C++: Release 11.2.0.1.0 - Production on Wed Jun 19 20:19:43 2013
+
+Copyright (c) 1982, 2009, Oracle and/or its affiliates.  All rights reserved.
+
+Error at line 4, column 10 in file eztxnloggerdb.pc
+     4  #include <ezlink/ezlnkmsg.h>
+     4  .........1
+     4  PCC-S-02015, unable to open include file

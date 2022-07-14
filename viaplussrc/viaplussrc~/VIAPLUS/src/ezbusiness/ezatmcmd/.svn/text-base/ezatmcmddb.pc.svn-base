@@ -1,0 +1,107 @@
+# include <sqlca.h>
+# include <stdlib.h>
+# include <string.h>
+# include <stdio.h>
+# include <ezbusiness/ezbusinesstypes.h>
+
+int ClearATMStaticStatus( char *StaticStatusCode, const char *AtmId, char *Date, char *Time )
+{	
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char hAtmId[ 17 ];  
+		char hDate[ 7 ];  
+		char hTime[ 7 ];  
+		char hStaticStatusCode[ 11 ];  
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR hAtmId IS STRING( 17 );
+	EXEC SQL VAR hDate IS STRING( 7 );
+	EXEC SQL VAR hTime IS STRING( 7 );
+	EXEC SQL VAR hStaticStatusCode IS STRING( 11 );
+
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	memset( hDate, 0, sizeof( hDate ) );
+	memset( hTime, 0, sizeof( hTime ) );
+	memset( hStaticStatusCode, 0, sizeof( hStaticStatusCode ) );
+	
+	strcpy( hAtmId, AtmId );
+	strcpy( hDate, Date );
+	strcpy( hTime, Time );
+	strcpy( hStaticStatusCode, StaticStatusCode );
+
+	
+	EXEC SQL UPDATE EZATMSTATUS SET 
+		STATICCODE=:hStaticStatusCode,
+		LOGDATE=to_date( :hDate, 'dd-mm-yy' ), 
+		LOGTIME=:hTime 
+	WHERE TRIM(ATMID)=:hAtmId;
+	if ( sqlca.sqlcode != 0 )
+    	return ( sqlca.sqlcode );
+	else
+	{
+		EXEC SQL COMMIT;
+		return ( sqlca.sqlcode );
+	}
+}
+
+int readEzAtmFit( const char *I_RecordId, struct AtmFit *atmfit_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[ 17 ];
+		char Input_RecordId[ 17 ];
+		char InstId[ 13 ];
+		char AtmLogicalGroup[ 17 ];
+		char AtmId[ 17 ];
+		char FitRecord[ 11 ];
+		char SecurityId[ 11 ];
+		char IndirectState;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR Input_RecordId IS STRING(17);
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR FitRecord IS STRING(13);
+	EXEC SQL VAR AtmLogicalGroup IS STRING(17);
+	EXEC SQL VAR AtmId IS STRING(17);
+	EXEC SQL VAR SecurityId IS STRING(11);
+
+	memset( RecordId, 0, sizeof( RecordId ) );
+	memset( Input_RecordId, 0, sizeof( Input_RecordId ) );
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( FitRecord, 0, sizeof( FitRecord ) );
+	memset( AtmLogicalGroup, 0, sizeof( AtmLogicalGroup ) );
+	memset( SecurityId, 0, sizeof( SecurityId ) );
+	memset( AtmId, 0, sizeof( AtmId ) );
+	
+	strcpy( Input_RecordId, I_RecordId );
+				
+	EXEC SQL SELECT
+		RTRIM(RECORDID),
+		RTRIM(INSTID),
+        RTRIM(ATMLOGICALGROUP),
+		RTRIM(ATMID),
+		RTRIM(FITRECORD),
+		RTRIM(SECURITYID),
+		INDIRECTSTATE
+	INTO
+		:RecordId,
+		:InstId,
+		:AtmLogicalGroup,
+		:AtmId,
+		:FitRecord,
+		:SecurityId,
+		:IndirectState
+	FROM EZATMFIT WHERE RTRIM(RECORDID)=:Input_RecordId;		
+		
+	if ( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    	
+    strcpy( atmfit_ptr->RecordId, RecordId );	
+   	strcpy( atmfit_ptr->InstId, InstId );
+	strcpy( atmfit_ptr->AtmLogicalGroup, AtmLogicalGroup );
+	strcpy( atmfit_ptr->AtmId, AtmId );
+	strcpy( atmfit_ptr->FitRecord, FitRecord );
+	strcpy( atmfit_ptr->SecurityId, SecurityId );
+	atmfit_ptr->IndirectState = IndirectState;
+	return sqlca.sqlcode;
+}
+

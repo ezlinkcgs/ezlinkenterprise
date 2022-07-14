@@ -1,0 +1,9 @@
+
+Pro*C/C++: Release 11.2.0.1.0 - Production on Thu Sep 5 18:09:06 2013
+
+Copyright (c) 1982, 2009, Oracle and/or its affiliates.  All rights reserved.
+
+Error at line 6, column 10 in file eztmsloggerdb.pc
+     6  #include <eztms/eztmsdbtypes.h>
+     6  .........1
+     6  PCC-S-02015, unable to open include file

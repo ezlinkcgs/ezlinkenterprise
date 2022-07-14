@@ -1,0 +1,261 @@
+
+/* Result Sets Interface */
+#ifndef SQL_CRSR
+#  define SQL_CRSR
+  struct sql_cursor
+  {
+    unsigned int curocn;
+    void *ptr1;
+    void *ptr2;
+    unsigned int magic;
+  };
+  typedef struct sql_cursor sql_cursor;
+  typedef struct sql_cursor SQL_CURSOR;
+#endif /* SQL_CRSR */
+
+/* Thread Safety */
+typedef void * sql_context;
+typedef void * SQL_CONTEXT;
+
+/* Object support */
+struct sqltvn
+{
+  unsigned char *tvnvsn; 
+  unsigned short tvnvsnl; 
+  unsigned char *tvnnm;
+  unsigned short tvnnml; 
+  unsigned char *tvnsnm;
+  unsigned short tvnsnml;
+};
+typedef struct sqltvn sqltvn;
+
+struct sqladts
+{
+  unsigned int adtvsn; 
+  unsigned short adtmode; 
+  unsigned short adtnum;  
+  sqltvn adttvn[1];       
+};
+typedef struct sqladts sqladts;
+
+static struct sqladts sqladt = {
+  1,1,0,
+};
+
+/* Binding to PL/SQL Records */
+struct sqltdss
+{
+  unsigned int tdsvsn; 
+  unsigned short tdsnum; 
+  unsigned char *tdsval[1]; 
+};
+typedef struct sqltdss sqltdss;
+static struct sqltdss sqltds =
+{
+  1,
+  0,
+};
+
+/* File name & Package Name */
+struct sqlcxp
+{
+  unsigned short fillen;
+           char  filnam[17];
+};
+static struct sqlcxp sqlfpn =
+{
+    16,
+    "ezsafreaderdb.pc"
+};
+
+
+static unsigned int sqlctx = 4978795;
+
+
+static struct sqlexd {
+   unsigned int   sqlvsn;
+   unsigned int   arrsiz;
+   unsigned int   iters;
+   unsigned int   offset;
+   unsigned short selerr;
+   unsigned short sqlety;
+   unsigned int   occurs;
+            short *cud;
+   unsigned char  *sqlest;
+            char  *stmt;
+   sqladts *sqladtp;
+   sqltdss *sqltdsp;
+            void  **sqphsv;
+   unsigned int   *sqphsl;
+            int   *sqphss;
+            void  **sqpind;
+            int   *sqpins;
+   unsigned int   *sqparm;
+   unsigned int   **sqparc;
+   unsigned short  *sqpadto;
+   unsigned short  *sqptdso;
+   unsigned int   sqlcmax;
+   unsigned int   sqlcmin;
+   unsigned int   sqlcincr;
+   unsigned int   sqlctimeout;
+   unsigned int   sqlcnowait;
+              int   sqfoff;
+   unsigned int   sqcmod;
+   unsigned int   sqfmod;
+            void  *sqhstv[4];
+   unsigned int   sqhstl[4];
+            int   sqhsts[4];
+            void  *sqindv[4];
+            int   sqinds[4];
+   unsigned int   sqharm[4];
+   unsigned int   *sqharc[4];
+   unsigned short  sqadto[4];
+   unsigned short  sqtdso[4];
+} sqlstm = {12,4};
+
+/* SQLLIB Prototypes */
+extern sqlcxt (/*_ void **, unsigned int *,
+                   struct sqlexd *, struct sqlcxp * _*/);
+extern sqlcx2t(/*_ void **, unsigned int *,
+                   struct sqlexd *, struct sqlcxp * _*/);
+extern sqlbuft(/*_ void **, char * _*/);
+extern sqlgs2t(/*_ void **, char * _*/);
+extern sqlorat(/*_ void **, unsigned int *, void * _*/);
+
+/* Forms Interface */
+static int IAPSUCC = 0;
+static int IAPFAIL = 1403;
+static int IAPFTL  = 535;
+extern void sqliem(/*_ char *, int * _*/);
+
+typedef struct { unsigned short len; unsigned char arr[1]; } VARCHAR;
+typedef struct { unsigned short len; unsigned char arr[1]; } varchar;
+
+/* CUD (Compilation Unit Data) Array */
+static short sqlcud0[] =
+{12,4130,1,0,0,
+5,0,0,1,299,0,4,31,0,0,4,1,0,1,0,2,5,0,0,2,5,0,0,2,5,0,0,1,5,0,0,
+};
+
+
+#include <ezdb/eznetworkreplay.h>
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h> 
+#include <ezlink/ezlnkmsg.h>
+#include <ezlink/ezsaftypes.h>
+
+int getNextPendingRecord( const char *I_NetworkId, struct EzSafDBInfo *safdbinfo_ptr )
+{
+	/* EXEC SQL BEGIN DECLARE SECTION; */ 
+
+		char SafRecordNo[ 21 ];
+		char NetworkId[ 17 ];
+		char TxnRefNum[ 151 ];
+		char SAFDetailRec[ 2049 ];
+        short ind_var;
+    /* EXEC SQL END DECLARE SECTION; */ 
+
+				
+	/* EXEC SQL VAR SafRecordNo IS STRING(21); */ 
+
+	/* EXEC SQL VAR NetworkId IS STRING(17); */ 
+
+	/* EXEC SQL VAR TxnRefNum IS STRING(151); */ 
+
+	/* EXEC SQL VAR SAFDetailRec IS STRING(2049); */ 
+
+	
+	memset( SafRecordNo, 0, sizeof( SafRecordNo ) );
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	memset( TxnRefNum, 0, sizeof( TxnRefNum	) );
+	memset( SAFDetailRec, 0, sizeof( SAFDetailRec ) );
+	
+	strcpy( NetworkId, I_NetworkId );
+
+	/* EXEC SQL SELECT
+		RTRIM(SAFRECORDNO),
+		RTRIM(TXNREFNUM),
+		RTRIM(SAFDETREC)
+	INTO
+		:SafRecordNo:ind_var,
+		:TxnRefNum:ind_var,
+		:SAFDetailRec:ind_var
+    FROM EZSAFDB WHERE RTRIM(SAFRECORDNO) || RTRIM(TRANDATE) || RTRIM(TRANTIME) IN (SELECT MIN(RTRIM(SAFRECORDNO)||RTRIM(TRANDATE)||RTRIM(TRANTIME)) FROM EZSAFDB WHERE RTRIM(NETWORKID)=:NetworkId AND SAFSTATUS = 'P' ); */ 
+
+{
+ struct sqlexd sqlstm;
+ sqlstm.sqlvsn = 12;
+ sqlstm.arrsiz = 4;
+ sqlstm.sqladtp = &sqladt;
+ sqlstm.sqltdsp = &sqltds;
+ sqlstm.stmt = "select RTRIM(SAFRECORDNO) ,RTRIM(TXNREFNUM) ,RTRIM(SAFDETREC\
+) into :b0:b1,:b2:b3,:b4:b5  from EZSAFDB where ((RTRIM(SAFRECORDNO)||RTRIM(TR\
+ANDATE))||RTRIM(TRANTIME)) in (select min(((RTRIM(SAFRECORDNO)||RTRIM(TRANDATE\
+))||RTRIM(TRANTIME)))  from EZSAFDB where (RTRIM(NETWORKID)=:b6 and SAFSTATUS=\
+'P'))";
+ sqlstm.iters = (unsigned int  )1;
+ sqlstm.offset = (unsigned int  )5;
+ sqlstm.selerr = (unsigned short)1;
+ sqlstm.cud = sqlcud0;
+ sqlstm.sqlest = (unsigned char  *)&sqlca;
+ sqlstm.sqlety = (unsigned short)256;
+ sqlstm.occurs = (unsigned int  )0;
+ sqlstm.sqhstv[0] = (         void  *)SafRecordNo;
+ sqlstm.sqhstl[0] = (unsigned int  )21;
+ sqlstm.sqhsts[0] = (         int  )0;
+ sqlstm.sqindv[0] = (         void  *)&ind_var;
+ sqlstm.sqinds[0] = (         int  )0;
+ sqlstm.sqharm[0] = (unsigned int  )0;
+ sqlstm.sqadto[0] = (unsigned short )0;
+ sqlstm.sqtdso[0] = (unsigned short )0;
+ sqlstm.sqhstv[1] = (         void  *)TxnRefNum;
+ sqlstm.sqhstl[1] = (unsigned int  )151;
+ sqlstm.sqhsts[1] = (         int  )0;
+ sqlstm.sqindv[1] = (         void  *)&ind_var;
+ sqlstm.sqinds[1] = (         int  )0;
+ sqlstm.sqharm[1] = (unsigned int  )0;
+ sqlstm.sqadto[1] = (unsigned short )0;
+ sqlstm.sqtdso[1] = (unsigned short )0;
+ sqlstm.sqhstv[2] = (         void  *)SAFDetailRec;
+ sqlstm.sqhstl[2] = (unsigned int  )2049;
+ sqlstm.sqhsts[2] = (         int  )0;
+ sqlstm.sqindv[2] = (         void  *)&ind_var;
+ sqlstm.sqinds[2] = (         int  )0;
+ sqlstm.sqharm[2] = (unsigned int  )0;
+ sqlstm.sqadto[2] = (unsigned short )0;
+ sqlstm.sqtdso[2] = (unsigned short )0;
+ sqlstm.sqhstv[3] = (         void  *)NetworkId;
+ sqlstm.sqhstl[3] = (unsigned int  )17;
+ sqlstm.sqhsts[3] = (         int  )0;
+ sqlstm.sqindv[3] = (         void  *)0;
+ sqlstm.sqinds[3] = (         int  )0;
+ sqlstm.sqharm[3] = (unsigned int  )0;
+ sqlstm.sqadto[3] = (unsigned short )0;
+ sqlstm.sqtdso[3] = (unsigned short )0;
+ sqlstm.sqphsv = sqlstm.sqhstv;
+ sqlstm.sqphsl = sqlstm.sqhstl;
+ sqlstm.sqphss = sqlstm.sqhsts;
+ sqlstm.sqpind = sqlstm.sqindv;
+ sqlstm.sqpins = sqlstm.sqinds;
+ sqlstm.sqparm = sqlstm.sqharm;
+ sqlstm.sqparc = sqlstm.sqharc;
+ sqlstm.sqpadto = sqlstm.sqadto;
+ sqlstm.sqptdso = sqlstm.sqtdso;
+ sqlcxt((void **)0, &sqlctx, &sqlstm, &sqlfpn);
+}
+
+
+
+	if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+
+	strcpy( safdbinfo_ptr->SafRecordNo, SafRecordNo );
+	strcpy( safdbinfo_ptr->TxnRefNum, TxnRefNum );
+	strcpy( safdbinfo_ptr->SAFDetailRec, SAFDetailRec );
+	strcpy( safdbinfo_ptr->NetworkId, NetworkId );
+	
+	return 0;
+}
+

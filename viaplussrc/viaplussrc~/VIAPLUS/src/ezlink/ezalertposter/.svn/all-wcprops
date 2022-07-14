@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/ezlinkenterprise/!svn/ver/2535/trunk/src/ezlink/ezalertposter
+END
+ezalertposter.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/ezlinkenterprise/!svn/ver/2535/trunk/src/ezlink/ezalertposter/ezalertposter.cpp
+END
+ezalertposterdb.pc
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/ezlinkenterprise/!svn/ver/2535/trunk/src/ezlink/ezalertposter/ezalertposterdb.pc
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/ezlinkenterprise/!svn/ver/2535/trunk/src/ezlink/ezalertposter/Makefile
+END

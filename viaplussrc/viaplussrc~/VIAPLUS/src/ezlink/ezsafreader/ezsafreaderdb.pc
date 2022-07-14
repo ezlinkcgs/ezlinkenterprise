@@ -1,0 +1,175 @@
+#include <ezdb/eznetworkreplay.h>
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h> 
+#include <ezlink/ezlnkmsg.h>
+#include <ezlink/ezsaftypes.h>
+
+int getNextPendingRecord( const char *I_NetworkId, struct EzSafDBInfo *safdbinfo_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char SafRecordNo[ 21 ];
+		char NetworkId[ 17 ];
+		char TxnRefNum[ 151 ];
+		char SAFDetailRec[ 2049 ];
+		char SafRepeatIndicator;
+        short ind_var;
+    EXEC SQL END DECLARE SECTION;
+				
+	EXEC SQL VAR SafRecordNo IS STRING(21);
+	EXEC SQL VAR NetworkId IS STRING(17);
+	EXEC SQL VAR TxnRefNum IS STRING(151);
+	EXEC SQL VAR SAFDetailRec IS STRING(2049);
+	
+	memset( SafRecordNo, 0, sizeof( SafRecordNo ) );
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	memset( TxnRefNum, 0, sizeof( TxnRefNum	) );
+	memset( SAFDetailRec, 0, sizeof( SAFDetailRec ) );
+	
+	strcpy( NetworkId, I_NetworkId );
+
+	EXEC SQL SELECT
+		RTRIM(SAFRECORDNO),
+		RTRIM(TXNREFNUM),
+		RTRIM(SAFDETREC),
+		RTRIM(SAFREPEATINDICATOR)
+	INTO
+		:SafRecordNo:ind_var,
+		:TxnRefNum:ind_var,
+		:SAFDetailRec:ind_var,
+		:SafRepeatIndicator:ind_var
+    FROM EZSAFDB WHERE RTRIM(SAFRECORDNO) || RTRIM(TRANDATE) || RTRIM(TRANTIME) IN (SELECT MIN(RTRIM(SAFRECORDNO)||RTRIM(TRANDATE)||RTRIM(TRANTIME)) FROM EZSAFDB WHERE RTRIM(NETWORKID)=:NetworkId AND SAFSTATUS = 'P' );
+
+	if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+
+	strcpy( safdbinfo_ptr->SafRecordNo, SafRecordNo );
+	strcpy( safdbinfo_ptr->TxnRefNum, TxnRefNum );
+	strcpy( safdbinfo_ptr->SAFDetailRec, SAFDetailRec );
+	strcpy( safdbinfo_ptr->NetworkId, NetworkId );
+	safdbinfo_ptr->SafRepeatIndicator = SafRepeatIndicator;
+	return 0;
+}
+
+int readTimeOutCount( const char *I_NetworkId, const char *I_TxnRefNum, int *I_TimeOutCount )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		char TxnRefNum[ 151 ];
+		int TimeOutCount;
+		short ind_var;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR NetworkId IS STRING(17);
+	EXEC SQL VAR TxnRefNum IS STRING(151);
+	
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	memset( TxnRefNum, 0, sizeof( TxnRefNum ) );
+	
+	strcpy( NetworkId, I_NetworkId );
+	strcpy( TxnRefNum, I_TxnRefNum );
+	
+	EXEC SQL SELECT
+		TIMEOUTCOUNT
+	INTO
+		:TimeOutCount:ind_var
+	FROM EZSAFDB WHERE RTRIM(TXNREFNUM)=:TxnRefNum AND RTRIM(NETWORKID)=:NetworkId;
+	
+	if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    	
+    *I_TimeOutCount = TimeOutCount;
+    
+    return sqlca.sqlcode;
+}
+
+int updateTimeOutCount( const char *I_NetworkId, const char *I_TxnRefNum, int I_TimeOutCount )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		char TxnRefNum[ 151 ];
+		int TimeOutCount;
+		short ind_var;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR NetworkId IS STRING(17);
+	EXEC SQL VAR TxnRefNum IS STRING(151);
+	
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	memset( TxnRefNum, 0, sizeof( TxnRefNum ) );
+	
+	strcpy( NetworkId, I_NetworkId );
+	strcpy( TxnRefNum, I_TxnRefNum );
+	TimeOutCount = I_TimeOutCount;
+	
+	EXEC SQL UPDATE EZSAFDB SET TIMEOUTCOUNT = :TimeOutCount WHERE RTRIM(TXNREFNUM)=:TxnRefNum AND RTRIM(NETWORKID)=:NetworkId;
+	
+	if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+    {
+        EXEC SQL COMMIT;
+       return sqlca.sqlcode;
+    }
+}
+
+int updateSafRepeatIndicator( const char *I_NetworkId, const char *I_TxnRefNum, char I_SafRepeatIndicator )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		char TxnRefNum[ 151 ];
+		char SafRepeatIndicator;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR NetworkId IS STRING(17);
+	EXEC SQL VAR TxnRefNum IS STRING(151);
+	
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	memset( TxnRefNum, 0, sizeof( TxnRefNum ) );
+	
+	strcpy( NetworkId, I_NetworkId );
+	strcpy( TxnRefNum, I_TxnRefNum );
+	SafRepeatIndicator = I_SafRepeatIndicator;
+		
+	EXEC SQL UPDATE EZSAFDB SET SAFREPEATINDICATOR = :SafRepeatIndicator WHERE RTRIM(TXNREFNUM)=:TxnRefNum AND RTRIM(NETWORKID)=:NetworkId;
+	
+	if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+    {
+        EXEC SQL COMMIT;
+        return sqlca.sqlcode;
+    }
+}
+
+int updateSafStatus( const char *I_TxnRefNum, char I_SafStatus, char I_SafResponseFlag, int I_SafResponse )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char TxnRefNum[ 151 ];
+		char SafStatus;
+		char SafResponseFlag;
+		int SafResponse;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR TxnRefNum IS STRING(151);
+	
+	memset( TxnRefNum, 0, sizeof( TxnRefNum ) );
+	strcpy( TxnRefNum, I_TxnRefNum );
+	SafStatus = I_SafStatus;
+	SafResponseFlag = I_SafResponseFlag;
+	SafResponse = I_SafResponse;
+	
+	EXEC SQL UPDATE EZSAFDB SET SAFSTATUS = :SafStatus, SAFRESPONSEINDICATOR = :SafResponseFlag, SAFRESPONSE = :SafResponse WHERE RTRIM(TXNREFNUM)=:TxnRefNum;
+	
+	if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+    {
+        EXEC SQL COMMIT;
+       return sqlca.sqlcode;
+    }
+}
+
+
+

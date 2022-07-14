@@ -1,0 +1,889 @@
+#include <ezbusiness/ezguicontroller.h>
+
+EzGuiController :: EzGuiController()
+{
+
+}
+
+EzGuiController :: ~EzGuiController()
+{
+
+}
+
+int EzGuiController :: InitEzGuiController( const char * TaskName )
+{
+		char logpath[ LOG_PATH_SIZE + 1 ];
+		EzCfgUtil cfgutil;
+		char cfgpath[ CFG_PATH_SIZE + 1 ], CfgVal[ CFG_VAL_SIZE + 1 ];
+		
+        memset( logpath, 0, sizeof( logpath ) );
+        sprintf( logpath, "%s/%s/%s", getenv( "EZDIR_HOME" ), "log", "ezguicontroller.log" );
+
+        if( openDebug( logpath, TaskName ) < 0 )
+                exit( 0 );
+        
+        SetDebug();
+        
+        if( InitEzTaskUtil( this ) < 0 )
+        {
+               trace( DEBUG_ERROR, "Error in Initializing EzTaskUtil" );
+               trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+               closeDebug( );
+               exit( 0 );
+        }
+
+        if( InitEzChannelUtil( this ) < 0 )
+        {
+                trace( DEBUG_ERROR, "Error in Initializing EzChannelUtil" );
+                trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+                closeDebug( );
+                TaskExit( );
+        }
+
+        if( CreateChannel( GUICHANNEL, TaskName ) < 0 )
+        {
+                trace( DEBUG_ERROR, "Error in Creating EzGuiController Channel" );
+                trace( DEBUG_ERROR, "^^^^^^^^^^^EzGuiController Ended Abnormally^^^^^^^^^^^^^" );
+                closeDebug( );
+                TaskExit( );
+        }
+        
+        /**************** Attaching TaskMgr Memory *****************/
+        
+        TaskMgrChannelId = LocateChannelId( this, "EzTaskMgr" );
+        	
+    	if( TaskMgrChannelId < 0 )
+    	{
+    		trace( DEBUG_ERROR, "Error in Creating EZTASKMGR Channel..." );
+    		return -1;
+    	}
+    	
+    	TaskMgrShmId = shmget ( ( key_t ) TaskMgrChannelId, 0, IPC_CREAT | 0666 );
+    	
+    	if( TaskMgrShmId < 0 )
+    	{
+    		trace( DEBUG_ERROR, "Error in Creating EzTaskMgr Shared Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+    		return -1;
+    	}
+    	
+    	TaskMgrShmPtr = ( struct EzTaskTable * ) shmat( TaskMgrShmId, 0, 0 );
+    	
+    	if( TaskMgrShmPtr == NULL )
+    	{
+    		trace( DEBUG_ERROR, "Error in attaching EzTaskMgr Shared Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+    		return -1;
+    	}
+    	
+    	TaskMgrSemId = semget ( ( key_t ) TaskMgrChannelId, 0, IPC_CREAT | 0666 );
+    		
+    	if( TaskMgrSemId < 0 )
+    	{
+    		trace( DEBUG_ERROR, "Error in Creating EzTaskMgr Semaphore..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+    		return -1;
+    	}	
+        
+    	trace( DEBUG_NORMAL, "Attached EzTaskMgr Channel.......");
+    	
+    	TaskMgrLocalPtr = ( struct EzTaskTable * ) malloc( sizeof( struct EzTaskTable ) * GetMaxTask() );
+    	
+    	
+    	
+    	/**************** Attaching CommMgr Memory *****************/
+    	        
+        CommMgrChannelId = LocateChannelId( this, "EzCommMgr" );
+        	
+    	if( CommMgrChannelId < 0 )
+    	{
+    		trace( DEBUG_ERROR, "Error in Creating EZCOMMMGR Channel..." );
+    		return -1;
+    	}
+    	
+    	CommMgrShmId = shmget ( ( key_t ) CommMgrChannelId, 0, IPC_CREAT | 0666 );
+    	
+    	if( CommMgrShmId < 0 )
+    	{
+    		trace( DEBUG_ERROR, "Error in Creating EzCommMgr Shared Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+    		return -1;
+    	}
+    	
+    	CommMgrShmPtr = ( struct EzCommTable * ) shmat( CommMgrShmId, 0, 0 );
+    	
+    	if( CommMgrShmPtr == NULL )
+    	{
+    		trace( DEBUG_ERROR, "Error in attaching EzCommMgr Shared Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+    		return -1;
+    	}
+    	
+    	CommMgrSemId = semget ( ( key_t ) CommMgrChannelId, 0, IPC_CREAT | 0666 );
+    		
+    	if( CommMgrSemId < 0 )
+    	{
+    		trace( DEBUG_ERROR, "Error in Creating EzCommMgr Semaphore..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+    		return -1;
+    	}	
+        
+    	trace( DEBUG_NORMAL, "Attached EzCommMgr Channel......."); 
+    	
+    	/**************** Attaching CommMgr Memory *****************/
+    	
+    	memset( cfgpath, 0, sizeof( cfgpath ) );
+		sprintf( cfgpath, "%s/%s/%s", getenv( "EZDIR_HOME" ), "cfg", "ezkernel.cfg" );
+		if( cfgutil.cfg_open( cfgpath ) < 0 )
+		{
+			trace( "Error in Opening File[%s]", cfgpath );
+			return -1;
+		}
+		
+		memset( CfgVal, 0, sizeof( CfgVal ) );
+		if( cfgutil.cfg_search( "CHANNEL#MAXCHANNELS", CfgVal, 2 ) < 0 )
+		{
+			trace( "Error in Searching CHANNEL#MAXCHANNELS in File[%s]", cfgpath );
+			cfgutil.cfg_close();
+			return -1;
+		}
+		MaxChannels = atoi( CfgVal );
+		
+		ChannelMgrId = LocateChannelId( this, "EzChannelMgr" );
+		        	
+    	if( ChannelMgrId < 0 )
+    	{
+    		trace( DEBUG_ERROR, "Error in Creating EZCHANNELMGR Channel..." );
+    		return -1;
+    	}
+    	
+    	ChannelMgrShmId = shmget ( ( key_t ) ChannelMgrId, 0, IPC_CREAT | 0666 );
+    	
+    	if( ChannelMgrShmId < 0 )
+    	{
+    		trace( DEBUG_ERROR, "Error in Creating EzChannelMgr Shared Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+    		return -1;
+    	}
+    	
+    	ChannelMgrShmPtr = ( struct EzChannelTable * ) shmat( ChannelMgrShmId, 0, 0 );
+    	
+    	if( ChannelMgrShmPtr == NULL )
+    	{
+    		trace( DEBUG_ERROR, "Error in attaching EzChannelMgr Shared Memory..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+    		return -1;
+    	}
+    	
+    	ChannelMgrSemId = semget ( ( key_t ) ChannelMgrId, 0, IPC_CREAT | 0666 );
+    		
+    	if( ChannelMgrSemId < 0 )
+    	{
+    		trace( DEBUG_ERROR, "Error in Creating EzChannelMgr Semaphore..SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+    		return -1;
+    	}	
+        
+    	trace( DEBUG_NORMAL, "Attached EzChannelMgr Channel.......");
+		
+    	memset( cfgpath, 0, sizeof( cfgpath ) );
+		sprintf( cfgpath, "%s/%s/%s", getenv( "EZDIR_HOME" ), "cfg", "ezbusiness.cfg" );
+		if( cfgutil.cfg_open( cfgpath ) < 0 )
+		{
+			trace( "Error in Opening File[%s]", cfgpath );
+			return -1;
+		}
+		
+		memset( CfgVal, 0, sizeof( CfgVal ) );
+		if( cfgutil.cfg_search( "EZBUSINESS#MAXGUIBYTES", CfgVal, 2 ) < 0 )
+		{
+			trace( "Error in Searching EZBUSINESS#MAXGUIBYTES in File[%s]", cfgpath );
+			cfgutil.cfg_close();
+			return -1;
+		}
+		
+		MaxBytes = atoi( CfgVal );
+		
+    	TaskInit();
+        initEzSigUtil( this );
+}
+
+void EzGuiController :: ServiceRequest()
+{
+	char ReadBuf[ GUI_BUFFER_SIZE + 1 ];
+	char ChannelName[ CHANNEL_NAME_SIZE + 1 ];
+	
+	while( 1 )
+	{
+		trace( DEBUG_NORMAL, "Waiting for Message in EzGuiController Channel" );
+		
+		memset( ReadBuf, 0, sizeof( ReadBuf ) );
+		if( ReadMessage( ReadBuf, &BufSize ) < 1 )
+		{
+			trace( DEBUG_ERROR, "Error in Reading EzATMController Channel" );
+			continue;
+		}
+		memset( ChannelName, 0, sizeof( ChannelName ) );
+		strcpy( ChannelName, GetLastSenderChannelName() );
+		trace( DEBUG_NORMAL, "Message received from [ %s ]", ChannelName );
+		if( DiagnizeAndServeGuiReq( ReadBuf, ChannelName ) < 0 )
+			trace( DEBUG_ERROR, "Failed in DiagnizeAndServeGuiReq" );
+	}
+}
+
+int EzGuiController :: DiagnizeAndServeGuiReq( char *GuiReq, char *ReqPort )
+{
+	char TempStr[ TEMP + 1 ], GuiResp[ GUI_BUFFER_SIZE + 1 ], CommandId[ TEMP + 1 ], TempBuf[ DEVINFOBUF_SIZE + 1 ];
+	
+	
+	hex_dump( ( unsigned char * ) GuiReq, strlen( GuiReq ) );
+	
+	memset( TempStr, 0, sizeof( TempStr ) );
+	getToken( GuiReq, TempStr, DEVICE_FS, 1 );
+	memset( CommandId, 0, sizeof( CommandId ) );
+	strcpy( CommandId, TempStr );
+	
+	if( !strcasecmp( TempStr, "TASK" ) )
+	{
+		memset( TempStr, 0, sizeof( TempStr ) );
+		getToken( GuiReq, TempStr, DEVICE_FS, 2 );
+		
+		if( atoi( TempStr ) ==  LIST )
+		{
+			int TaskCount = 0;
+			retval = 0;
+			OffsetSize = 0;
+			
+			memset( TaskMgrLocalPtr, 0, sizeof( struct EzTaskTable ) * GetMaxTask() );
+			if( LoadTaskMgrList( TaskMgrLocalPtr ) < 0 )
+			{
+				trace( DEBUG_ERROR, "Unable to Load TaskMgrList" );
+				return -1;
+			}
+			
+			for( int i = 0 ; i < GetTaskCount(); i++ )
+			{
+				if( i == 0 )
+				{
+					trace( "Packing Start Bit");
+					memset( GuiResp, 0, sizeof( GuiResp ) );
+					sprintf( GuiResp, "%c%s%c%d%c", DEVICE_STARTBIT, "TASK", DEVICE_FS , GetTaskCount(), DEVICE_FS );
+					OffsetSize += strlen( GuiResp );
+				}
+				
+				memset( TempBuf, 0, sizeof( TempBuf ) );
+				if( BuildTaskMgrList( TempBuf, i ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Failed in BuildTaskMgrList" );
+					return -1;
+				}
+				else
+				{
+					if( OffsetSize + strlen( TempBuf ) < MaxBytes )
+					{
+						strncat( GuiResp, TempBuf, strlen( TempBuf ) );
+						OffsetSize += strlen( TempBuf );
+						if( i+1 == GetTaskCount() )
+						{
+							strcat( GuiResp, "\x0f" );
+							trace( "OffsetSize[%d] MaxBytes[%d]", OffsetSize, MaxBytes );
+							if( PostGuiReply( GuiResp, ReqPort ) < 0 )
+							{
+								trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+								return -1;
+							}
+						}
+					}							
+					else
+					{
+						trace( "OffsetSize[%d] MaxBytes[%d]", OffsetSize, MaxBytes );
+						if( PostGuiReply( GuiResp, ReqPort ) < 0 )
+						{
+							trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+							return -1;
+						}
+						memset( GuiResp, 0, sizeof( GuiResp ) );
+						OffsetSize = 0;
+					}
+				}
+			}
+		}
+		else if( atoi( TempStr ) ==  START )
+		{
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, DEVICE_FS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( StartTask( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "StartTask[ %s ]", TempStr );
+					return -1;
+				}
+			}
+		}
+		else if( atoi( TempStr ) ==  STOP )
+		{
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, DEVICE_FS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( StopTask( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "StartTask[ %s ]", TempStr );
+					return -1;
+				}
+			}
+		}
+		else
+		{
+			trace( DEBUG_ERROR, "Invalid Task Command Type[ %s ]", TempStr );
+			return -1;
+		}
+	}
+	else if( !strcasecmp( TempStr, "PORT" ) )
+	{
+		memset( TempStr, 0, sizeof( TempStr ) );
+		getToken( GuiReq, TempStr, DEVICE_FS, 2 );
+		
+		if( atoi( TempStr ) ==  LIST )
+		{
+			int PortCount = 0;
+			retval = 0;
+			OffsetSize = 0;
+			
+			memset( CommMgrLocalPtr, 0, sizeof( struct EzCommTable ) * GetMaxPort() );
+			if( LoadCommMgrList( CommMgrLocalPtr ) < 0 )
+			{
+				trace( DEBUG_ERROR, "Unable to Load CommMgrList" );
+				return -1;
+			}
+			
+			for( int i = 0 ; i < GetPortCount(); i++ )
+			{
+				if( i == 0 )
+				{
+					trace( "Packing Start Bit");
+					memset( GuiResp, 0, sizeof( GuiResp ) );
+					sprintf( GuiResp, "%c%s%c%d%c", DEVICE_STARTBIT, "PORT", DEVICE_FS , GetTaskCount(), DEVICE_FS );
+					OffsetSize += strlen( GuiResp );
+				}
+				
+				memset( TempBuf, 0, sizeof( TempBuf ) );
+				if( BuildCommMgrList( TempBuf, i ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Failed in BuildCommMgrList" );
+					return -1;
+				}
+				else
+				{
+					if( OffsetSize + strlen( TempBuf ) < MaxBytes )
+					{
+						strncat( GuiResp, TempBuf, strlen( TempBuf ) );
+						OffsetSize += strlen( TempBuf );
+						if( i+1 == GetPortCount() )
+						{
+							strcat( GuiResp, "\x0f" );
+							trace( "OffsetSize[%d] MaxBytes[%d]", OffsetSize, MaxBytes );
+							if( PostGuiReply( GuiResp, ReqPort ) < 0 )
+							{
+								trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+								return -1;
+							}
+						}
+					}							
+					else
+					{
+						trace( "OffsetSize[%d] MaxBytes[%d]", OffsetSize, MaxBytes );
+						if( PostGuiReply( GuiResp, ReqPort ) < 0 )
+						{
+							trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+							return -1;
+						}
+						memset( GuiResp, 0, sizeof( GuiResp ) );
+						OffsetSize = 0;
+					}
+				}
+			}
+		}
+		else if( atoi( TempStr ) ==  START )
+		{
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, DEVICE_FS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( StartPort( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "StartPort[ %s ]", TempStr );
+					return -1;
+				}
+			}
+		}
+		else if( atoi( TempStr ) ==  STOP )
+		{
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, DEVICE_FS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( StopPort( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "StartPort[ %s ]", TempStr );
+					return -1;
+				}
+			}
+		}
+		else if( atoi( TempStr ) ==  ADD )
+		{
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, DEVICE_FS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( AddPort( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "AddPort[ %s ]", TempStr );
+					return -1;
+				}
+			}
+		}
+		else if( atoi( TempStr ) ==  REMOVE )
+		{
+			memset( TempStr, 0, sizeof( TempStr ) );
+			getToken( GuiReq, TempStr, DEVICE_FS, 3 );
+			if( strlen( TempStr ) != 0 )
+			{
+				if( RemovePort( TempStr ) < 0 )
+				{
+					trace( DEBUG_ERROR, "RemovePort[ %s ]", TempStr );
+					return -1;
+				}
+			}
+		}
+		else
+		{
+			trace( DEBUG_ERROR, "Invalid Port Command Type[ %s ]", TempStr );
+			return -1;
+		}
+	}
+	else if( !strcasecmp( TempStr, "CHANNEL" ) )
+	{
+		memset( TempStr, 0, sizeof( TempStr ) );
+		getToken( GuiReq, TempStr, DEVICE_FS, 2 );
+		
+		if( atoi( TempStr ) ==  LIST )
+		{
+			int ChannelCount = 0;
+			retval = 0;
+			OffsetSize = 0;
+			
+			memset( ChannelMgrLocalPtr, 0, sizeof( struct EzChannelTable ) * MaxChannels );
+			if( LoadChannelMgrList( ChannelMgrLocalPtr ) < 0 )
+			{
+				trace( DEBUG_ERROR, "Unable to Load ChannelMgrList" );
+				return -1;
+			}
+			
+			for( int i = 0 ; i < GetChannelCount(); i++ )
+			{
+				if( i == 0 )
+				{
+					trace( "Packing Start Bit");
+					memset( GuiResp, 0, sizeof( GuiResp ) );
+					sprintf( GuiResp, "%c%s%c%d%c", DEVICE_STARTBIT, "CHANNEL", DEVICE_FS , GetTaskCount(), DEVICE_FS );
+					OffsetSize += strlen( GuiResp );
+				}
+				
+				memset( TempBuf, 0, sizeof( TempBuf ) );
+				if( BuildChannelMgrList( TempBuf, i ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Failed in BuildChannelMgrList" );
+					return -1;
+				}
+				else
+				{
+					if( OffsetSize + strlen( TempBuf ) < MaxBytes )
+					{
+						strncat( GuiResp, TempBuf, strlen( TempBuf ) );
+						OffsetSize += strlen( TempBuf );
+						if( i+1 == GetChannelCount() )
+						{
+							strcat( GuiResp, "\x0f" );
+							trace( "OffsetSize[%d] MaxBytes[%d]", OffsetSize, MaxBytes );
+							if( PostGuiReply( GuiResp, ReqPort ) < 0 )
+							{
+								trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+								return -1;
+							}
+						}
+					}							
+					else
+					{
+						trace( "OffsetSize[%d] MaxBytes[%d]", OffsetSize, MaxBytes );
+						if( PostGuiReply( GuiResp, ReqPort ) < 0 )
+						{
+							trace( DEBUG_ERROR, "Failed while Posting Gui Reply" );
+							return -1;
+						}
+						memset( GuiResp, 0, sizeof( GuiResp ) );
+						OffsetSize = 0;
+					}
+				}
+			}
+		}
+		else
+		{
+			trace( DEBUG_ERROR, "Invalid Channel Command Type[ %s ]", TempStr );
+			return -1;
+		}
+	}
+	else
+	{
+		trace( DEBUG_ERROR, "Invalid Command Id[ %s ]", TempStr );
+		return -1;
+	}
+	
+	if( strcasecmp( CommandId , "DEVICE" ) )
+	{	
+		
+	}
+	
+	return 1;
+}
+
+int EzGuiController :: GetTaskCount()
+{
+	struct sembuf sem_buf;
+	int Count = 0;
+	
+	retval = -1;
+			
+	for( int i = 0; i < GetMaxTask(); i++ )
+	{
+		sem_buf.sem_num = i;
+		sem_buf.sem_flg = 0;
+		sem_buf.sem_op = -2;
+		if( semop( TaskMgrSemId, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for TaskMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+		
+		if ( ( strcmp( ( TaskMgrShmPtr + i )->TaskName, INIT_NAME ) ) && ( ( TaskMgrShmPtr + i )->TaskId != INIT_VAL ) )
+			Count ++;
+				
+		sem_buf.sem_op = 2;
+		if( semop( TaskMgrSemId, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for TaskMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+	}
+	
+	return Count;
+}
+
+int EzGuiController :: LoadTaskMgrList( struct EzTaskTable *TaskMgrPtr )
+{
+	struct sembuf sem_buf;
+	
+	for( int i = 0, j = 0; i < GetMaxTask(); i++ )
+	{
+		sem_buf.sem_num = i;
+		sem_buf.sem_flg = 0;
+		sem_buf.sem_op = -2;
+		if( semop( TaskMgrSemId, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for TaskMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+		
+		if ( ( strcmp( ( TaskMgrShmPtr + i )->TaskName, INIT_NAME ) ) && ( ( TaskMgrShmPtr + i )->TaskId != INIT_VAL ) )
+		{
+			memset( TaskMgrPtr + j, 0, sizeof( struct EzTaskTable ) );
+			memcpy( TaskMgrPtr + j, TaskMgrShmPtr + i, sizeof( struct EzTaskTable ) );
+			j++;
+		}
+		
+		sem_buf.sem_op = 2;
+		if( semop( TaskMgrSemId, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for TaskMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+	}
+	
+	sem_buf.sem_op = 2;
+	if( semop( TaskMgrSemId, &sem_buf, 1 ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Semop for TaskMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+		return -1;
+	}
+	
+	return 1;
+}
+
+int EzGuiController :: BuildTaskMgrList( char *TaskMgrList, int SlotNo  )
+{
+	if( strlen( ( TaskMgrLocalPtr + SlotNo )->TaskName ) != 0 )
+	{
+		trace( DEBUG_TEST, "Task [ %s ]", ( TaskMgrLocalPtr + SlotNo )->TaskName );
+		sprintf( TaskMgrList, "%s%c", ( TaskMgrLocalPtr + SlotNo )->TaskName, DEVICE_GS );
+		TaskMgrList += strlen( ( TaskMgrLocalPtr + SlotNo )->TaskName );
+		TaskMgrList ++;
+			
+			
+		sprintf( TaskMgrList, "%05d%c", ( TaskMgrLocalPtr + SlotNo )->TaskId, DEVICE_GS );
+		TaskMgrList += 6;
+		
+		sprintf( TaskMgrList, "%02d%c", ( TaskMgrLocalPtr + SlotNo )->TraceLevel, DEVICE_GS );
+		TaskMgrList += 3;
+		
+		sprintf( TaskMgrList, "%02d%c", ( TaskMgrLocalPtr + SlotNo )->TaskStatus, DEVICE_GS );
+		TaskMgrList += 3;
+			
+		sprintf( TaskMgrList, "%s%c", ( TaskMgrLocalPtr + SlotNo )->StartDate, DEVICE_GS );
+		TaskMgrList += strlen( ( TaskMgrLocalPtr + SlotNo )->StartDate );
+		TaskMgrList ++;
+			
+		sprintf( TaskMgrList, "%s%c", ( TaskMgrLocalPtr + SlotNo )->StartTime, DEVICE_RS );
+		TaskMgrList += strlen( ( TaskMgrLocalPtr + SlotNo )->StartTime );
+		return 1;
+	}
+	else
+		return -1;
+}
+
+int EzGuiController :: GetPortCount()
+{
+	struct sembuf sem_buf;
+	int Count = 0;
+	
+	retval = -1;
+			
+	for( int i = 0; i < GetMaxPort(); i++ )
+	{
+		sem_buf.sem_num = i;
+		sem_buf.sem_flg = 0;
+		sem_buf.sem_op = -2;
+		if( semop( CommMgrSemId, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for CommMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+		
+		if ( ( strcmp( ( CommMgrShmPtr + i )->PortName, INIT_NAME ) ) && ( ( CommMgrShmPtr + i )->PortId != INIT_VAL ) )
+			Count ++;
+				
+		sem_buf.sem_op = 2;
+		if( semop( CommMgrSemId, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for CommMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+	}
+	
+	return Count;
+}
+
+int EzGuiController :: LoadCommMgrList( struct EzCommTable *CommMgrPtr )
+{
+	
+	struct sembuf sem_buf;
+	
+	for( int i = 0, j = 0; i < GetMaxPort(); i++ )
+	{
+		sem_buf.sem_num = i;
+		sem_buf.sem_flg = 0;
+		sem_buf.sem_op = -2;
+		if( semop( CommMgrSemId, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for CommMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+		
+		if ( ( strcmp( ( CommMgrShmPtr + i )->PortName, INIT_NAME ) ) && ( ( CommMgrShmPtr + i )->PortId != INIT_VAL ) )
+		{
+			memset( CommMgrPtr + j, 0, sizeof( struct EzCommTable ) );
+			memcpy( CommMgrPtr + j, CommMgrShmPtr + i, sizeof( struct EzCommTable ) );
+			j++;
+		}
+		
+		sem_buf.sem_op = 2;
+		if( semop( CommMgrSemId, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for CommMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+	}
+	
+	sem_buf.sem_op = 2;
+	if( semop( CommMgrSemId, &sem_buf, 1 ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Semop for CommMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+		return -1;
+	}
+	
+	return 1;
+}
+
+int EzGuiController :: BuildCommMgrList( char *CommMgrList, int SlotNo  )
+{
+	if( strlen( ( CommMgrLocalPtr + SlotNo )->PortName ) != 0 )
+	{
+		trace( DEBUG_TEST, "Port [ %s ]", ( CommMgrShmPtr + SlotNo )->PortName );
+		sprintf( CommMgrList, "%s%c", ( CommMgrShmPtr + SlotNo )->PortName, DEVICE_GS );
+		CommMgrList += strlen( ( CommMgrShmPtr + SlotNo )->PortName );
+		CommMgrList ++;
+		
+		sprintf( CommMgrList, "%s%c", ( CommMgrShmPtr + SlotNo )->IpAddress, DEVICE_GS );
+		CommMgrList += strlen( ( CommMgrShmPtr + SlotNo )->IpAddress );
+		CommMgrList ++;
+		
+		sprintf( CommMgrList, "%05d%c", ( CommMgrShmPtr + SlotNo )->PortNo, DEVICE_GS );
+		CommMgrList += 6;
+		
+		sprintf( CommMgrList, "%02d%c", ( CommMgrShmPtr + SlotNo )->ApplType, DEVICE_GS );
+		CommMgrList += 3;
+		
+		sprintf( CommMgrList, "%05d%c", ( CommMgrShmPtr + SlotNo )->PortId, DEVICE_GS );
+		CommMgrList += 6;
+		
+		sprintf( CommMgrList, "%02d%c", ( CommMgrShmPtr + SlotNo )->PortStatus, DEVICE_RS );
+		CommMgrList += 3;
+	}
+	return 1;
+}
+
+int EzGuiController :: GetChannelCount()
+{
+	struct sembuf sem_buf;
+	int Count = 0;
+	
+	retval = -1;
+			
+	for( int i = 0; i < MaxChannels; i++ )
+	{
+		sem_buf.sem_num = i;
+		sem_buf.sem_flg = 0;
+		sem_buf.sem_op = -2;
+		if( semop( ChannelMgrSemId, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+		
+		if ( ( strcmp( ( ChannelMgrShmPtr + i )->ChannelName, CHANNEL_INIT_NAME ) ) && ( ( ChannelMgrShmPtr + i )->ChannelType == TASK_CHANNEL ) )
+			Count ++;
+				
+		sem_buf.sem_op = 2;
+		if( semop( ChannelMgrSemId, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+	}
+	
+	return Count;
+}
+
+int EzGuiController :: LoadChannelMgrList( struct EzChannelTable *ChannelMgrPtr )
+{
+	struct sembuf sem_buf;
+	
+	for( int i = 0, j = 0; i < MaxChannels; i++ )
+	{
+		sem_buf.sem_num = i;
+		sem_buf.sem_flg = 0;
+		sem_buf.sem_op = -2;
+		if( semop( TaskMgrSemId, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for TaskMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+		
+		if ( ( strcmp( ( ChannelMgrShmPtr + i )->ChannelName, CHANNEL_INIT_NAME ) ) && ( ( ChannelMgrShmPtr + i )->ChannelType == TASK_CHANNEL ) )
+		{
+			memset( ChannelMgrPtr + j, 0, sizeof( struct EzChannelTable ) );
+			memcpy( ChannelMgrPtr + j, ChannelMgrShmPtr + i, sizeof( struct EzChannelTable ) );
+			j++;
+		}
+		
+		sem_buf.sem_op = 2;
+		if( semop( ChannelMgrSemId, &sem_buf, 1 ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+			return -1;
+		}
+	}
+	
+	sem_buf.sem_op = 2;
+	if( semop( ChannelMgrSemId, &sem_buf, 1 ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Semop for ChannelMgrChannel SysErr[ %s ] ErrNo[ %d ]", strerror( errno ), errno );
+		return -1;
+	}
+	
+	return 1;
+}
+
+int EzGuiController :: BuildChannelMgrList( char *ChannelMgrList, int SlotNo  )
+{
+	if( strlen( ( ChannelMgrLocalPtr + SlotNo )->ChannelName ) != 0 )
+	{
+		trace( DEBUG_TEST, "Channel [ %s ]", ( ChannelMgrShmPtr + SlotNo )->ChannelName );
+		sprintf( ChannelMgrList, "%s%c", ( ChannelMgrShmPtr + SlotNo )->ChannelName, DEVICE_GS );
+		ChannelMgrList += strlen( ( ChannelMgrShmPtr + SlotNo )->ChannelName );
+		ChannelMgrList ++;
+		
+		sprintf( ChannelMgrList, "%s%c", ( ChannelMgrShmPtr + SlotNo )->TaskName, DEVICE_GS );
+		ChannelMgrList += strlen( ( ChannelMgrShmPtr + SlotNo )->TaskName );
+		ChannelMgrList ++;
+		
+		sprintf( ChannelMgrList, "%04d%c", ( ChannelMgrShmPtr + SlotNo )->ChannelKeyId, DEVICE_GS );
+		ChannelMgrList += 5;
+		
+		sprintf( ChannelMgrList, "%08d%c", ( ChannelMgrShmPtr + SlotNo )->ChannelQid, DEVICE_GS );
+		ChannelMgrList += 9;
+		
+		sprintf( ChannelMgrList, "%04d%c", GetNMsg(), DEVICE_GS );
+		ChannelMgrList += 5;
+		
+		sprintf( ChannelMgrList, "%08d%c", GetNBytes(), DEVICE_GS );
+		ChannelMgrList += 9;
+		
+		sprintf( ChannelMgrList, "%08d%c", GetMaxBytes(), DEVICE_RS );
+		ChannelMgrList += 9;
+	}
+	return 1;
+}
+
+int EzGuiController :: PostGuiReply( char *GuiResp, char *GuiPort )
+{
+	int Count = 0, ByteLen = 0;
+	
+	ByteLen = strlen( GuiResp );
+	
+	if ( WritePortChannel( GuiPort, GuiResp, strlen( GuiResp ) ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Failed to post the Message into Port Channel[ %s ]", GuiPort );
+		return -1;
+	}
+	else
+		trace( DEBUG_NORMAL, "Posted the Message to Port Channel[ %s ]", GuiPort );
+	
+	return 1;	
+}
+
+int EzGuiController :: getToken( const char *msg, char *tmp, char ch, int count )
+{
+	int i = 0, j = 0, cnt = 0;
+	for( i = 0; i < strlen( msg ); i++ )
+	{
+		if( msg[ i ] == ch )
+			cnt++;
+		else if( cnt == count )
+			break;
+		else if ( cnt + 1 == count )
+		{
+			tmp[ j ] = msg[ i ];
+			j++;
+		}
+	}
+} 
+
+int main( int argc, char **argv )
+{
+    EzGuiController ezatmcontrollerobj;
+    ezatmcontrollerobj.InitEzGuiController( argv[ 0 ] );
+    ezatmcontrollerobj.ServiceRequest();
+    return 1;
+}

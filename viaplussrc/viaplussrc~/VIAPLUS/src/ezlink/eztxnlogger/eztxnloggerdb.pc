@@ -1,0 +1,1256 @@
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ezlink/ezlnkmsg.h>
+
+int selectEzTxnLog( struct EzTxnMsg *txnmsg, const char *I_TxnRefNum, char *I_ChannelName )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char TxnRefNum[ 151 ];
+		int MsgType;
+        int OrgMsgType;
+        int TxnCode;
+        char TerminalId[ 17 ];
+        char TerminalLocation[ 65 ];
+        int TraceNo;
+        int OrgTraceNo;
+        int TranDate;
+        int TranTime;
+        int OrgTranDate;
+        int OrgTranTime;
+        int LocalDate;
+        int LocalTime;
+        int RespCode;
+        int RevCode;
+        int ReasonCode;
+        int AuthCode;
+        int CaptureDate;
+        int CaptureTime;
+        int SettlementDate;
+        int AcqCurrencyCode;
+        int AcqConvRate;
+        int AcqConvDate;
+        int IssCurrencyCode;
+        int IssConvRate;
+        int IssConvDate;
+        int SettCurrencyCode;
+        int SettConvRate;
+        int SettConvDate;
+        int MerchantType;
+        int PosEntryCode;
+        int PosConditionCode;
+        int PosCapCode;
+        char PosPinCapCode;
+        char chn[ 20 ];
+        char AcqBranchCode[ 11 ];
+        char IssBranchCode[ 11 ];
+        char TxfBranchCode[ 11 ];
+        char ForwardBranchCode[ 11 ];
+        char FromAcctSubType[ 11 ];
+        char ToAcctSubType[ 11 ];
+		char AvailBalance[ 15 ];
+        char LedgerBalance[ 15 ];
+        char Amount[ 15 ];
+        char TxnFee[ 15 ];
+        char DispAmount[ 15 ];
+        char FromAccount[ 33 ];
+        char ToAccount[ 33 ];
+        char RefNum[ 13 ];
+        char AuthNum[ 13 ];
+        char AcceptorName[ 41 ];
+        char AcquirerInst[ 13 ];
+        char IssuerInst[ 13 ];
+        char ForwardInst[ 13 ];
+        char TxfInst[ 13 ];
+        char SettInst[ 13 ];
+        char NetworkId[ 17 ];
+        char AcqNetworkId[ 17 ];
+		char IssuerNetworkId[ 17 ];
+		char FwdNetworkId[ 17 ];
+		char TxfNetworkId[ 17 ];
+		char SettNetworkId[ 17 ];
+        char Track2[ 40 ];
+        char RsvFld1[ 513 ];
+        char RsvFld2[ 513 ];
+        char RsvFld3[ 51 ];
+        char RsvFld4[ 51 ];
+        char RsvFld5[ 51 ];
+        char RsvFld6[ 51 ];
+        char OrgChannel[ 33 ];
+        char OrgPort[ 33 ];
+        char SrcChannel[ 33 ];
+       	short ind_var;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR TxnRefNum IS STRING(151);
+	EXEC SQL VAR TerminalId IS STRING(17);
+    EXEC SQL VAR TerminalLocation IS STRING(65);
+    EXEC SQL VAR chn IS STRING(20);
+    EXEC SQL VAR AcqBranchCode IS STRING(11);
+    EXEC SQL VAR IssBranchCode IS STRING(11);
+    EXEC SQL VAR TxfBranchCode IS STRING(11);
+    EXEC SQL VAR ForwardBranchCode IS STRING(11);
+    EXEC SQL VAR FromAcctSubType IS STRING(11);
+    EXEC SQL VAR ToAcctSubType IS STRING(11);
+    EXEC SQL VAR AvailBalance IS STRING(15);
+    EXEC SQL VAR LedgerBalance IS STRING(15);
+    EXEC SQL VAR Amount IS STRING(15);
+    EXEC SQL VAR TxnFee IS STRING(15);
+    EXEC SQL VAR DispAmount IS STRING(15);
+    EXEC SQL VAR FromAccount IS STRING(33);
+    EXEC SQL VAR ToAccount IS STRING(33);
+    EXEC SQL VAR RefNum IS STRING(13);
+    EXEC SQL VAR AuthNum IS STRING(13);
+    EXEC SQL VAR AcceptorName IS STRING(41);
+    EXEC SQL VAR RefNum IS STRING(13);
+    EXEC SQL VAR AcquirerInst IS STRING(13);
+    EXEC SQL VAR IssuerInst IS STRING(13);
+    EXEC SQL VAR ForwardInst IS STRING(13);
+    EXEC SQL VAR TxfInst IS STRING(13);
+    EXEC SQL VAR SettInst IS STRING(13);
+    EXEC SQL VAR NetworkId IS STRING(17);
+    EXEC SQL VAR AcqNetworkId IS STRING(17);
+    EXEC SQL VAR IssuerNetworkId IS STRING(17);
+    EXEC SQL VAR FwdNetworkId IS STRING(17);
+    EXEC SQL VAR TxfNetworkId IS STRING(17);
+    EXEC SQL VAR SettNetworkId IS STRING(17);
+    EXEC SQL VAR Track2 IS STRING(40);
+    EXEC SQL VAR RsvFld1 IS STRING(513);
+    EXEC SQL VAR RsvFld2 IS STRING(513);
+    EXEC SQL VAR RsvFld3 IS STRING(51);
+    EXEC SQL VAR RsvFld4 IS STRING(51);
+    EXEC SQL VAR RsvFld5 IS STRING(51);
+    EXEC SQL VAR RsvFld6 IS STRING(51);
+    EXEC SQL VAR OrgChannel IS STRING(33);
+	EXEC SQL VAR OrgPort IS STRING(33);
+	EXEC SQL VAR SrcChannel IS STRING(33);
+	
+ 	memset( TxnRefNum, 0, sizeof( TxnRefNum ) );
+	memset( TerminalId, 0, sizeof( TerminalId ) );
+    memset( TerminalLocation, 0, sizeof( TerminalLocation ) );
+    memset( chn, 0, sizeof( chn ) );
+    memset( AcqBranchCode, 0, sizeof( AcqBranchCode ) );
+    memset( IssBranchCode, 0, sizeof( IssBranchCode ) );
+    memset( ForwardBranchCode, 0, sizeof( ForwardBranchCode ) );
+    memset( TxfBranchCode, 0, sizeof( TxfBranchCode ) );
+    memset( FromAcctSubType, 0, sizeof( FromAcctSubType ) );
+    memset( ToAcctSubType, 0, sizeof( ToAcctSubType ) );
+    memset( AvailBalance, 0, sizeof( AvailBalance ) );
+    memset( LedgerBalance, 0, sizeof( LedgerBalance ) );
+    memset( Amount, 0, sizeof( Amount ) );
+    memset( TxnFee, 0, sizeof( TxnFee ) );
+    memset( DispAmount, 0, sizeof( DispAmount ) );
+    memset( FromAccount, 0, sizeof( FromAccount ) );
+    memset( ToAccount, 0, sizeof( ToAccount ) );
+    memset( RefNum, 0, sizeof( RefNum ) );
+    memset( AuthNum, 0, sizeof( AuthNum ) );
+    memset( AcceptorName, 0, sizeof( AcceptorName ) );
+    memset( AcquirerInst, 0, sizeof( AcquirerInst ) );
+    memset( IssuerInst, 0, sizeof( IssuerInst ) );
+    memset( ForwardInst, 0, sizeof( ForwardInst ) );
+    memset( TxfInst, 0, sizeof( TxfInst ) );
+    memset( SettInst, 0, sizeof( SettInst ) );
+    memset( NetworkId, 0, sizeof( NetworkId ) );
+    memset( AcqNetworkId, 0, sizeof( AcqNetworkId ) );
+    memset( IssuerNetworkId, 0, sizeof( IssuerNetworkId ) );
+    memset( FwdNetworkId, 0, sizeof( FwdNetworkId ) );
+    memset( TxfNetworkId, 0, sizeof( TxfNetworkId ) );
+    memset( SettNetworkId, 0, sizeof( SettNetworkId ) );
+    memset( Track2, 0, sizeof( Track2 ) );
+    memset( RsvFld1, 0, sizeof( RsvFld1 ) );
+    memset( RsvFld2, 0, sizeof( RsvFld2 ) );
+    memset( RsvFld3, 0, sizeof( RsvFld3 ) );
+    memset( RsvFld4, 0, sizeof( RsvFld4 ) );
+    memset( RsvFld5, 0, sizeof( RsvFld5 ) );
+    memset( RsvFld6, 0, sizeof( RsvFld6 ) );
+    memset( OrgChannel, 0, sizeof( OrgChannel ) );
+	memset( OrgPort, 0, sizeof( OrgPort ) );
+	memset( SrcChannel, 0, sizeof( SrcChannel ) );
+ 	
+	strcpy( TxnRefNum, I_TxnRefNum );
+		
+	EXEC SQL SELECT
+		RTRIM(TXNREFNUM),
+		MSGTYPE,
+		ORGMSGTYPE,
+		TXNCODE,
+		RTRIM(TERMINALID),
+		RTRIM(TERMLOC),
+		TRACENO,
+		ORGTRACENO,
+		TRANDATE,
+		TRANTIME,
+		ORGTRANDATE,
+		ORGTRANTIME,
+		LOCALDATE,
+		LOCALTIME,
+		RESPCODE,
+		REVCODE,
+		REASONCODE,
+		AUTHCODE,
+		CAPTUREDATE,
+		CAPTURETIME,
+		SETTLEMENTDATE,
+		ACQCURRENCYCODE,
+		ACQCONVRATE,
+		ACQCONVDATE,
+		ISSCURRENCYCODE,
+		ISSCONVRATE,
+		ISSCONVDATE,
+		SETTCURRENCYCODE,
+		SETTCONVRATE,
+		SETTCONVDATE,
+		MERCHANTTYPE,
+		POSENTRYCODE,
+		POSCONDITIONCODE,
+		POSCAPCODE,
+		POSPINCAPCODE,
+		RTRIM(CHN),
+		RTRIM(ACQBRANCHCODE),
+		RTRIM(ISSBRANCHCODE),
+		RTRIM(TXFBRANCHCODE),
+		RTRIM(FORWARDBRANCHCODE),
+		RTRIM(FROMACCTSUBTYPE),
+		RTRIM(TOACCTSUBTYPE),
+		RTRIM(AVAILBALANCE),
+		RTRIM(LEDGERBALANCE),
+		RTRIM(AMOUNT),
+		RTRIM(TXNFEE),
+		RTRIM(DISPAMOUNT),
+		RTRIM(FROMACCOUNT),
+		RTRIM(TOACCOUNT),
+		RTRIM(REFNUM),
+		RTRIM(AUTHNUM),
+		RTRIM(ACCEPTORNAME),
+		RTRIM(ACQUIRERINST),
+		RTRIM(ISSUERINST),
+		RTRIM(FORWARDINST),
+		RTRIM(TXFINST),
+		RTRIM(SETTINST),
+		RTRIM(NETWORKID),
+		RTRIM(ACQNETWORKID),
+		RTRIM(ISSUERNETWORKID),
+		RTRIM(FWDNETWORKID),
+		RTRIM(TXFNETWORKID),
+		RTRIM(SETTNETWORKID),
+		RTRIM(TRACK2),
+		RTRIM(RSVFLD1),
+		RTRIM(RSVFLD2),
+		RTRIM(RSVFLD3),
+		RTRIM(RSVFLD4),
+		RTRIM(RSVFLD5),
+		RTRIM(RSVFLD6),
+		RTRIM(ORGCHANNEL),
+		RTRIM(ORGPORT),
+		RTRIM(SRCCHANNEL)
+		INTO
+		:MsgType:ind_var,
+		:OrgMsgType:ind_var,
+		:TxnCode:ind_var,
+		:TerminalId:ind_var,
+		:TerminalLocation:ind_var,
+		:TraceNo:ind_var,
+		:OrgTraceNo:ind_var,
+		:TranDate:ind_var,
+		:TranTime:ind_var,
+		:OrgTranDate:ind_var,
+		:OrgTranTime:ind_var,
+		:LocalDate:ind_var,
+		:LocalTime:ind_var,
+		:RespCode:ind_var,
+		:RevCode:ind_var,
+		:ReasonCode:ind_var,
+		:AuthCode:ind_var,
+		:CaptureDate:ind_var,
+		:CaptureTime:ind_var,
+		:SettlementDate:ind_var,
+		:AcqCurrencyCode:ind_var,
+		:AcqConvRate:ind_var,
+		:AcqConvDate:ind_var,
+		:IssCurrencyCode:ind_var,
+		:IssConvRate:ind_var,
+		:IssConvDate:ind_var,
+		:SettCurrencyCode:ind_var,
+		:SettConvRate:ind_var,
+		:SettConvDate:ind_var,
+		:MerchantType:ind_var,
+		:PosEntryCode:ind_var,
+		:PosConditionCode:ind_var,
+		:PosCapCode:ind_var,
+		:PosPinCapCode:ind_var,
+		:chn:ind_var,
+		:AcqBranchCode:ind_var,
+		:IssBranchCode:ind_var,
+		:TxfBranchCode:ind_var,
+		:ForwardBranchCode:ind_var,
+		:FromAcctSubType:ind_var,
+		:ToAcctSubType:ind_var,
+		:AvailBalance:ind_var,
+		:LedgerBalance:ind_var,
+		:Amount:ind_var,
+		:TxnFee:ind_var,
+		:DispAmount:ind_var,
+		:FromAccount:ind_var,
+		:ToAccount:ind_var,
+		:RefNum:ind_var,
+		:AuthNum:ind_var,
+		:AcceptorName:ind_var,
+		:AcquirerInst:ind_var,
+		:IssuerInst:ind_var,
+		:ForwardInst:ind_var,
+		:TxfInst:ind_var,
+		:SettInst:ind_var,
+		:NetworkId:ind_var,
+		:AcqNetworkId:ind_var,
+		:IssuerNetworkId:ind_var,
+		:FwdNetworkId:ind_var,
+		:TxfNetworkId:ind_var,
+		:SettNetworkId:ind_var,
+		:Track2:ind_var,
+		:RsvFld1:ind_var,
+		:RsvFld2:ind_var,
+		:RsvFld3:ind_var,
+		:RsvFld4:ind_var,
+		:RsvFld5:ind_var,
+		:RsvFld6:ind_var,
+		:OrgChannel:ind_var,
+		:OrgPort:ind_var,
+		:SrcChannel:ind_var
+	FROM EZTXNLOG WHERE RTRIM(TXNREFNUM)=:TxnRefNum;
+
+	if( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	
+	txnmsg->MsgType = MsgType;
+	txnmsg->OrgMsgType = OrgMsgType;
+	txnmsg->TxnCode = TxnCode;
+	memset( txnmsg->TerminalId, 0, sizeof( txnmsg->TerminalId ) );
+	strcpy( txnmsg->TerminalId, TerminalId );
+	memset( txnmsg->TerminalLocation, 0, sizeof( txnmsg->TerminalLocation ) );
+	strcpy( txnmsg->TerminalLocation, TerminalLocation );
+	txnmsg->TraceNo = TraceNo;
+	txnmsg->OrgTraceNo = OrgTraceNo;
+	txnmsg->TranDate = TranDate;	 
+	txnmsg->TranTime = TranTime;
+	txnmsg->OrgTranDate = OrgTranDate;
+	txnmsg->OrgTranTime = OrgTranTime;
+	txnmsg->LocalDate = LocalDate;
+	txnmsg->LocalTime = LocalTime;
+	txnmsg->RespCode = RespCode;
+	txnmsg->RevCode = RevCode;
+	txnmsg->AuthCode = AuthCode;
+	txnmsg->ReasonCode = ReasonCode;
+	txnmsg->CaptureDate = CaptureDate;
+	txnmsg->CaptureTime = CaptureTime;
+	txnmsg->SettlementDate = SettlementDate;
+	txnmsg->AcqCurrencyCode = AcqCurrencyCode;
+	txnmsg->IssCurrencyCode = IssCurrencyCode;
+	txnmsg->SettCurrencyCode = SettCurrencyCode;
+	txnmsg->AcqConvRate = AcqConvRate;
+	txnmsg->AcqConvDate = AcqConvDate;
+	txnmsg->IssConvRate = IssConvRate;
+	txnmsg->IssConvDate = IssConvDate;
+	txnmsg->SettConvRate = SettConvRate;
+	txnmsg->SettConvDate = SettConvDate;
+	txnmsg->MerchantType = MerchantType;
+	txnmsg->PosEntryCode = PosEntryCode;
+	txnmsg->PosConditionCode = PosConditionCode;
+	txnmsg->PosCapCode = PosCapCode;
+	txnmsg->PosPinCapCode = PosPinCapCode;
+	memset( txnmsg->AcqBranchCode, 0, sizeof( txnmsg->AcqBranchCode ) );
+	strcpy( txnmsg->AcqBranchCode, AcqBranchCode );
+	memset( txnmsg->IssBranchCode, 0, sizeof( txnmsg->IssBranchCode ) );
+	strcpy( txnmsg->IssBranchCode, IssBranchCode );
+	memset( txnmsg->TxfBranchCode, 0, sizeof( txnmsg->TxfBranchCode ) );
+	strcpy( txnmsg->TxfBranchCode, TxfBranchCode );
+	memset( txnmsg->ForwardBranchCode, 0, sizeof( txnmsg->ForwardBranchCode ) );
+	strcpy( txnmsg->ForwardBranchCode,ForwardBranchCode );
+	memset( txnmsg->FromAcctSubType, 0, sizeof( txnmsg->FromAcctSubType ) );
+	strcpy( txnmsg->FromAcctSubType, FromAcctSubType );
+	memset( txnmsg->ToAcctSubType, 0, sizeof( txnmsg->ToAcctSubType ) );
+	strcpy( txnmsg->ToAcctSubType, ToAcctSubType );
+	memset( txnmsg->AvailBalance, 0, sizeof( txnmsg->AvailBalance ) );
+	strcpy( txnmsg->AvailBalance, AvailBalance );
+	memset( txnmsg->LedgerBalance, 0, sizeof( txnmsg->LedgerBalance ) );
+	strcpy( txnmsg->LedgerBalance, LedgerBalance );
+	memset( txnmsg->Amount, 0, sizeof( txnmsg->Amount ) );
+	strcpy( txnmsg->Amount, Amount );
+	memset( txnmsg->TxnFee, 0, sizeof( txnmsg->TxnFee ) );
+	strcpy( txnmsg->TxnFee, TxnFee );
+	memset( txnmsg->DispAmount, 0, sizeof( txnmsg->DispAmount ) );
+	strcpy( txnmsg->DispAmount, DispAmount );
+	memset( txnmsg->FromAccount, 0, sizeof( txnmsg->FromAccount ) );
+	strcpy( txnmsg->FromAccount, FromAccount );
+	memset( txnmsg->ToAccount, 0, sizeof( txnmsg->ToAccount ) );
+	strcpy( txnmsg->ToAccount, ToAccount );
+	memset( txnmsg->RefNum, 0, sizeof( txnmsg->RefNum ) );
+	strcpy( txnmsg->RefNum, RefNum );
+	memset( txnmsg->AuthNum, 0, sizeof( txnmsg->AuthNum ) );
+	strcpy( txnmsg->AuthNum, AuthNum );
+	memset( txnmsg->AcceptorName, 0, sizeof( txnmsg->AcceptorName ) );
+	strcpy( txnmsg->AcceptorName, AcceptorName );
+	memset( txnmsg->AcquirerInst, 0, sizeof( txnmsg->AcquirerInst ) );
+	strcpy( txnmsg->AcquirerInst, AcquirerInst );
+	memset( txnmsg->IssuerInst, 0, sizeof( txnmsg->IssuerInst ) );
+	strcpy( txnmsg->IssuerInst, IssuerInst );
+	memset( txnmsg->ForwardInst, 0, sizeof( txnmsg->ForwardInst ) );
+	strcpy( txnmsg->ForwardInst, ForwardInst );
+	memset( txnmsg->TxfInst, 0, sizeof( txnmsg->TxfInst ) );
+	strcpy( txnmsg->TxfInst, TxfInst );
+	memset( txnmsg->SettInst, 0, sizeof( txnmsg->SettInst ) );
+	strcpy( txnmsg->SettInst, SettInst );
+	memset( txnmsg->NetworkId, 0, sizeof( txnmsg->NetworkId ) );
+	strcpy( txnmsg->NetworkId, NetworkId );
+	memset( txnmsg->AcqNetworkId, 0, sizeof( txnmsg->AcqNetworkId ) );
+	strcpy( txnmsg->AcqNetworkId, AcqNetworkId );
+	memset( txnmsg->IssuerNetworkId, 0, sizeof( txnmsg->IssuerNetworkId ) );
+	strcpy( txnmsg->IssuerNetworkId, IssuerNetworkId );
+	memset( txnmsg->FwdNetworkId, 0, sizeof( txnmsg->FwdNetworkId ) );
+	strcpy( txnmsg->FwdNetworkId, FwdNetworkId );
+	memset( txnmsg->TxfNetworkId, 0, sizeof( txnmsg->TxfNetworkId ) );
+	strcpy( txnmsg->TxfNetworkId, TxfNetworkId );
+	memset( txnmsg->SettNetworkId, 0, sizeof( txnmsg->SettNetworkId ) );
+	strcpy( txnmsg->SettNetworkId, SettNetworkId );
+	memset( txnmsg->Track2, 0, sizeof( txnmsg->Track2 ) );
+	strcpy( txnmsg->Track2, Track2 );
+	memset( txnmsg->RsvFld1, 0, sizeof( txnmsg->RsvFld1 ) );
+	strcpy( txnmsg->RsvFld1, RsvFld1 );
+	memset( txnmsg->RsvFld2, 0, sizeof( txnmsg->RsvFld2 ) );
+	strcpy( txnmsg->RsvFld2, RsvFld2 );
+	memset( txnmsg->RsvFld3, 0, sizeof( txnmsg->RsvFld3 ) );
+	strcpy( txnmsg->RsvFld3, RsvFld3 );
+	memset( txnmsg->RsvFld4, 0, sizeof( txnmsg->RsvFld4 ) );
+	strcpy( txnmsg->RsvFld4, RsvFld4 );
+	memset( txnmsg->RsvFld5, 0, sizeof( txnmsg->RsvFld5 ) );
+	strcpy( txnmsg->RsvFld5, RsvFld5 );
+	memset( txnmsg->RsvFld6, 0, sizeof( txnmsg->RsvFld6 ) );
+	strcpy( txnmsg->RsvFld6, RsvFld6 );
+	memset( txnmsg->OrgChannel, 0, sizeof( txnmsg->OrgChannel ) );
+	strcpy( txnmsg->OrgChannel, OrgChannel );
+	memset( txnmsg->OrgPort, 0, sizeof( txnmsg->OrgPort ) );
+	strcpy( txnmsg->OrgPort, OrgPort );
+	strcpy( I_ChannelName, SrcChannel );
+	
+	return 0;
+}
+
+int insertEzTxnLog( struct EzTxnMsg *txnmsg, const char *I_TxnRefNum, const char *I_SrcChannelName, const char *I_DestChannelName, short I_RefSeqNo )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char TxnRefNum[ 151 ];
+		char DeviceType[ 17 ];
+		int MsgType;
+        int OrgMsgType;
+        int TxnCode;
+        char TerminalId[ 17 ];
+        char TerminalLocation[ 65 ];
+        int TraceNo;
+        int OrgTraceNo;
+        char TranDate[ 7 ];
+        int TranTime;
+        char OrgTranDate[ 7 ];
+        int OrgTranTime;
+        char LocalDate[ 7 ];
+        int LocalTime;
+        int RespCode;
+        int RevCode;
+        int ReasonCode;
+        int AuthCode;
+        char CaptureDate[ 7 ];
+        int CaptureTime;
+        char SettlementDate[ 7 ];
+        char BusinessDate[ 7 ];
+        int AcqCurrencyCode;
+        int AcqConvRate;
+        char AcqConvDate[ 7 ];
+        int IssCurrencyCode;
+        int IssConvRate;
+        char IssConvDate[ 7 ];
+        int SettCurrencyCode;
+        int SettConvRate;
+        char SettConvDate[ 7 ];
+        int MerchantType;
+        int PosEntryCode;
+        int PosConditionCode;
+        int PosCapCode;
+        char PosPinCapCode;
+        char chn[ 20 ];
+        char t_chn[ 129 ];
+        char AcqBranchCode[ 11 ];
+        char IssBranchCode[ 11 ];
+        char TxfBranchCode[ 11 ];
+        char ForwardBranchCode[ 11 ];
+        char FromAcctSubType[ 11 ];
+        char ToAcctSubType[ 11 ];
+		char AvailBalance[ 15 ];
+        char LedgerBalance[ 15 ];
+        char Amount[ 15 ];
+        char TxnFee[ 15 ];
+        char DispAmount[ 15 ];
+        char FromAccount[ 33 ];
+        char ToAccount[ 33 ];
+        char RefNum[ 13 ];
+        char AuthNum[ 13 ];
+        char BatchId[ 13 ];
+        char AcceptorId[ 33 ];
+        char AcceptorName[ 41 ];
+        char AcquirerInst[ 13 ];
+        char IssuerInst[ 13 ];
+        char ForwardInst[ 13 ];
+        char TxfInst[ 13 ];
+        char SettInst[ 13 ];
+        char NetworkId[ 17 ];
+        char AcqNetworkId[ 17 ];
+		char IssuerNetworkId[ 17 ];
+		char FwdNetworkId[ 17 ];
+		char TxfNetworkId[ 17 ];
+		char SettNetworkId[ 17 ];
+        char RsvFld1[ 513 ];
+        char RsvFld2[ 513 ];
+        char RsvFld3[ 51 ];
+        char RsvFld4[ 51 ];
+        char RsvFld5[ 51 ];
+        char RsvFld6[ 51 ];
+        char OrgChannel[ 33 ];
+        char OrgPort[ 33 ];
+        char SrcChannel[ 33 ];
+        char DestChannel[ 33 ];
+        char SrcPort[ 33 ];
+        char DestPort[ 33 ];
+        int RefSeqNo;
+       	short ind_var;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR TxnRefNum IS STRING(151);
+	EXEC SQL VAR DeviceType IS STRING(17);
+	EXEC SQL VAR TerminalId IS STRING(17);
+    EXEC SQL VAR TerminalLocation IS STRING(65);
+    EXEC SQL VAR TranDate IS STRING(7);
+    EXEC SQL VAR OrgTranDate IS STRING(7);
+    EXEC SQL VAR LocalDate IS STRING(7);
+    EXEC SQL VAR CaptureDate IS STRING(7);
+    EXEC SQL VAR SettlementDate IS STRING(7);
+    EXEC SQL VAR BusinessDate IS STRING(7);
+    EXEC SQL VAR AcqConvDate IS STRING(7);
+    EXEC SQL VAR IssConvDate IS STRING(7);
+    EXEC SQL VAR SettConvDate IS STRING(7);
+    EXEC SQL VAR chn IS STRING(20);
+    EXEC SQL VAR t_chn IS STRING(129);
+    EXEC SQL VAR AcqBranchCode IS STRING(11);
+    EXEC SQL VAR IssBranchCode IS STRING(11);
+    EXEC SQL VAR TxfBranchCode IS STRING(11);
+    EXEC SQL VAR ForwardBranchCode IS STRING(11);
+    EXEC SQL VAR FromAcctSubType IS STRING(11);
+    EXEC SQL VAR ToAcctSubType IS STRING(11);
+    EXEC SQL VAR AvailBalance IS STRING(15);
+    EXEC SQL VAR LedgerBalance IS STRING(15);
+    EXEC SQL VAR Amount IS STRING(15);
+    EXEC SQL VAR TxnFee IS STRING(15);
+    EXEC SQL VAR DispAmount IS STRING(15);
+    EXEC SQL VAR FromAccount IS STRING(33);
+    EXEC SQL VAR ToAccount IS STRING(33);
+    EXEC SQL VAR RefNum IS STRING(13);
+    EXEC SQL VAR AuthNum IS STRING(13);
+    EXEC SQL VAR BatchId IS STRING(13);
+    EXEC SQL VAR AcceptorId IS STRING(33);
+    EXEC SQL VAR AcceptorName IS STRING(41);
+    EXEC SQL VAR RefNum IS STRING(13);
+    EXEC SQL VAR AcquirerInst IS STRING(13);
+    EXEC SQL VAR IssuerInst IS STRING(13);
+    EXEC SQL VAR ForwardInst IS STRING(13);
+    EXEC SQL VAR TxfInst IS STRING(13);
+    EXEC SQL VAR SettInst IS STRING(13);
+    EXEC SQL VAR NetworkId IS STRING(17);
+    EXEC SQL VAR AcqNetworkId IS STRING(17);
+    EXEC SQL VAR IssuerNetworkId IS STRING(17);
+    EXEC SQL VAR FwdNetworkId IS STRING(17);
+    EXEC SQL VAR TxfNetworkId IS STRING(17);
+    EXEC SQL VAR SettNetworkId IS STRING(17);
+    EXEC SQL VAR RsvFld1 IS STRING(513);
+    EXEC SQL VAR RsvFld2 IS STRING(513);
+    EXEC SQL VAR RsvFld3 IS STRING(51);
+    EXEC SQL VAR RsvFld4 IS STRING(51);
+    EXEC SQL VAR RsvFld5 IS STRING(51);
+    EXEC SQL VAR RsvFld6 IS STRING(51);
+    EXEC SQL VAR OrgChannel IS STRING(33);
+    EXEC SQL VAR OrgPort IS STRING(33);
+	EXEC SQL VAR SrcChannel IS STRING(33);
+	EXEC SQL VAR DestChannel IS STRING(33);
+	EXEC SQL VAR SrcPort IS STRING(33);
+	EXEC SQL VAR DestPort IS STRING(33);
+	
+	memset( TxnRefNum, 0, sizeof( TxnRefNum ) );
+	memset( DeviceType, 0, sizeof( DeviceType ) );
+	memset( TerminalId, 0, sizeof( TerminalId ) );
+    memset( TerminalLocation, 0, sizeof( TerminalLocation ) );
+    memset( TranDate, 0, sizeof( TranDate ) );
+    memset( OrgTranDate, 0, sizeof( OrgTranDate ) );
+    memset( LocalDate, 0, sizeof( LocalDate ) ); 
+    memset( CaptureDate, 0, sizeof( CaptureDate ) );
+    memset( SettlementDate, 0, sizeof( SettlementDate ) );
+    memset( BusinessDate, 0, sizeof( BusinessDate ) );
+    memset( AcqConvDate, 0, sizeof( AcqConvDate ) );
+    memset( IssConvDate, 0, sizeof( IssConvDate ) );
+    memset( SettConvDate, 0, sizeof( SettConvDate ) );
+    memset( chn, 0, sizeof( chn ) );
+    memset( t_chn, 0, sizeof( t_chn ) );
+    memset( AcqBranchCode, 0, sizeof( AcqBranchCode ) );
+    memset( IssBranchCode, 0, sizeof( IssBranchCode ) );
+    memset( ForwardBranchCode, 0, sizeof( ForwardBranchCode ) );
+    memset( TxfBranchCode, 0, sizeof( TxfBranchCode ) );
+    memset( FromAcctSubType, 0, sizeof( FromAcctSubType ) );
+    memset( ToAcctSubType, 0, sizeof( ToAcctSubType ) );
+    memset( AvailBalance, 0, sizeof( AvailBalance ) );
+    memset( LedgerBalance, 0, sizeof( LedgerBalance ) );
+    memset( Amount, 0, sizeof( Amount ) );
+    memset( TxnFee, 0, sizeof( TxnFee ) );
+    memset( DispAmount, 0, sizeof( DispAmount ) );
+    memset( FromAccount, 0, sizeof( FromAccount ) );
+    memset( ToAccount, 0, sizeof( ToAccount ) );
+    memset( RefNum, 0, sizeof( RefNum ) );
+    memset( AuthNum, 0, sizeof( AuthNum ) );
+    memset( BatchId, 0, sizeof( BatchId ) );
+    memset( AcceptorId, 0, sizeof( AcceptorId ) );
+    memset( AcceptorName, 0, sizeof( AcceptorName ) );
+    memset( AcquirerInst, 0, sizeof( AcquirerInst ) );
+    memset( IssuerInst, 0, sizeof( IssuerInst ) );
+    memset( ForwardInst, 0, sizeof( ForwardInst ) );
+    memset( TxfInst, 0, sizeof( TxfInst ) );
+    memset( SettInst, 0, sizeof( SettInst ) );
+    memset( NetworkId, 0, sizeof( NetworkId ) );
+    memset( AcqNetworkId, 0, sizeof( AcqNetworkId ) );
+    memset( IssuerNetworkId, 0, sizeof( IssuerNetworkId ) );
+    memset( FwdNetworkId, 0, sizeof( FwdNetworkId ) );
+    memset( TxfNetworkId, 0, sizeof( TxfNetworkId ) );
+    memset( SettNetworkId, 0, sizeof( SettNetworkId ) );
+    memset( RsvFld1, 0, sizeof( RsvFld1 ) );
+    memset( RsvFld2, 0, sizeof( RsvFld2 ) );
+    memset( RsvFld3, 0, sizeof( RsvFld3 ) );
+    memset( RsvFld4, 0, sizeof( RsvFld4 ) );
+    memset( RsvFld5, 0, sizeof( RsvFld5 ) );
+    memset( RsvFld6, 0, sizeof( RsvFld6 ) );
+    memset( OrgChannel, 0, sizeof( OrgChannel ) );
+	memset( OrgPort, 0, sizeof( OrgPort ) );
+	memset( SrcChannel, 0, sizeof( SrcChannel ) );
+	memset( DestChannel, 0, sizeof( DestChannel ) );
+	memset( SrcPort, 0, sizeof( SrcPort ) );
+	memset( DestPort, 0, sizeof( DestPort ) );
+	
+	strcpy( TxnRefNum, I_TxnRefNum );
+	strcpy( DeviceType, txnmsg->DeviceType );
+	MsgType = txnmsg->MsgType;
+    OrgMsgType = txnmsg->OrgMsgType;
+    TxnCode = txnmsg->TxnCode;
+    strcpy( TerminalId, txnmsg->TerminalId );
+    strcpy( TerminalLocation, txnmsg->TerminalLocation );
+    TraceNo = txnmsg->TraceNo;
+    OrgTraceNo = txnmsg->OrgTraceNo;
+    sprintf( TranDate, "%06d", txnmsg->TranDate );
+    TranTime = txnmsg->TranTime;
+    
+    if( !txnmsg->OrgTranDate )
+    	sprintf( OrgTranDate, "%06d", txnmsg->TranDate );
+    else
+    	sprintf( OrgTranDate, "%06d", txnmsg->OrgTranDate );
+    	
+    OrgTranTime = txnmsg->OrgTranTime;
+    sprintf( LocalDate, "%06d", txnmsg->LocalDate );
+    LocalTime = txnmsg->LocalTime;
+    RespCode = txnmsg->RespCode;
+    RevCode = txnmsg->RevCode;
+    ReasonCode = txnmsg->ReasonCode;
+    AuthCode = txnmsg->AuthCode;
+    
+    if( !txnmsg->CaptureDate )
+    	sprintf( CaptureDate, "%06d", txnmsg->LocalDate );
+    else
+    	sprintf( CaptureDate, "%06d", txnmsg->CaptureDate );
+    CaptureTime = txnmsg->CaptureTime;
+    if( !txnmsg->SettlementDate )
+    	sprintf( SettlementDate, "%06d", txnmsg->LocalDate );
+    else
+    	sprintf( SettlementDate, "%06d", txnmsg->SettlementDate );
+    	
+	if( !txnmsg->BusinessDate )
+		sprintf( BusinessDate, "%06d", txnmsg->LocalDate );
+	else
+		sprintf( BusinessDate, "%06d", txnmsg->BusinessDate );
+    	
+    AcqCurrencyCode = txnmsg->AcqCurrencyCode;
+    AcqConvRate = txnmsg->AcqConvRate;
+    
+    if( !txnmsg->AcqConvDate )
+    	sprintf( AcqConvDate, "%06d", txnmsg->LocalDate );
+    else
+    	sprintf( AcqConvDate, "%06d", txnmsg->AcqConvDate );
+    	
+    IssCurrencyCode = txnmsg->IssCurrencyCode;
+    IssConvRate = txnmsg->IssConvRate;
+    
+    if( !txnmsg->IssConvDate )
+    	sprintf( IssConvDate, "%06d", txnmsg->LocalDate );
+    else
+    	sprintf( IssConvDate, "%06d", txnmsg->IssConvDate );
+    	
+    SettCurrencyCode = txnmsg->SettCurrencyCode;
+    SettConvRate = txnmsg->SettConvRate;
+    
+    if( !txnmsg->SettConvDate )
+    	sprintf( SettConvDate, "%06d", txnmsg->LocalDate );
+    else
+    	sprintf( SettConvDate, "%06d", txnmsg->SettConvDate );
+    	
+    MerchantType = txnmsg->MerchantType;
+    PosEntryCode = txnmsg->PosEntryCode;
+    PosConditionCode = txnmsg->PosConditionCode;
+    PosCapCode = txnmsg->PosCapCode;
+    PosPinCapCode = txnmsg->PosPinCapCode;
+    strcpy( chn, txnmsg->m_chn );
+    if( !strlen( txnmsg->t_chn ) )
+    	strcpy( t_chn, txnmsg->m_chn );
+    else
+    	strcpy( t_chn, txnmsg->t_chn );
+    strcpy( AcqBranchCode, txnmsg->AcqBranchCode );
+    strcpy( IssBranchCode, txnmsg->IssBranchCode );
+    strcpy( ForwardBranchCode, txnmsg->ForwardBranchCode );
+    strcpy( TxfBranchCode, txnmsg->TxfBranchCode );
+	strcpy( FromAcctSubType, txnmsg->FromAcctSubType );
+    strcpy( ToAcctSubType, txnmsg->ToAcctSubType );
+    strcpy( AvailBalance, txnmsg->AvailBalance );
+    strcpy( LedgerBalance, txnmsg->LedgerBalance );
+    strcpy( Amount, txnmsg->Amount );
+    strcpy( TxnFee, txnmsg->TxnFee );
+    strcpy( DispAmount, txnmsg->DispAmount );
+    strcpy( FromAccount, txnmsg->FromAccount );
+    strcpy( ToAccount, txnmsg->ToAccount );
+    strcpy( RefNum, txnmsg->RefNum );
+    strcpy( AuthNum, txnmsg->AuthNum );
+    strcpy( BatchId, txnmsg->BatchId );
+    strcpy( AcceptorId, txnmsg->AcceptorId );
+    strcpy( AcceptorName, txnmsg->AcceptorName );
+    strcpy( AcquirerInst, txnmsg->AcquirerInst );
+    strcpy( IssuerInst, txnmsg->IssuerInst );
+    strcpy( ForwardInst, txnmsg->ForwardInst );
+    strcpy( TxfInst, txnmsg->TxfInst );
+    strcpy( SettInst, txnmsg->SettInst );
+    strcpy( NetworkId, txnmsg->NetworkId );
+    strcpy( AcqNetworkId, txnmsg->AcqNetworkId );
+    strcpy( IssuerNetworkId, txnmsg->IssuerNetworkId );
+    strcpy( FwdNetworkId, txnmsg->FwdNetworkId );
+    strcpy( TxfNetworkId, txnmsg->TxfNetworkId );
+    strcpy( SettNetworkId, txnmsg->SettNetworkId );
+    strcpy( RsvFld1, txnmsg->RsvFld1 );
+    strcpy( RsvFld2, txnmsg->RsvFld2 );
+    strcpy( RsvFld3, txnmsg->RsvFld3 );
+    strcpy( RsvFld4, txnmsg->RsvFld4 );
+    strcpy( RsvFld5, txnmsg->RsvFld5 );
+    strcpy( RsvFld6, txnmsg->RsvFld6 );
+   	strcpy( OrgChannel, txnmsg->OrgChannel );
+	strcpy( OrgPort, txnmsg->OrgPort );
+	strcpy( SrcChannel, I_SrcChannelName );
+	strcpy( DestChannel, I_DestChannelName );
+	strcpy( SrcPort, txnmsg->SrcPort );
+	strcpy( DestPort, txnmsg->DestPort );
+	
+	RefSeqNo = I_RefSeqNo;
+	
+	EXEC SQL INSERT INTO EZTXNLOG
+	(
+		TXNREFNUM,
+		DEVICETYPE,
+		MSGTYPE,
+		ORGMSGTYPE,
+		TXNCODE,
+		TERMINALID,
+		TERMLOC,
+		TRACENO,
+		ORGTRACENO,
+		TRANDATE,
+		TRANTIME,
+		ORGTRANDATE,
+		ORGTRANTIME,
+		LOCALDATE,
+		LOCALTIME,
+		RESPCODE,
+		REVCODE,
+		REASONCODE,
+		AUTHCODE,
+		CAPTUREDATE,
+		CAPTURETIME,
+		SETTLEMENTDATE,
+		BUSINESSDATE,
+		ACQCURRENCYCODE,
+		ACQCONVRATE,
+		ACQCONVDATE,
+		ISSCURRENCYCODE,
+		ISSCONVRATE,
+		ISSCONVDATE,
+		SETTCURRENCYCODE,
+		SETTCONVRATE,
+		SETTCONVDATE,
+		MERCHANTTYPE,
+		POSENTRYCODE,
+		POSCONDITIONCODE,
+		POSCAPCODE,
+		POSPINCAPCODE,
+		CHN,
+		TCHN,
+		ACQBRANCHCODE,
+		ISSBRANCHCODE,
+		TXFBRANCHCODE,
+		FORWARDBRANCHCODE,
+		FROMACCTSUBTYPE,
+		TOACCTSUBTYPE,
+		AVAILBALANCE,
+		LEDGERBALANCE,
+		AMOUNT,
+		TXNFEE,
+		DISPAMOUNT,
+		FROMACCOUNT,
+		TOACCOUNT,
+		REFNUM,
+		AUTHNUM,
+		BATCHID,
+		ACCEPTORID,
+		ACCEPTORNAME,
+		ACQUIRERINST,
+		ISSUERINST,
+		FORWARDINST,
+		TXFINST,
+		SETTINST,
+		NETWORKID,
+		ACQNETWORKID,
+		ISSUERNETWORKID,
+		FWDNETWORKID,
+		TXFNETWORKID,
+		SETTNETWORKID,
+		RSVFLD1,
+		RSVFLD2,
+		RSVFLD3,
+		RSVFLD4,
+		RSVFLD5,
+		RSVFLD6,
+		ORGCHANNEL,
+		ORGPORT,
+		SRCCHANNEL,
+		DESTCHANNEL,
+		SRCPORT,
+		DESTPORT,
+		REFSEQNO
+	)
+	VALUES
+	(
+		:TxnRefNum,
+		:DeviceType,
+		:MsgType,
+        :OrgMsgType,
+        :TxnCode,
+        :TerminalId,
+        :TerminalLocation,
+        :TraceNo,
+        :OrgTraceNo,
+        to_date( :TranDate, 'dd-mm-yy' ),
+        :TranTime,
+        to_date( :OrgTranDate, 'dd-mm-yy' ),
+        :OrgTranTime,
+        to_date( :LocalDate, 'dd-mm-yy' ),
+        :LocalTime,
+        :RespCode,
+        :RevCode,
+        :ReasonCode,
+        :AuthCode,
+        to_date( :CaptureDate, 'dd-mm-yy' ),
+        :CaptureTime,
+        to_date( :SettlementDate, 'dd-mm-yy' ),
+        to_date( :BusinessDate, 'dd-mm-yy' ),
+        :AcqCurrencyCode,
+        :AcqConvRate,
+        to_date( :AcqConvDate, 'dd-mm-yy' ),
+        :IssCurrencyCode,
+        :IssConvRate,
+        to_date( :IssConvDate, 'dd-mm-yy' ),
+        :SettCurrencyCode,
+        :SettConvRate,
+        to_date( :SettConvDate, 'dd-mm-yy' ),
+        :MerchantType,
+        :PosEntryCode,
+        :PosConditionCode,
+        :PosCapCode,
+        :PosPinCapCode,
+        :chn,
+        :t_chn,
+        :AcqBranchCode,
+        :IssBranchCode,
+        :TxfBranchCode,
+        :ForwardBranchCode,
+	    :FromAcctSubType,
+        :ToAcctSubType,
+        :AvailBalance,
+        :LedgerBalance,
+        :Amount,
+        :TxnFee,
+        :DispAmount,
+        :FromAccount,
+        :ToAccount,
+        :RefNum,
+        :AuthNum,
+        :BatchId,
+		:AcceptorId,
+        :AcceptorName,
+        :AcquirerInst,
+        :IssuerInst,
+        :ForwardInst,
+        :TxfInst,
+        :SettInst,
+        :NetworkId,
+        :AcqNetworkId,
+        :IssuerNetworkId,
+        :FwdNetworkId,
+        :TxfNetworkId,
+        :SettNetworkId,
+        :RsvFld1,
+        :RsvFld2,
+        :RsvFld3,
+        :RsvFld4,
+        :RsvFld5,
+        :RsvFld6,
+        :OrgChannel,
+        :OrgPort,
+        :SrcChannel,
+        :DestChannel,
+        :SrcPort,
+        :DestPort,
+        :RefSeqNo
+    );
+	
+	if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+    {
+            EXEC SQL COMMIT;
+            return sqlca.sqlcode;
+    }
+}
+
+int updateEzTxnLog( struct EzTxnMsg *txnmsg, const char *I_TxnRefNum, const char *I_ChannelName )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char TxnRefNum[ 151 ];
+		int MsgType;
+        int OrgMsgType;
+        int TxnCode;
+        char TerminalId[ 17 ];
+        char TerminalLocation[ 65 ];
+        int TraceNo;
+        int OrgTraceNo;
+        int TranDate;
+        int TranTime;
+        int OrgTranDate;
+        int OrgTranTime;
+        int LocalDate;
+        int LocalTime;
+        int RespCode;
+        int RevCode;
+        int ReasonCode;
+        int AuthCode;
+        int CaptureDate;
+        int CaptureTime;
+        int SettlementDate;
+        int AcqCurrencyCode;
+        int AcqConvRate;
+        int AcqConvDate;
+        int IssCurrencyCode;
+        int IssConvRate;
+        int IssConvDate;
+        int SettCurrencyCode;
+        int SettConvRate;
+        int SettConvDate;
+        int MerchantType;
+        int PosEntryCode;
+        int PosConditionCode;
+        int PosCapCode;
+        char PosPinCapCode;
+        char chn[ 20 ];
+        char AcqBranchCode[ 11 ];
+        char IssBranchCode[ 11 ];
+        char TxfBranchCode[ 11 ];
+        char ForwardBranchCode[ 11 ];
+        char FromAcctSubType[ 11 ];
+        char ToAcctSubType[ 11 ];
+		char AvailBalance[ 15 ];
+        char LedgerBalance[ 15 ];
+        char Amount[ 15 ];
+        char TxnFee[ 15 ];
+        char DispAmount[ 15 ];
+        char FromAccount[ 33 ];
+        char ToAccount[ 33 ];
+        char RefNum[ 13 ];
+        char AuthNum[ 13 ];
+        char AcceptorName[ 41 ];
+        char AcquirerInst[ 13 ];
+        char IssuerInst[ 13 ];
+        char ForwardInst[ 13 ];
+        char TxfInst[ 13 ];
+        char SettInst[ 13 ];
+        char NetworkId[ 17 ];
+        char AcqNetworkId[ 17 ];
+		char IssuerNetworkId[ 17 ];
+		char FwdNetworkId[ 17 ];
+		char TxfNetworkId[ 17 ];
+		char SettNetworkId[ 17 ];
+        char Track2[ 40 ];
+        char RsvFld1[ 513 ];
+        char RsvFld2[ 513 ];
+        char RsvFld3[ 51 ];
+        char RsvFld4[ 51 ];
+        char RsvFld5[ 51 ];
+        char RsvFld6[ 51 ];
+        char OrgChannel[ 33 ];
+        char OrgPort[ 33 ];
+        char SrcChannel[ 33 ];
+       	short ind_var;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR TxnRefNum IS STRING(151);
+	EXEC SQL VAR TerminalId IS STRING(17);
+    EXEC SQL VAR TerminalLocation IS STRING(65);
+    EXEC SQL VAR chn IS STRING(20);
+    EXEC SQL VAR AcqBranchCode IS STRING(11);
+    EXEC SQL VAR IssBranchCode IS STRING(11);
+    EXEC SQL VAR TxfBranchCode IS STRING(11);
+    EXEC SQL VAR ForwardBranchCode IS STRING(11);
+    EXEC SQL VAR FromAcctSubType IS STRING(11);
+    EXEC SQL VAR ToAcctSubType IS STRING(11);
+    EXEC SQL VAR AvailBalance IS STRING(15);
+    EXEC SQL VAR LedgerBalance IS STRING(15);
+    EXEC SQL VAR Amount IS STRING(15);
+    EXEC SQL VAR TxnFee IS STRING(15);
+    EXEC SQL VAR DispAmount IS STRING(15);
+    EXEC SQL VAR FromAccount IS STRING(33);
+    EXEC SQL VAR ToAccount IS STRING(33);
+    EXEC SQL VAR RefNum IS STRING(13);
+    EXEC SQL VAR AuthNum IS STRING(13);
+    EXEC SQL VAR AcceptorName IS STRING(41);
+    EXEC SQL VAR RefNum IS STRING(13);
+    EXEC SQL VAR AcquirerInst IS STRING(13);
+    EXEC SQL VAR IssuerInst IS STRING(13);
+    EXEC SQL VAR ForwardInst IS STRING(13);
+    EXEC SQL VAR TxfInst IS STRING(13);
+    EXEC SQL VAR SettInst IS STRING(13);
+    EXEC SQL VAR NetworkId IS STRING(17);
+    EXEC SQL VAR AcqNetworkId IS STRING(17);
+    EXEC SQL VAR IssuerNetworkId IS STRING(17);
+    EXEC SQL VAR FwdNetworkId IS STRING(17);
+    EXEC SQL VAR TxfNetworkId IS STRING(17);
+    EXEC SQL VAR SettNetworkId IS STRING(17);
+    EXEC SQL VAR Track2 IS STRING(40);
+    EXEC SQL VAR RsvFld1 IS STRING(513);
+    EXEC SQL VAR RsvFld2 IS STRING(513);
+    EXEC SQL VAR RsvFld3 IS STRING(51);
+    EXEC SQL VAR RsvFld4 IS STRING(51);
+    EXEC SQL VAR RsvFld5 IS STRING(51);
+    EXEC SQL VAR RsvFld6 IS STRING(51);
+    EXEC SQL VAR OrgChannel IS STRING(33);
+	EXEC SQL VAR OrgPort IS STRING(33);
+	EXEC SQL VAR SrcChannel IS STRING(33);
+	
+ 	memset( TxnRefNum, 0, sizeof( TxnRefNum ) );
+	memset( TerminalId, 0, sizeof( TerminalId ) );
+    memset( TerminalLocation, 0, sizeof( TerminalLocation ) );
+    memset( chn, 0, sizeof( chn ) );
+    memset( AcqBranchCode, 0, sizeof( AcqBranchCode ) );
+    memset( IssBranchCode, 0, sizeof( IssBranchCode ) );
+    memset( ForwardBranchCode, 0, sizeof( ForwardBranchCode ) );
+    memset( TxfBranchCode, 0, sizeof( TxfBranchCode ) );
+    memset( FromAcctSubType, 0, sizeof( FromAcctSubType ) );
+    memset( ToAcctSubType, 0, sizeof( ToAcctSubType ) );
+    memset( AvailBalance, 0, sizeof( AvailBalance ) );
+    memset( LedgerBalance, 0, sizeof( LedgerBalance ) );
+    memset( Amount, 0, sizeof( Amount ) );
+    memset( TxnFee, 0, sizeof( TxnFee ) );
+    memset( DispAmount, 0, sizeof( DispAmount ) );
+    memset( FromAccount, 0, sizeof( FromAccount ) );
+    memset( ToAccount, 0, sizeof( ToAccount ) );
+    memset( RefNum, 0, sizeof( RefNum ) );
+    memset( AuthNum, 0, sizeof( AuthNum ) );
+    memset( AcceptorName, 0, sizeof( AcceptorName ) );
+    memset( AcquirerInst, 0, sizeof( AcquirerInst ) );
+    memset( IssuerInst, 0, sizeof( IssuerInst ) );
+    memset( ForwardInst, 0, sizeof( ForwardInst ) );
+    memset( TxfInst, 0, sizeof( TxfInst ) );
+    memset( SettInst, 0, sizeof( SettInst ) );
+    memset( NetworkId, 0, sizeof( NetworkId ) );
+    memset( AcqNetworkId, 0, sizeof( AcqNetworkId ) );
+    memset( IssuerNetworkId, 0, sizeof( IssuerNetworkId ) );
+    memset( FwdNetworkId, 0, sizeof( FwdNetworkId ) );
+    memset( TxfNetworkId, 0, sizeof( TxfNetworkId ) );
+    memset( SettNetworkId, 0, sizeof( SettNetworkId ) );
+    memset( Track2, 0, sizeof( Track2 ) );
+    memset( RsvFld1, 0, sizeof( RsvFld1 ) );
+    memset( RsvFld2, 0, sizeof( RsvFld2 ) );
+    memset( RsvFld3, 0, sizeof( RsvFld3 ) );
+    memset( RsvFld4, 0, sizeof( RsvFld4 ) );
+    memset( RsvFld5, 0, sizeof( RsvFld5 ) );
+    memset( RsvFld6, 0, sizeof( RsvFld6 ) );
+    memset( OrgChannel, 0, sizeof( OrgChannel ) );
+	memset( OrgPort, 0, sizeof( OrgPort ) );
+	memset( SrcChannel, 0, sizeof( SrcChannel ) );
+ 	
+	strcpy( TxnRefNum, I_TxnRefNum );
+	MsgType = txnmsg->MsgType;
+    OrgMsgType = txnmsg->OrgMsgType;
+    TxnCode = txnmsg->TxnCode;
+    strcpy( TerminalId, txnmsg->TerminalId );
+    strcpy( TerminalLocation, txnmsg->TerminalLocation );
+    TraceNo = txnmsg->TraceNo;
+    OrgTraceNo = txnmsg->OrgTraceNo;
+    TranDate = txnmsg->TranDate;
+    TranTime = txnmsg->TranTime;
+    OrgTranDate = txnmsg->OrgTranDate;
+    OrgTranTime = txnmsg->OrgTranTime;
+    LocalDate = txnmsg->LocalDate;
+    LocalTime = txnmsg->LocalTime;
+    RespCode = txnmsg->RespCode;
+    RevCode = txnmsg->RevCode;
+    ReasonCode = txnmsg->ReasonCode;
+    AuthCode = txnmsg->AuthCode;
+    CaptureDate = txnmsg->CaptureDate;
+    CaptureTime = txnmsg->CaptureTime;
+    SettlementDate = txnmsg->SettlementDate;
+    AcqCurrencyCode = txnmsg->AcqCurrencyCode;
+    AcqConvRate = txnmsg->AcqConvRate;
+    AcqConvDate = txnmsg->AcqConvDate;
+    IssCurrencyCode = txnmsg->IssCurrencyCode;
+    IssConvRate = txnmsg->IssConvRate;
+    IssConvDate = txnmsg->IssConvDate;
+    SettCurrencyCode = txnmsg->SettCurrencyCode;
+    SettConvRate = txnmsg->SettConvRate;
+    SettConvDate = txnmsg->SettConvDate;
+    MerchantType = txnmsg->MerchantType;
+    PosEntryCode = txnmsg->PosEntryCode;
+    PosConditionCode = txnmsg->PosConditionCode;
+    PosCapCode = txnmsg->PosCapCode;
+    PosPinCapCode = txnmsg->PosPinCapCode;
+    strcpy( chn, txnmsg->chn );
+    strcpy( AcqBranchCode, txnmsg->AcqBranchCode );
+    strcpy( IssBranchCode, txnmsg->IssBranchCode );
+    strcpy( ForwardBranchCode, txnmsg->ForwardBranchCode );
+    strcpy( TxfBranchCode, txnmsg->TxfBranchCode );
+	strcpy( FromAcctSubType, txnmsg->FromAcctSubType );
+    strcpy( ToAcctSubType, txnmsg->ToAcctSubType );
+    strcpy( AvailBalance, txnmsg->AvailBalance );
+    strcpy( LedgerBalance, txnmsg->LedgerBalance );
+    strcpy( Amount, txnmsg->Amount );
+    strcpy( TxnFee, txnmsg->TxnFee );
+    strcpy( DispAmount, txnmsg->DispAmount );
+    strcpy( FromAccount, txnmsg->FromAccount );
+    strcpy( ToAccount, txnmsg->ToAccount );
+    strcpy( RefNum, txnmsg->RefNum );
+    strcpy( AuthNum, txnmsg->AuthNum );
+    strcpy( AcceptorName, txnmsg->AcceptorName );
+    strcpy( AcquirerInst, txnmsg->AcquirerInst );
+    strcpy( IssuerInst, txnmsg->IssuerInst );
+    strcpy( ForwardInst, txnmsg->ForwardInst );
+    strcpy( TxfInst, txnmsg->TxfInst );
+    strcpy( SettInst, txnmsg->SettInst );
+    strcpy( NetworkId, txnmsg->NetworkId );
+    strcpy( AcqNetworkId, txnmsg->AcqNetworkId );
+    strcpy( IssuerNetworkId, txnmsg->IssuerNetworkId );
+    strcpy( FwdNetworkId, txnmsg->FwdNetworkId );
+    strcpy( TxfNetworkId, txnmsg->TxfNetworkId );
+    strcpy( SettNetworkId, txnmsg->SettNetworkId );
+    strcpy( Track2, txnmsg->Track2 );
+    strcpy( RsvFld1, txnmsg->RsvFld1 );
+    strcpy( RsvFld2, txnmsg->RsvFld2 );
+    strcpy( RsvFld3, txnmsg->RsvFld3 );
+    strcpy( RsvFld4, txnmsg->RsvFld4 );
+    strcpy( RsvFld5, txnmsg->RsvFld5 );
+    strcpy( RsvFld6, txnmsg->RsvFld6 );
+   	strcpy( OrgChannel, txnmsg->OrgChannel );
+	strcpy( OrgPort, txnmsg->OrgPort );
+	strcpy( SrcChannel, I_ChannelName );
+
+	EXEC SQL UPDATE INTO EZTXNLOG SET
+		TXNREFNUM = :TxnRefNum,
+		MSGTYPE = :MsgType,
+		TXNCODE = :TxnCode,
+		ORGMSGTYPE = :OrgMsgType,
+		TERMINALID = :TerminalId,
+		TERMLOC = :TerminalLocation,
+		TRACENO = :TraceNo,
+		ORGTRACENO = :OrgTraceNo,
+		TRANDATE = :TranDate,
+		TRANTIME = :TranTime,
+		ORGTRANDATE = :OrgTranDate,
+		ORGTRANTIME = :OrgTranTime,
+		LOCALDATE = :LocalDate,
+		LOCALTIME = :LocalTime,
+		RESPCODE = :RespCode,
+		REVCODE = :RevCode,
+		REASONCODE = :ReasonCode,
+		AUTHCODE = :AuthCode,
+		CAPTUREDATE = :CaptureDate,
+		CAPTURETIME = :CaptureTime,
+		SETTLEMENTDATE = :SettlementDate,
+		ACQCURRENCYCODE = :AcqCurrencyCode,
+		ACQCONVRATE = :AcqConvRate,
+		ACQCONVDATE = :AcqConvDate,
+		ISSCURRENCYCODE = :IssCurrencyCode,
+		ISSCONVRATE = :IssConvRate,
+		ISSCONVDATE = :IssConvDate,
+		SETTCURRENCYCODE = :SettCurrencyCode,
+		SETTCONVRATE = :SettConvRate,
+		SETTCONVDATE = :SettConvDate,
+		MERCHANTTYPE = :MerchantType,
+		POSENTRYCODE = :PosEntryCode,
+		POSCONDITIONCODE = :PosConditionCode,
+		POSCAPCODE = :PosCapCode,
+		POSPINCAPCODE = :PosPinCapCode,
+		CHN = :chn,
+		ACQBRANCHCODE = :AcqBranchCode,
+		ISSBRANCHCODE = :IssBranchCode,
+		TXFBRANCHCODE = :TxfBranchCode,
+		FORWARDBRANCHCODE = :ForwardBranchCode,
+		FROMACCTSUBTYPE = :FromAcctSubType,
+		TOACCTSUBTYPE = :ToAcctSubType,
+		AVAILBALANCE = :AvailBalance,
+		LEDGERBALANCE = :LedgerBalance,
+		AMOUNT = :Amount,
+		TXNFEE = :TxnFee,
+		DISPAMOUNT = :DispAmount,
+		FROMACCOUNT = :FromAccount,
+		TOACCOUNT = :ToAccount,
+		REFNUM = :RefNum,
+		AUTHNUM = :AuthNum,
+		ACCEPTORNAME = :AcceptorName,
+		ACQUIRERINST = :AcquirerInst,
+		ISSUERINST = :IssuerInst,
+		FORWARDINST = :ForwardInst,
+		TXFINST = :TxfInst,
+		SETTINST = :SettInst,
+		NETWORKID = :NetworkId,
+		ACQNETWORKID = :AcqNetworkId,
+		ISSUERNETWORKID = :IssuerNetworkId,
+		FWDNETWORKID = :FwdNetworkId,
+		TXFNETWORKID = :TxfNetworkId,
+		SETTNETWORKID = :SettNetworkId,
+		TRACK2 = :Track2,
+		RSVFLD1 = :RsvFld1,
+		RSVFLD2 = :RsvFld2,
+		RSVFLD3 = :RsvFld3,
+		RSVFLD4 = :RsvFld4,
+		RSVFLD5 = :RsvFld5,
+		RSVFLD6 = :RsvFld6,
+		ORGCHANNEL = :OrgChannel,
+		ORGPORT = :OrgPort, 
+		SRCPORT = :SrcChannel
+	WHERE RTRIM(TXNREFNUM) = :TxnRefNum;
+
+	if( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	else
+	{
+		EXEC SQL COMMIT;
+	   return sqlca.sqlcode;
+	}
+}

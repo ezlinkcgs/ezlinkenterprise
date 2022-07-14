@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/ezlinkenterprise/!svn/ver/2580/trunk/src/ezbusiness/ezposdbmgr
+END
+ezposdbmgrdb.c
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/ezlinkenterprise/!svn/ver/2503/trunk/src/ezbusiness/ezposdbmgr/ezposdbmgrdb.c
+END
+ezposdbmgrdb.pc
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/ezlinkenterprise/!svn/ver/2503/trunk/src/ezbusiness/ezposdbmgr/ezposdbmgrdb.pc
+END
+ezposdbmgrdb.lis
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/ezlinkenterprise/!svn/ver/2503/trunk/src/ezbusiness/ezposdbmgr/ezposdbmgrdb.lis
+END
+ezposdbmgrutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/ezlinkenterprise/!svn/ver/2000/trunk/src/ezbusiness/ezposdbmgr/ezposdbmgrutil.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/ezlinkenterprise/!svn/ver/2217/trunk/src/ezbusiness/ezposdbmgr/Makefile
+END
+ezposdbmgr.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/ezlinkenterprise/!svn/ver/2580/trunk/src/ezbusiness/ezposdbmgr/ezposdbmgr.cpp
+END

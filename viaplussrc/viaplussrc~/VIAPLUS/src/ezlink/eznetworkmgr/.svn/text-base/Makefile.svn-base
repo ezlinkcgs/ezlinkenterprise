@@ -1,0 +1,35 @@
+BINDIR=${EZDIR_HOME}/bin
+LIBDIR=-L${EZDIR_HOME}/lib -L${ORACLE_HOME}/lib
+BINARY=EzNetworkMgr
+OBJFILE=eznetworkmgr.o
+SOURCE=eznetworkmgr.cpp
+OBJFILE1=eznetworkmgrutil.o
+SOURCE1=eznetworkmgrutil.cpp
+OBJFILE2=eznetworkmgrdb.o
+SOURCE2=eznetworkmgrdb.c
+SOURCEPC=eznetworkmgrdb.pc
+OINCLUDEDIR=${ORACLE_HOME}/precomp/public
+LIBLIST=-lezdebug_util -lezsigutil -leztaskutil -lezchannelutil -lezcfg_util -lpthread -lclntsh -lezdatetimeutil -lezchanneltools -lezsequtil -lezdbutil -lezsecurityutil
+
+INCLUDEDIR=${EZDIR_HOME}/include
+
+${BINARY}	:	${OBJFILE} ${OBJFILE1} ${OBJFILE2}
+			g++ ${OBJFILE} ${OBJFILE1} ${OBJFILE2} ${LIBDIR} ${LIBLIST} -o ${BINARY}	
+
+${OBJFILE}	:	${SOURCE}
+			g++ -c ${SOURCE} -I${INCLUDEDIR}
+
+${OBJFILE1}	:	${SOURCE1}
+			g++ -c ${SOURCE1} -I${INCLUDEDIR}
+
+${OBJFILE2}	:	${SOURCEPC}
+			proc ${SOURCEPC}
+			cc -c ${SOURCE2} -I${INCLUDEDIR} -I${OINCLUDEDIR}
+
+install		:
+			mv ${BINARY} ${BINDIR}
+
+clean		:
+			rm *.o
+			rm tp*
+				

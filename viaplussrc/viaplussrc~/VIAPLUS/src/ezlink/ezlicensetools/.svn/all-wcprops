@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/ezlinkenterprise/!svn/ver/2280/trunk/src/ezlink/ezlicensetools
+END
+encryptfile
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/ezlinkenterprise/!svn/ver/1421/trunk/src/ezlink/ezlicensetools/encryptfile
+END
+encryptlicensefile.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/ezlinkenterprise/!svn/ver/1421/trunk/src/ezlink/ezlicensetools/encryptlicensefile.cpp
+END
+genserverkey.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/ezlinkenterprise/!svn/ver/2081/trunk/src/ezlink/ezlicensetools/genserverkey.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/ezlinkenterprise/!svn/ver/2280/trunk/src/ezlink/ezlicensetools/Makefile
+END

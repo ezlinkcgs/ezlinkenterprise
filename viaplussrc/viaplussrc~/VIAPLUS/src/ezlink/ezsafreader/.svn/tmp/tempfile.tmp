@@ -1,0 +1,713 @@
+#include <ezlink/ezsafreader.h>
+
+void EzSafReader :: initEzSafReader( const char *TaskName )
+{
+	char logpath[ LOG_PATH_SIZE + 1 ];
+
+	memset( logpath, 0, sizeof( logpath ) );
+	sprintf( logpath, "%s/%s/%s", getenv( "EZDIR_HOME" ), "log", "ezsafreader.log" );
+
+	if( openDebug( logpath, TaskName ) < 0 )
+		exit( 0 );
+
+	SetDebug();
+
+	if( InitEzTaskUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzTaskUtil");
+		trace( "^^^^^^^^^^^EzSafReader Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		exit( 0 );
+	}
+	if( InitEzChannelUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzChannelUtil" );
+	    trace( "^^^^^^^^^^^EzSafReader Ended Abnormally^^^^^^^^^^^^^");
+	    closeDebug();
+	    TaskExit();
+    }
+	if( initReplayUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing ReplayUtil" );
+	    trace( "^^^^^^^^^^^EzSafReader Ended Abnormally^^^^^^^^^^^^^");
+	    closeDebug();
+	    TaskExit();
+	}
+	if( CreateChannel( "EzSafReader", TaskName ) < 0 )
+	{
+		trace( "Error in Creating Channel EzSafReader" );
+		trace( "^^^^^^^^^^^EzSafReader Ended Abnormally^^^^^^^^^^^^^");
+	    closeDebug();
+	    TaskExit();
+	}
+	if( initEventUtil( this, "EzSafReader" ) < 0 )
+	{
+		trace( "Error in Initializing EventUtil" );
+		trace( "^^^^^^^^^^^EzSafReader Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	if( initDBUtil( TaskName, this ) < 0 )
+	{
+		trace( "Error in Initializing DBUtil" );
+		trace( "^^^^^^^^^^^EzSafReader Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	if( DBConnect() < 0 )
+	{
+		trace( "Error in Connecting with Switch Database....." );
+		trace( "^^^^^^^^^^^EzSafReader Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	if( eztxnrefselectutil.initEzTxnRefSelectUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzTxnRefSelectUtil" );
+		trace( "^^^^^^^^^^^EzSafReader Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	if( initNetworkUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing NetworkUtil" );
+		trace( "^^^^^^^^^^^EzSafReader Ended Abnormally^^^^^^^^^^^^^");
+	    closeDebug();
+	    TaskExit();
+	}
+	if( initReplayTable() < 0 )
+	{
+		trace( "Error in Initializing Replay Table" );
+		trace( "^^^^^^^^^^^EzSafReader Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	DBClose();
+	TaskInit();
+	initEzSigUtil( this );
+}
+
+int EzSafReader :: initReplayTable()
+{
+	struct EzNetworkReplay *eznetworkreplay_ptr;
+	int SqlErr, NetworkCount;
+
+	NetworkCount = getEzNetworkReplayCount( &SqlErr );
+
+	if( SqlErr != 0 )
+	{
+		trace( "Error in getting EzNetworkEcho Count...OraErr[%05d]", SqlErr );
+		return -1;
+	}
+
+	trace( DEBUG_TEST, "NetworkCount[%d] MaxNetworks[%d]", NetworkCount, getMaxNetworks() );
+
+	if( NetworkCount > getMaxNetworks() )
+	{
+		trace( "No. of Networks configured in NetworkCount[%d] > MaxNetworks[%d]", NetworkCount, getMaxNetworks() );
+		return -1;
+	}
+
+	eznetworkreplay_ptr = ( struct EzNetworkReplay * ) malloc( sizeof( struct EzNetworkReplay ) * NetworkCount );
+	memset( eznetworkreplay_ptr, 0, sizeof( struct EzNetworkReplay ) * NetworkCount );
+
+	if( LoadEzNetworkReplay( eznetworkreplay_ptr, &SqlErr ) < 0 )
+	{
+		trace( "Error in Loading EzNetworkReplay Table...OraErr[%05d]", SqlErr );
+		free( eznetworkreplay_ptr );
+		return -1;
+	}
+
+	for( int i = 0; i < NetworkCount; i++ )
+	{
+		trace( DEBUG_TEST, "Updating NetworkId[%s] ReplayInterval[%d] ReplayProperty[%c] ReplayAction[%c] in ReplayTable", ( eznetworkreplay_ptr + i )->NetworkId, ( eznetworkreplay_ptr + i )->ReplayInterval, ( eznetworkreplay_ptr + i )->ReplayProperty, ( eznetworkreplay_ptr + i )->ReplayAction );
+		if( updateReplayTable( ( eznetworkreplay_ptr + i )->NetworkId, ( eznetworkreplay_ptr + i )->ReplayInterval, ( eznetworkreplay_ptr + i )->ReplayProperty, ( eznetworkreplay_ptr + i )->ReplayAction ) < 0 )
+			trace( "Error in updating NetworkId[%s] in ReplayTable", ( eznetworkreplay_ptr + i )->NetworkId );
+		else
+			trace( DEBUG_TEST, "Updated NetworkId[%s] ReplayInterval[%d] ReplayProperty[%c] ReplayAction[%c] in ReplayTable", ( eznetworkreplay_ptr + i )->NetworkId, ( eznetworkreplay_ptr + i )->ReplayInterval, ( eznetworkreplay_ptr + i )->ReplayProperty, ( eznetworkreplay_ptr + i )->ReplayAction );
+	}
+	free( eznetworkreplay_ptr );
+	return 1;
+}
+
+void EzSafReader :: serviceTimeOut( struct EzTxnMsg *txnmsg_ptr )
+{
+	struct EzReplayTable replaytable_rec;
+	struct EzTxnMsg txnmsg;
+	char SafRecordNo[ 21 ], TxnRefNum[ 255 ], NetworkChannel[ 33 ], NetworkPort[ 33 ], EventId[ EVENT_KEY_SIZE + 1 ];
+	int retval, NetworkStatus;
+
+	if( txnmsg_ptr->MerchantType == 6011 )
+		trace( DEBUG_TEST, "Txn with CHN[%s] MsgType[%d] TxnCode[%d] TraceNo[%d] RefNum[%s] TxnDate[%d] TxnTime[%d] got TimedOut for NetworkId[%s]", txnmsg_ptr->chn, txnmsg_ptr->MsgType, txnmsg_ptr->TxnCode, txnmsg_ptr->TraceNo, txnmsg_ptr->RefNum, txnmsg_ptr->TranDate, txnmsg_ptr->TranTime, txnmsg_ptr->NetworkId );
+	else
+		trace( DEBUG_TEST, "Txn with AccountNo[%s] MsgType[%d] TxnCode[%d] TraceNo[%d] RefNum[%s] TxnDate[%d] TxnTime[%d] got TimedOut for NetworkId[%s]", txnmsg_ptr->FromAccount, txnmsg_ptr->MsgType, txnmsg_ptr->TxnCode, txnmsg_ptr->TraceNo, txnmsg_ptr->RefNum, txnmsg_ptr->TranDate, txnmsg_ptr->TranTime, txnmsg_ptr->NetworkId );
+
+	memset( &replaytable_rec, 0, sizeof( struct EzReplayTable ) );
+	if( readReplayTable( txnmsg_ptr->NetworkId, &replaytable_rec ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in reading NetworkId[%s] from ReplayTable", txnmsg_ptr->NetworkId );
+		return;
+	}
+
+	if( replaytable_rec.Status != REPLAY_NETWORK_RUNNING )
+		return;
+
+	trace( DEBUG_TEST, "Reading NetworkId[%s] from NetworkMemory Table", txnmsg_ptr->NetworkId );
+	retval = readNetworkMemory( replaytable_rec.NetworkId );
+	if( retval < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Reading NetworkId[%s] from NetworkMemory Table", txnmsg_ptr->NetworkId );
+		if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+			trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+		return;
+	}
+
+	if( replaytable_rec.ReplayAction == REPLAY_TIMEOUT_DOWN && getNetworkStatus() == NETWORK_STATUS_UP )
+	{
+		trace( DEBUG_NORMAL, "Marking the NetworkId[%s] as Down....", txnmsg_ptr->NetworkId );
+		retval = setNetworkStatus( replaytable_rec.NetworkId, NETWORK_STATUS_DOWN );
+		if( retval < 0 )
+			trace( "Error in Updating NetworkId[%s] Status as Down....",  txnmsg_ptr->NetworkId );
+		if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+			trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+	}
+	else
+	{
+		NetworkStatus = getNetworkStatus();
+		memset( NetworkChannel, 0, sizeof( NetworkChannel ) );
+		getNetworkChannelName( NetworkChannel );
+		memset( NetworkPort, 0, sizeof( NetworkPort ) );
+		getNetworkPortName( NetworkPort );
+		trace( DEBUG_TEST, "Read NetworkId[%s] with NetworkChannel[%s] NetworkPort[%s] NetworkStatus[%d]", txnmsg_ptr->NetworkId, NetworkChannel, NetworkPort, NetworkStatus );
+
+		if( replaytable_rec.ReplayProperty ==  REPLAY_DOWN )
+		{
+			trace( DEBUG_TEST, "NetworkId[%s] is Configured to Replay when Network is Down...", txnmsg_ptr->NetworkId );
+			if( NetworkStatus == NETWORK_STATUS_UP )
+			{
+				if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+					trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+				return;
+			}
+		}
+		else if( replaytable_rec.ReplayProperty ==  REPLAY_UP )
+		{
+			trace( DEBUG_TEST, "NetworkId[%s] is Configured to Replay when Network is Up...", txnmsg_ptr->NetworkId );
+			if( NetworkStatus != NETWORK_STATUS_UP &&  NetworkStatus != NETWORK_STATUS_SAFDOWNLOAD )
+			{
+				if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+					trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+				return;
+			}
+		}
+
+		memset( SafRecordNo, 0, sizeof( SafRecordNo ) );
+		memset( TxnRefNum, 0, sizeof( TxnRefNum ) );
+		memset( &txnmsg, 0, sizeof( struct EzTxnMsg ) );
+		retval = getNextPendingRecord( txnmsg_ptr->NetworkId, &txnmsg, SafRecordNo, TxnRefNum );
+
+		if( retval == 1403 )
+		{
+			trace( DEBUG_NORMAL, "No Pending Record for NetworkId[%s] in EzSafDB", txnmsg_ptr->NetworkId );
+			if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+				trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+		}
+		else if( retval != 0 )
+		{
+			trace( "Error in Reading EzSafDB for NetworkId[%s] SqlErr[%05d]", replaytable_rec.NetworkId, retval );
+			if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+				trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+		}
+		else
+		{
+			retval = checkAndUpdateReplayStatusAndReplayFlag( replaytable_rec.NetworkId, REPLAY_STATUS_ACTIVE, REPLAY_FLAG_ACTIVE );
+			if( retval < 0 )
+			{
+				if( retval == -1 )
+					trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", replaytable_rec.NetworkId );
+				else
+					trace( "Relay Status Flag is Active for NetworkId[%s] and is Waiting for Response.....", replaytable_rec.NetworkId );
+				return;
+			}
+
+			memset( txnmsg.DestPort, 0, sizeof( txnmsg.DestPort ) );
+			strcpy( txnmsg.DestPort, NetworkPort );
+
+			trace( DEBUG_TEST, "Replaying SafRecordNo[%s] for NetworkId[%s] ChannelName[%s] DestPort[%s] with TxnRefNum[%s]", SafRecordNo, txnmsg.NetworkId, NetworkChannel, txnmsg.DestPort, TxnRefNum );
+
+			retval = WriteChannel( NetworkChannel, ( char * )&txnmsg, sizeof( EzTxnMsg ) );
+
+			if( retval < 0 )
+				trace( DEBUG_ERROR, "Error in Replaying SafRecordNo[%s] for NetworkId[%s] ChannelName[%s] DestPort[%s] with TxnRefNum[%s]", SafRecordNo, txnmsg.NetworkId, NetworkChannel, txnmsg.DestPort, TxnRefNum );
+			else
+				trace( DEBUG_NORMAL, "Replayed SafRecordNo[%s] for NetworkId[%s] ChannelName[%s] DestPort[%s] with TxnRefNum[%s]", SafRecordNo, txnmsg.NetworkId, NetworkChannel, txnmsg.DestPort, TxnRefNum );
+
+			memset( EventId, 0, sizeof( EventId ) );
+			eztxnrefselectutil.getTxnRefNum( &txnmsg, EventId );
+			if( createEvent( EventId, ( char * ) &txnmsg, sizeof( struct EzTxnMsg ), replaytable_rec.ReplayInterval ) < 0 )
+				trace( DEBUG_ERROR, "Error in Creating EventId[%s]", EventId );
+			else
+				trace( DEBUG_ERROR, "EventId[%s] Created with TimeOut[%d]", EventId, replaytable_rec.ReplayInterval );
+		}
+	}
+}
+
+void EzSafReader :: serviceReplayIntimationRequest( const char *NetworkId  )
+{
+	struct EzReplayTable replaytable_rec;
+	struct EzTxnMsg txnmsg;
+	char SafRecordNo[ 21 ], TxnRefNum[ 255 ], NetworkChannel[ 33 ], NetworkPort[ 33 ], EventId[ EVENT_KEY_SIZE + 1 ];
+	int retval, NetworkStatus;
+
+	trace( DEBUG_NORMAL, "Servicing Replay Intimation Request for NetworkId[%s]", NetworkId );
+
+	memset( &replaytable_rec, 0, sizeof( struct EzReplayTable ) );
+	if( readReplayTable( NetworkId, &replaytable_rec ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in reading NetworkId[%s] from ReplayTable", NetworkId );
+		return;
+	}
+
+	if( replaytable_rec.Status != REPLAY_NETWORK_RUNNING )
+	{
+		trace( DEBUG_NORMAL, "NetworkId[%s] is in Suspended State....", NetworkId );
+		return;
+	}
+
+	if( replaytable_rec.ReplayFlag == REPLAY_FLAG_ACTIVE )
+	{
+		trace( DEBUG_ERROR, "Already NetworkId[%s] Record is Replayed and Waiting for Response", NetworkId );
+		return;
+	}
+
+	trace( DEBUG_TEST, "Reading NetworkId[%s] from NetworkMemory Table", NetworkId );
+
+	retval = readNetworkMemory( replaytable_rec.NetworkId );
+	if( retval < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Reading NetworkId[%s] from NetworkMemory Table", NetworkId );
+		if( updateReplayStatusAndReplayFlag( NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+			trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", NetworkId );
+		return;
+	}
+	NetworkStatus = getNetworkStatus();
+	memset( NetworkChannel, 0, sizeof( NetworkChannel ) );
+	getNetworkChannelName( NetworkChannel );
+	memset( NetworkPort, 0, sizeof( NetworkPort ) );
+	getNetworkPortName( NetworkPort );
+	trace( DEBUG_TEST, "Read NetworkId[%s] with NetworkChannel[%s] NetworkPort[%s] NetworkStatus[%d]", NetworkId, NetworkChannel, NetworkPort, NetworkStatus );
+
+	if( replaytable_rec.ReplayProperty ==  REPLAY_DOWN )
+	{
+		trace( DEBUG_TEST, "NetworkId[%s] is Configured to Replay when Network is Down...", NetworkId );
+		if( NetworkStatus != NETWORK_STATUS_DOWN )
+		{
+			if( updateReplayStatusAndReplayFlag( NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+				trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", NetworkId );
+			return;
+		}
+	}
+	else if( replaytable_rec.ReplayProperty ==  REPLAY_UP )
+	{
+		trace( DEBUG_TEST, "NetworkId[%s] is Configured to Replay when Network is Up...", NetworkId );
+		if( NetworkStatus != NETWORK_STATUS_UP &&  NetworkStatus != NETWORK_STATUS_SAFDOWNLOAD )
+		{
+			if( updateReplayStatusAndReplayFlag( NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+				trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", NetworkId );
+			return;
+		}
+	}
+
+	memset( SafRecordNo, 0, sizeof( SafRecordNo ) );
+	memset( TxnRefNum, 0, sizeof( TxnRefNum ) );
+	memset( &txnmsg, 0, sizeof( struct EzTxnMsg ) );
+	retval = getNextPendingRecord( NetworkId, &txnmsg, SafRecordNo, TxnRefNum );
+
+	if( retval == 1403 )
+	{
+		trace( DEBUG_NORMAL, "No Pending Record for NetworkId[%s] in EzSafDB", NetworkId );
+		if( updateReplayStatusAndReplayFlag( NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+			trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", NetworkId );
+	}
+	else if( retval != 0 )
+	{
+		trace( "Error in Reading EzSafDB for NetworkId[%s] SqlErr[%05d]", replaytable_rec.NetworkId, retval );
+		if( updateReplayStatusAndReplayFlag( NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+			trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", NetworkId );
+	}
+	else
+	{
+		retval = checkAndUpdateReplayStatusAndReplayFlag( NetworkId, REPLAY_STATUS_ACTIVE, REPLAY_FLAG_ACTIVE );
+		if( retval < 0 )
+		{
+			if( retval == -1 )
+				trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", NetworkId );
+			else
+				trace( "Relay Status Flag is Active for NetworkId[%s] and is Waiting for Response.....", NetworkId );
+			return;
+		}
+
+		memset( txnmsg.DestPort, 0, sizeof( txnmsg.DestPort ) );
+		strcpy( txnmsg.DestPort, NetworkPort );
+
+		trace( DEBUG_TEST, "Replaying SafRecordNo[%s] for NetworkId[%s] ChannelName[%s] DestPort[%s] with TxnRefNum[%s]", SafRecordNo, txnmsg.NetworkId, NetworkChannel, txnmsg.DestPort, TxnRefNum );
+
+		retval = WriteChannel( NetworkChannel, ( char * )&txnmsg, sizeof( EzTxnMsg ) );
+
+		if( retval < 0 )
+			trace( DEBUG_ERROR, "Error in Replaying SafRecordNo[%s] for NetworkId[%s] ChannelName[%s] DestPort[%s] with TxnRefNum[%s]", SafRecordNo, txnmsg.NetworkId, NetworkChannel, txnmsg.DestPort, TxnRefNum );
+		else
+			trace( DEBUG_NORMAL, "Replayed SafRecordNo[%s] for NetworkId[%s] ChannelName[%s] DestPort[%s] with TxnRefNum[%s]", SafRecordNo, txnmsg.NetworkId, NetworkChannel, txnmsg.DestPort, TxnRefNum );
+
+		memset( EventId, 0, sizeof( EventId ) );
+		eztxnrefselectutil.getTxnRefNum( &txnmsg, EventId );
+		if( createEvent( EventId, ( char * ) &txnmsg, sizeof( struct EzTxnMsg ), replaytable_rec.ReplayInterval ) < 0 )
+			trace( DEBUG_ERROR, "Error in Creating EventId[%s]", EventId );
+		else
+			trace( DEBUG_ERROR, "EventId[%s] Created with TimeOut[%d]", EventId, replaytable_rec.ReplayInterval );
+	}
+}
+
+void EzSafReader :: serviceSAFDownloadRequest( struct EzTxnMsg *txnmsg_ptr )
+{
+	struct EzReplayTable replaytable_rec;
+	struct EzTxnMsg txnmsg;
+	char SafRecordNo[ 21 ], TxnRefNum[ 255 ], NetworkChannel[ 33 ], NetworkPort[ 33 ], EventId[ EVENT_KEY_SIZE + 1 ];
+	int retval, NetworkStatus;
+
+	trace( DEBUG_NORMAL, "Servicing SAF Download Request for NetworkId[%s]", txnmsg_ptr->NetworkId );
+
+	memset( &replaytable_rec, 0, sizeof( struct EzReplayTable ) );
+	if( readReplayTable( txnmsg_ptr->NetworkId, &replaytable_rec ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in reading NetworkId[%s] from ReplayTable", txnmsg_ptr->NetworkId );
+		return;
+	}
+
+	if( updateReplayMsgIndicator( txnmsg.NetworkId, REPLAY_MSGTYPEINDICATOR_DOWNLOAD ) < 0 )
+		trace( DEBUG_ERROR, "Error in Setting Message Indicator for NetworkId[%s]", txnmsg.NetworkId );
+	else
+		trace( DEBUG_ERROR, "Set Message Indicator for NetworkId[%s]", txnmsg.NetworkId );
+
+	trace( DEBUG_TEST, "Reading NetworkId[%s] from NetworkMemory Table", txnmsg_ptr->NetworkId );
+	retval = readNetworkMemory( replaytable_rec.NetworkId );
+	if( retval < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Reading NetworkId[%s] from NetworkMemory Table", txnmsg_ptr->NetworkId );
+		if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+			trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+		return;
+	}
+
+	if( setNetworkStatus( txnmsg.NetworkId, NETWORK_STATUS_SAFDOWNLOAD ) < 0 )
+		trace( DEBUG_ERROR, "Error in Setting Network Status for NetworkId[%s]", txnmsg.NetworkId );
+	else
+		trace( DEBUG_NORMAL, "Setting Network Status for NetworkId[%s] as SAFDOWNLOAD", txnmsg.NetworkId );
+
+	if( replaytable_rec.Status != REPLAY_NETWORK_RUNNING )
+			return;
+
+	if( replaytable_rec.ReplayFlag == REPLAY_FLAG_ACTIVE )
+	{
+		trace( DEBUG_ERROR, "Already NetworkId[%s] Record is Replayed and Waiting for Response", txnmsg_ptr->NetworkId );
+		return;
+	}
+
+		trace( DEBUG_TEST, "Reading NetworkId[%s] from NetworkMemory Table", txnmsg_ptr->NetworkId );
+		retval = readNetworkMemory( replaytable_rec.NetworkId );
+		if( retval < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Reading NetworkId[%s] from NetworkMemory Table", txnmsg_ptr->NetworkId );
+			if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+				trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+			return;
+		}
+		NetworkStatus = getNetworkStatus();
+		memset( NetworkChannel, 0, sizeof( NetworkChannel ) );
+		getNetworkChannelName( NetworkChannel );
+		memset( NetworkPort, 0, sizeof( NetworkPort ) );
+		getNetworkPortName( NetworkPort );
+		trace( DEBUG_TEST, "Read NetworkId[%s] with NetworkChannel[%s] NetworkPort[%s] NetworkStatus[%d]", txnmsg_ptr->NetworkId, NetworkChannel, NetworkPort, NetworkStatus );
+
+		if( replaytable_rec.ReplayProperty ==  REPLAY_DOWN )
+		{
+			trace( DEBUG_TEST, "NetworkId[%s] is Configured to Replay when Network is Down...", txnmsg_ptr->NetworkId );
+			if( NetworkStatus == NETWORK_STATUS_UP )
+			{
+				if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+					trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+				return;
+			}
+		}
+		else if( replaytable_rec.ReplayProperty ==  REPLAY_UP )
+		{
+			trace( DEBUG_TEST, "NetworkId[%s] is Configured to Replay when Network is Up...", txnmsg_ptr->NetworkId );
+			if( NetworkStatus != NETWORK_STATUS_UP &&  NetworkStatus != NETWORK_STATUS_SAFDOWNLOAD )
+			{
+				if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+					trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+				return;
+			}
+		}
+
+		memset( SafRecordNo, 0, sizeof( SafRecordNo ) );
+		memset( TxnRefNum, 0, sizeof( TxnRefNum ) );
+		memset( &txnmsg, 0, sizeof( struct EzTxnMsg ) );
+		retval = getNextPendingRecord( txnmsg_ptr->NetworkId, &txnmsg, SafRecordNo, TxnRefNum );
+
+		if( retval == 1403 )
+		{
+			trace( DEBUG_NORMAL, "No Pending Record for NetworkId[%s] in EzSafDB", txnmsg_ptr->NetworkId );
+			if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+				trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+			if( ( NetworkStatus == NETWORK_STATUS_SAFDOWNLOAD ) && ( replaytable_rec.MsgTypeIndicator == REPLAY_MSGTYPEINDICATOR_DOWNLOAD ) )
+			{
+				trace( DEBUG_NORMAL, "Generating SAF Download Response for NetworkId[%s]", txnmsg_ptr->NetworkId );
+				memset( &txnmsg, 0, sizeof( struct EzTxnMsg ) );
+				txnmsg.MsgType = EZLINK_TXN_PBFDownloadResponse;
+				strcpy( txnmsg.NetworkId, txnmsg_ptr->NetworkId );
+				txnmsg.RespCode = EZLINK_RC_Approved;
+				strcpy( txnmsg.DestPort, NetworkPort );
+				retval = WriteChannel( NetworkChannel, ( char * )&txnmsg, sizeof( EzTxnMsg ) );
+				if( retval < 0 )
+					trace( DEBUG_ERROR, "Error in Writing SAF Download Response for NetworkId[%s] to Channel[%s]", txnmsg.NetworkId, NetworkChannel );
+				else
+					trace( DEBUG_NORMAL, "Written SAF Download Response for NetworkId[%s] to Channel[%s]", txnmsg.NetworkId, NetworkChannel );
+				trace( DEBUG_NORMAL, "Changing NetworkId[%s] Status as ONLINE....", txnmsg.NetworkId );
+				if( setNetworkStatus( txnmsg.NetworkId, NETWORK_STATUS_UP ) < 0 )
+					trace( DEBUG_ERROR, "Error in Setting Network Status for NetworkId[%s]", txnmsg.NetworkId );
+				else
+					trace( DEBUG_NORMAL, "Setting Network Status for NetworkId[%s] as ONLINE", txnmsg.NetworkId );
+				if( updateReplayMsgIndicator( txnmsg.NetworkId, REPLAY_MSGTYPEINDICATOR_INIT ) < 0 )
+					trace( DEBUG_ERROR, "Error in Setting Message Indicator for NetworkId[%s]", txnmsg.NetworkId );
+				else
+					trace( DEBUG_ERROR, "Set Message Indicator for NetworkId[%s]", txnmsg.NetworkId );
+			}
+		}
+		else if( retval != 0 )
+		{
+			trace( "Error in Reading EzSafDB for NetworkId[%s] SqlErr[%05d]", replaytable_rec.NetworkId, retval );
+			if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+				trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+		}
+		else
+		{
+			retval = checkAndUpdateReplayStatusAndReplayFlag( replaytable_rec.NetworkId, REPLAY_STATUS_ACTIVE, REPLAY_FLAG_ACTIVE );
+			if( retval < 0 )
+			{
+				if( retval == -1 )
+					trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", replaytable_rec.NetworkId );
+				else
+					trace( "Relay Status Flag is Active for NetworkId[%s] and is Waiting for Response.....", replaytable_rec.NetworkId );
+				return;
+			}
+
+			memset( txnmsg.DestPort, 0, sizeof( txnmsg.DestPort ) );
+			strcpy( txnmsg.DestPort, NetworkPort );
+
+			trace( DEBUG_TEST, "Replaying SafRecordNo[%s] for NetworkId[%s] ChannelName[%s] DestPort[%s] with TxnRefNum[%s]", SafRecordNo, txnmsg.NetworkId, NetworkChannel, txnmsg.DestPort, TxnRefNum );
+
+			retval = WriteChannel( NetworkChannel, ( char * )&txnmsg, sizeof( EzTxnMsg ) );
+
+			if( retval < 0 )
+				trace( DEBUG_ERROR, "Error in Replaying SafRecordNo[%s] for NetworkId[%s] ChannelName[%s] DestPort[%s] with TxnRefNum[%s]", SafRecordNo, txnmsg.NetworkId, NetworkChannel, txnmsg.DestPort, TxnRefNum );
+			else
+				trace( DEBUG_NORMAL, "Replayed SafRecordNo[%s] for NetworkId[%s] ChannelName[%s] DestPort[%s] with TxnRefNum[%s]", SafRecordNo, txnmsg.NetworkId, NetworkChannel, txnmsg.DestPort, TxnRefNum );
+
+			memset( EventId, 0, sizeof( EventId ) );
+			eztxnrefselectutil.getTxnRefNum( &txnmsg, EventId );
+			if( createEvent( EventId, ( char * ) &txnmsg, sizeof( struct EzTxnMsg ), replaytable_rec.ReplayInterval ) < 0 )
+				trace( DEBUG_ERROR, "Error in Creating EventId[%s]", EventId );
+			else
+				trace( DEBUG_ERROR, "EventId[%s] Created with TimeOut[%d]", EventId, replaytable_rec.ReplayInterval );
+		}
+
+
+}
+
+void EzSafReader :: serviceReplayResponse( struct EzTxnMsg *txnmsg_ptr )
+{
+	struct EzReplayTable replaytable_rec;
+	struct EzTxnMsg txnmsg;
+	char SafRecordNo[ 21 ], TxnRefNum[ 255 ], NetworkChannel[ 33 ], NetworkPort[ 33 ], EventId[ EVENT_KEY_SIZE + 1 ];
+	int retval, NetworkStatus;
+
+
+	memset( EventId, 0, sizeof( EventId ) );
+	eztxnrefselectutil.getTxnRefNum( txnmsg_ptr, EventId );
+
+	trace( DEBUG_NORMAL, "Destroying EventId[%s]....", EventId );
+
+	if( destroyEvent( EventId, ( char * )txnmsg_ptr ) < 0 )
+		trace( DEBUG_ERROR, "Error in Destroying EventId[%s]", EventId );
+	else
+		trace( DEBUG_NORMAL, "Destroyed Event[%s] Successfully", EventId );
+
+	if( updateReplayFlag( txnmsg_ptr->NetworkId, REPLAY_FLAG_IDLE ) < 0 )
+		trace( "Error in Updating Replay Flag for NetworkId[%s] as Idle....", txnmsg_ptr->NetworkId );
+
+	memset( &replaytable_rec, 0, sizeof( struct EzReplayTable ) );
+	if( readReplayTable( txnmsg_ptr->NetworkId, &replaytable_rec ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in reading NetworkId[%s] from ReplayTable", txnmsg_ptr->NetworkId );
+		return;
+	}
+
+	if( replaytable_rec.Status != REPLAY_NETWORK_RUNNING )
+			return;
+
+	trace( DEBUG_TEST, "Reading NetworkId[%s] from NetworkMemory Table", txnmsg_ptr->NetworkId );
+	retval = readNetworkMemory( replaytable_rec.NetworkId );
+	if( retval < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Reading NetworkId[%s] from NetworkMemory Table", txnmsg_ptr->NetworkId );
+		if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+			trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+		return;
+	}
+	NetworkStatus = getNetworkStatus();
+	memset( NetworkChannel, 0, sizeof( NetworkChannel ) );
+	getNetworkChannelName( NetworkChannel );
+	memset( NetworkPort, 0, sizeof( NetworkPort ) );
+	getNetworkPortName( NetworkPort );
+	trace( DEBUG_TEST, "Read NetworkId[%s] with NetworkChannel[%s] NetworkPort[%s] NetworkStatus[%d]", txnmsg_ptr->NetworkId, NetworkChannel, NetworkPort, NetworkStatus );
+
+	if( replaytable_rec.ReplayProperty ==  REPLAY_DOWN )
+	{
+		trace( DEBUG_TEST, "NetworkId[%s] is Configured to Replay when Network is Down...", txnmsg_ptr->NetworkId );
+		if( NetworkStatus == NETWORK_STATUS_UP )
+		{
+			if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+				trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+			return;
+		}
+	}
+	else if( replaytable_rec.ReplayProperty ==  REPLAY_UP )
+	{
+		trace( DEBUG_TEST, "NetworkId[%s] is Configured to Replay when Network is Up...", txnmsg_ptr->NetworkId );
+		if( NetworkStatus != NETWORK_STATUS_UP &&  NetworkStatus != NETWORK_STATUS_SAFDOWNLOAD )
+		{
+			if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+				trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+			return;
+		}
+	}
+
+	memset( SafRecordNo, 0, sizeof( SafRecordNo ) );
+	memset( TxnRefNum, 0, sizeof( TxnRefNum ) );
+	memset( &txnmsg, 0, sizeof( struct EzTxnMsg ) );
+	retval = getNextPendingRecord( txnmsg_ptr->NetworkId, &txnmsg, SafRecordNo, TxnRefNum );
+
+	if( retval == 1403 )
+	{
+		trace( DEBUG_NORMAL, "No Pending Record for NetworkId[%s] in EzSafDB", txnmsg_ptr->NetworkId );
+		if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+			trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+		if( ( NetworkStatus == NETWORK_STATUS_SAFDOWNLOAD ) && ( replaytable_rec.MsgTypeIndicator == REPLAY_MSGTYPEINDICATOR_DOWNLOAD ) )
+		{
+			trace( DEBUG_NORMAL, "Generating SAF Download Response for NetworkId[%s]", txnmsg_ptr->NetworkId );
+			memset( &txnmsg, 0, sizeof( struct EzTxnMsg ) );
+			txnmsg.MsgType = EZLINK_TXN_PBFDownloadResponse;
+			strcpy( txnmsg.NetworkId, txnmsg_ptr->NetworkId );
+			txnmsg.RespCode = EZLINK_RC_Approved;
+			strcpy( txnmsg.DestPort, NetworkPort );
+			retval = WriteChannel( NetworkChannel, ( char * )&txnmsg, sizeof( EzTxnMsg ) );
+			if( retval < 0 )
+				trace( DEBUG_ERROR, "Error in Writing SAF Download Response for NetworkId[%s] to Channel[%s]", txnmsg.NetworkId, NetworkChannel );
+			else
+				trace( DEBUG_NORMAL, "Written SAF Download Response for NetworkId[%s] to Channel[%s]", txnmsg.NetworkId, NetworkChannel );
+			trace( DEBUG_NORMAL, "Changing NetworkId[%s] Status as ONLINE....", txnmsg.NetworkId );
+			if( setNetworkStatus( txnmsg.NetworkId, NETWORK_STATUS_UP ) < 0 )
+				trace( DEBUG_ERROR, "Error in Setting Network Status for NetworkId[%s]", txnmsg.NetworkId );
+			else
+				trace( DEBUG_NORMAL, "Setting Network Status for NetworkId[%s] as ONLINE", txnmsg.NetworkId );
+			if( updateReplayMsgIndicator( txnmsg.NetworkId, REPLAY_MSGTYPEINDICATOR_INIT ) < 0 )
+				trace( DEBUG_ERROR, "Error in Setting Message Indicator for NetworkId[%s]", txnmsg.NetworkId );
+			else
+				trace( DEBUG_ERROR, "Set Message Indicator for NetworkId[%s]", txnmsg.NetworkId );
+		}
+	}
+	else if( retval != 0 )
+	{
+		trace( "Error in Reading EzSafDB for NetworkId[%s] SqlErr[%05d]", replaytable_rec.NetworkId, retval );
+		if( updateReplayStatusAndReplayFlag( txnmsg_ptr->NetworkId, REPLAY_STATUS_IDLE, REPLAY_FLAG_IDLE ) < 0 )
+			trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", txnmsg_ptr->NetworkId );
+	}
+	else
+	{
+		retval = checkAndUpdateReplayStatusAndReplayFlag( replaytable_rec.NetworkId, REPLAY_STATUS_ACTIVE, REPLAY_FLAG_ACTIVE );
+		if( retval < 0 )
+		{
+			if( retval == -1 )
+				trace( "Error in Updating Replay Status & Flag for NetworkId[%s]", replaytable_rec.NetworkId );
+			else
+				trace( "Relay Status Flag is Active for NetworkId[%s] and is Waiting for Response.....", replaytable_rec.NetworkId );
+			return;
+		}
+
+		memset( txnmsg.DestPort, 0, sizeof( txnmsg.DestPort ) );
+		strcpy( txnmsg.DestPort, NetworkPort );
+
+		trace( DEBUG_TEST, "Replaying SafRecordNo[%s] for NetworkId[%s] ChannelName[%s] DestPort[%s] with TxnRefNum[%s]", SafRecordNo, txnmsg.NetworkId, NetworkChannel, txnmsg.DestPort, TxnRefNum );
+
+		retval = WriteChannel( NetworkChannel, ( char * )&txnmsg, sizeof( EzTxnMsg ) );
+
+		if( retval < 0 )
+			trace( DEBUG_ERROR, "Error in Replaying SafRecordNo[%s] for NetworkId[%s] ChannelName[%s] DestPort[%s] with TxnRefNum[%s]", SafRecordNo, txnmsg.NetworkId, NetworkChannel, txnmsg.DestPort, TxnRefNum );
+		else
+			trace( DEBUG_NORMAL, "Replayed SafRecordNo[%s] for NetworkId[%s] ChannelName[%s] DestPort[%s] with TxnRefNum[%s]", SafRecordNo, txnmsg.NetworkId, NetworkChannel, txnmsg.DestPort, TxnRefNum );
+
+		memset( EventId, 0, sizeof( EventId ) );
+		eztxnrefselectutil.getTxnRefNum( &txnmsg, EventId );
+		if( createEvent( EventId, ( char * ) &txnmsg, sizeof( struct EzTxnMsg ), replaytable_rec.ReplayInterval ) < 0 )
+			trace( DEBUG_ERROR, "Error in Creating EventId[%s]", EventId );
+		else
+			trace( DEBUG_ERROR, "EventId[%s] Created with TimeOut[%d]", EventId, replaytable_rec.ReplayInterval );
+	}
+}
+
+void EzSafReader :: serviceRequest()
+{
+	struct EzTxnMsg txnmsg;
+	struct EzNetworkReplay eznetworkreplay_rec;
+	struct EzReplayTable replaytable_rec;
+	int MsgSize, retval;
+
+	while( 1 )
+	{
+		dbUtilClose();
+		trace( "SafReader waiting for servicing request...");
+		memset( &txnmsg, 0, sizeof( struct EzTxnMsg ) );
+		if( ReadMessage( ( char * )&txnmsg, &MsgSize ) < 0 )
+		{
+			trace( "Error in Reading Message from EzSafReader Channel" );
+			trace( "^^^^^^^^^^^^^^^EzSafReader Ended Abnormally^^^^^^^^^^^" );
+			closeDebug();
+			TaskExit();
+		}
+
+		trace( DEBUG_NORMAL, "Message read from Channel[%s]", GetLastSenderChannelName() );
+
+		if( dbUtilConnect() < 0 )
+			continue;
+
+		if( !strcmp( GetLastSenderChannelName(), EVENTMGR_CHANNEL ) )
+			serviceTimeOut( &txnmsg );
+		else if( txnmsg.MsgType == EZLINK_TXN_ReplayIntimationRequest )
+			serviceReplayIntimationRequest( txnmsg.NetworkId );
+		else if ( txnmsg.MsgType == EZLINK_TXN_PBFDownloadRequest )
+			serviceSAFDownloadRequest( &txnmsg );
+		else
+			serviceReplayResponse( &txnmsg );
+	}
+}
+
+int main( int argc, char **argv )
+{
+	EzSafReader safreaderobj;
+	safreaderobj.initEzSafReader( argv[ 0 ] );
+	safreaderobj.serviceRequest();
+	return 1;
+}
+
+

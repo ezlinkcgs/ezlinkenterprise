@@ -1,0 +1,26 @@
+BINDIR=${EZDIR_HOME}/bin
+LIBDIR=${EZDIR_HOME}/lib
+BINARY=EzMCommDriver
+OBJFILE=ezmcommdrvr.o
+SOURCE=ezmcommdrvr.cpp
+OBJFILE1=ezmcommdrvrutil.o
+SOURCE1=ezmcommdrvrutil.cpp
+LIBLIST=-lezdebug_util -lezcfg_util -lezsigutil -lezchannelutil -lpthread -lnsl -lezdatetimeutil -lezchanneltools -leztaskutil
+INCLUDEDIR=${EZDIR_HOME}/include
+
+${BINARY}	:	${OBJFILE} ${OBJFILE1} 
+			g++ ${OBJFILE} ${OBJFILE1} -L${LIBDIR} ${LIBLIST} -o ${BINARY}	
+
+${OBJFILE}	:	${SOURCE}
+			g++ -c ${SOURCE} -I${INCLUDEDIR}
+
+${OBJFILE1}	:	${SOURCE1}
+			g++ -c ${SOURCE1} -I${INCLUDEDIR}
+
+install		:
+			mv ${BINARY} ${BINDIR}
+
+clean		:
+			rm *.o
+
+				

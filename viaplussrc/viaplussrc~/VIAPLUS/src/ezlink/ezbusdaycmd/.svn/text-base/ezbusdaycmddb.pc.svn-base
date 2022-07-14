@@ -1,0 +1,74 @@
+#include <ezdb/eznetworkbusday.h>
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+int readEzNetworkBusDay( const char *I_NetworkId, struct EzNetworkBusDay *eznetworkbusday_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		char Input_NetworkId[ 17 ];
+		char CutOverUseFlag;
+		int CutOverDate;
+		int CutOverTime;
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR NetworkId IS STRING(17);
+	EXEC SQL VAR Input_NetworkId IS STRING(17);
+	
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	memset( Input_NetworkId, 0, sizeof( Input_NetworkId ) );
+	
+	strcpy( Input_NetworkId, I_NetworkId );
+	
+	EXEC SQL SELECT
+		RTRIM(NETWORKID),
+		CUTOVERUSEFLAG,
+		TO_NUMBER(TO_CHAR(CUTOVERDATE,'DDMMYY')),
+		CUTOVERTIME
+	INTO
+		:NetworkId,
+		:CutOverUseFlag,
+		:CutOverDate,
+		:CutOverTime
+	FROM EZNETWORKBUSDAY WHERE RTRIM(NETWORKID)=:Input_NetworkId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+		
+	strcpy( eznetworkbusday_ptr->NetworkId, NetworkId );
+	eznetworkbusday_ptr->CutOverUseFlag = CutOverUseFlag;
+	eznetworkbusday_ptr->CutOverDate = CutOverDate;
+	eznetworkbusday_ptr->CutOverTime = CutOverTime;
+   
+	return sqlca.sqlcode;	
+}
+
+int updateBusDate( const char *I_NetworkId, const char *I_DateStr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		char DateStr[ 7 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR NetworkId IS STRING(17);
+	EXEC SQL VAR DateStr IS STRING(7);
+	
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	strcpy( NetworkId, I_NetworkId );
+	memset( DateStr, 0, sizeof( DateStr ) );
+	strcpy( DateStr, I_DateStr ); 
+	
+	EXEC SQL UPDATE EZNETWORKBUSDAY SET CUTOVERDATE=TO_DATE(:DateStr , 'DDMMYY' ) WHERE RTRIM(NETWORKID)=:NetworkId;
+	
+	if( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	else
+	{
+		EXEC SQL COMMIT;
+		return sqlca.sqlcode;
+	}
+}

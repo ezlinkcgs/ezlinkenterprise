@@ -1,0 +1,21 @@
+<<<<<<< .mine
+
+Pro*C/C++: Release 10.2.0.1.0 - Production on Tue Oct 26 18:52:54 2010
+
+Copyright (c) 1982, 2005, Oracle.  All rights reserved.
+
+Error at line 4, column 10 in file ezmobile8583db.pc
+     4  #include <ezdb/ezcardinfo.h>
+     4  .........1
+     4  PCC-S-02015, unable to open include file
+=======
+
+Pro*C/C++: Release 11.2.0.1.0 - Production on Fri Jul 29 16:40:40 2011
+
+Copyright (c) 1982, 2009, Oracle and/or its affiliates.  All rights reserved.
+
+Error at line 7, column 11 in file /usr/include/gnu/stubs.h
+     7  # include <gnu/stubs-32.h>
+     7  ..........1
+     7  PCC-S-02015, unable to open include file
+>>>>>>> .r2240

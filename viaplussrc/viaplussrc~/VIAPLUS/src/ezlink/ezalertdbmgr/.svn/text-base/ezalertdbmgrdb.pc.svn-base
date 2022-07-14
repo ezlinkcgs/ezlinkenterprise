@@ -1,0 +1,421 @@
+#include <ezlink/ezalertdbtypes.h>
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+int getEzStatusAlertCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZSTATUSALERT;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzStatusAlert( struct EzStatusAlertMemory *ezstatusalert_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[17];
+		char InstId[17];
+		char DeviceId[ 33 ];
+		char AlertType[ 17 ];
+		char StatusList[ 129 ];
+		char SMSReq;
+		char MailReq;
+		char SMSAlertGroupId[ 17 ];
+		char MailAlertGroupId[ 17 ];
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR InstId IS STRING(17);
+	EXEC SQL VAR DeviceId IS STRING(33);
+	EXEC SQL VAR AlertType IS STRING(17);
+	EXEC SQL VAR StatusList IS STRING(129);
+	EXEC SQL VAR SMSAlertGroupId IS STRING(17);
+	EXEC SQL VAR MailAlertGroupId IS STRING(17);
+	
+	EXEC SQL DECLARE ezstatusalert_cur CURSOR FOR
+    SELECT
+    	TRIM(RECORDID),
+    	TRIM(INSTID),
+		TRIM(DEVICEID),
+		TRIM(ALERTTYPE),
+        TRIM(STATUSLIST),
+        SMSREQ,
+        MAILREQ,
+        TRIM(SMSALERTGROUPID),
+        TRIM(MAILALERTGROUPID)
+    FROM EZSTATUSALERT;
+		
+	EXEC SQL OPEN ezstatusalert_cur;
+
+	while( 1 )
+	{
+		memset( RecordId, 0, sizeof( RecordId ) );
+		memset( InstId, 0, sizeof( InstId ) );
+		memset( DeviceId, 0, sizeof( DeviceId ) );
+		memset( AlertType, 0, sizeof( AlertType ) );
+		memset( StatusList, 0, sizeof( StatusList ) );
+		memset( SMSAlertGroupId, 0, sizeof( SMSAlertGroupId ) );
+		memset( MailAlertGroupId, 0, sizeof( MailAlertGroupId ) );
+		
+		EXEC SQL FETCH ezstatusalert_cur INTO
+		:RecordId,
+		:InstId,
+		:DeviceId,
+		:AlertType,
+		:StatusList,
+		:SMSReq,
+		:MailReq,
+		:SMSAlertGroupId,
+		:MailAlertGroupId;
+		
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        memset( ezstatusalert_ptr + i, 0, sizeof( struct EzStatusAlertMemory ) );
+        strcpy( ( ezstatusalert_ptr + i )->RecordId, RecordId );
+        strcpy( ( ezstatusalert_ptr + i )->InstId, InstId );
+        strcpy( ( ezstatusalert_ptr + i )->DeviceId, DeviceId );
+        strcpy( ( ezstatusalert_ptr + i )->AlertType, AlertType );
+        strcpy( ( ezstatusalert_ptr + i )->StatusList, StatusList );
+        ( ezstatusalert_ptr + i )->SMSReq = SMSReq;
+        ( ezstatusalert_ptr + i )->MailReq = MailReq;
+        strcpy( ( ezstatusalert_ptr + i )->SMSAlertGroupId, SMSAlertGroupId );
+        strcpy( ( ezstatusalert_ptr + i )->MailAlertGroupId, MailAlertGroupId );
+    	i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezstatusalert_cur;
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;	
+}
+
+int getEzSMSAlertGroupCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZSMSALERTGROUP;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzSMSAlertGroup( struct EzSMSAlertGroupMemory *ezsmsalertgroup_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char SMSAlertGroupId[17];
+		char MobileList[ 255 ];
+		char TemplateFile[ 33 ];
+		char GSMPort[ 33 ];
+		short ind_var;
+    EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR SMSAlertGroupId IS STRING(17);
+	EXEC SQL VAR MobileList IS STRING(255);
+	EXEC SQL VAR TemplateFile IS STRING(33);
+	EXEC SQL VAR GSMPort IS STRING(33);
+			
+	EXEC SQL DECLARE ezsmsalertgroup_cur CURSOR FOR
+    SELECT
+    	TRIM(SMSALERTGROUPID),
+		TRIM(MOBILELIST),
+		TRIM(TEMPLATEFILE),
+        TRIM(GSMPORT)
+    FROM EZSMSALERTGROUP;
+		
+	EXEC SQL OPEN ezsmsalertgroup_cur;
+
+	while( 1 )
+	{
+		memset( SMSAlertGroupId, 0, sizeof( SMSAlertGroupId ) );
+		memset( MobileList, 0, sizeof( MobileList ) );
+		memset( TemplateFile, 0, sizeof( TemplateFile ) );
+		memset( GSMPort, 0, sizeof( GSMPort ) );
+			
+		EXEC SQL FETCH ezsmsalertgroup_cur INTO
+		:SMSAlertGroupId,
+		:MobileList,
+		:TemplateFile,
+		:GSMPort:ind_var;
+				
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        memset( ezsmsalertgroup_ptr + i, 0, sizeof( struct EzSMSAlertGroupMemory ) );
+        strcpy( ( ezsmsalertgroup_ptr + i )->SMSAlertGroupId, SMSAlertGroupId );
+        strcpy( ( ezsmsalertgroup_ptr + i )->MobileList, MobileList );
+        strcpy( ( ezsmsalertgroup_ptr + i )->TemplateFile, TemplateFile );
+        strcpy( ( ezsmsalertgroup_ptr + i )->GSMPort, GSMPort );
+        i++;
+	}
+	
+	*SqlErr = sqlca.sqlcode;
+	
+	EXEC SQL CLOSE ezsmsalertgroup_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;	
+
+}
+
+int getEzMailAlertGroupCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZMAILALERTGROUP;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzMailAlertGroup( struct EzMailAlertGroupMemory *ezmailalertgroup_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char MailAlertGroupId[17];
+		char FromAddress[ 65 ];
+		char ToList[ 255 ];
+		char CCList[ 255 ];
+		char Subject[ 129 ];
+		char TemplateFile[ 33 ];
+		short ind_var;
+    EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR MailAlertGroupId IS STRING(17);
+	EXEC SQL VAR FromAddress IS STRING(65);
+	EXEC SQL VAR ToList IS STRING(255);
+	EXEC SQL VAR CCList IS STRING(255);
+	EXEC SQL VAR Subject IS STRING(129);
+	EXEC SQL VAR TemplateFile IS STRING(33);
+			
+	EXEC SQL DECLARE ezmailalertgroup_cur CURSOR FOR
+    SELECT
+    	TRIM(MAILALERTGROUPID),
+    	TRIM(FROMADDRESS),
+		TRIM(TOLIST),
+		TRIM(CCLIST),
+		TRIM(SUBJECT),
+		TRIM(TEMPLATEFILE)
+    FROM EZMAILALERTGROUP;
+		
+	EXEC SQL OPEN ezmailalertgroup_cur;
+
+	while( 1 )
+	{
+		memset( MailAlertGroupId, 0, sizeof( MailAlertGroupId ) );
+		memset( FromAddress, 0, sizeof( FromAddress ) );
+		memset( ToList, 0, sizeof( ToList ) );
+		memset( CCList, 0, sizeof( CCList ) );
+		memset( Subject, 0, sizeof( Subject ) );
+		memset( TemplateFile, 0, sizeof( TemplateFile ) );
+	
+		EXEC SQL FETCH ezmailalertgroup_cur INTO
+		:MailAlertGroupId,
+		:FromAddress,
+		:ToList,
+		:CCList,
+		:Subject,
+		:TemplateFile;
+				
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        memset( ezmailalertgroup_ptr + i, 0, sizeof( struct EzMailAlertGroupMemory ) );
+        strcpy( ( ezmailalertgroup_ptr + i )->MailAlertGroupId, MailAlertGroupId );
+        strcpy( ( ezmailalertgroup_ptr + i )->FromAddress, FromAddress );
+        strcpy( ( ezmailalertgroup_ptr + i )->ToList, ToList );
+        strcpy( ( ezmailalertgroup_ptr + i )->CCList, CCList );
+        strcpy( ( ezmailalertgroup_ptr + i )->Subject, Subject );
+        strcpy( ( ezmailalertgroup_ptr + i )->TemplateFile, TemplateFile );
+        i++;
+	}
+	
+	*SqlErr = sqlca.sqlcode;
+	
+	EXEC SQL CLOSE ezmailalertgroup_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;	
+
+}
+
+int getEzAlertInfoCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZALERTINFO;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzAlertInfo( struct EzAlertInfoMemory *ezalertinfo_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[17];
+		char InstId[17];
+		char SMSReq;
+		char MailReq;
+		char SMSChannel[ 33 ];
+		char MailChannel[ 33 ];
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR InstId IS STRING(17);
+	EXEC SQL VAR SMSChannel IS STRING(33);
+	EXEC SQL VAR MailChannel IS STRING(33);
+	
+	EXEC SQL DECLARE ezalertinfo_cur CURSOR FOR
+    SELECT
+    	TRIM(RECORDID),
+    	TRIM(INSTID),
+		SMSREQ,
+        MAILREQ,
+        TRIM(SMSCHANNEL),
+        TRIM(MAILCHANNEL)
+    FROM EZALERTINFO;
+		
+	EXEC SQL OPEN ezalertinfo_cur;
+
+	while( 1 )
+	{
+		memset( RecordId, 0, sizeof( RecordId ) );
+		memset( InstId, 0, sizeof( InstId ) );
+		memset( SMSChannel, 0, sizeof( SMSChannel ) );
+		memset( MailChannel, 0, sizeof( MailChannel ) );
+		
+		EXEC SQL FETCH ezalertinfo_cur INTO
+		:RecordId,
+		:InstId,
+		:SMSReq,
+		:MailReq,
+		:SMSChannel,
+		:MailChannel;
+		
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        memset( ezalertinfo_ptr + i, 0, sizeof( struct EzAlertInfoMemory ) );
+        strcpy( ( ezalertinfo_ptr + i )->RecordId, RecordId );
+        strcpy( ( ezalertinfo_ptr + i )->InstId, InstId );
+        ( ezalertinfo_ptr + i )->SMSReq = SMSReq;
+        ( ezalertinfo_ptr + i )->MailReq = MailReq;
+        strcpy( ( ezalertinfo_ptr + i )->SMSChannel, SMSChannel );
+        strcpy( ( ezalertinfo_ptr + i )->MailChannel, MailChannel );
+    	i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezalertinfo_cur;
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;	
+}
+
+int getEzAlertDescCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZALERTDESC;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzAlertDesc( struct EzAlertDescMemory *ezalertdesc_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[ 17 ];
+		char DeviceType[ 17 ];
+		char StatusCode[ 10 ];
+		char StatusDesc[ 65 ];
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR DeviceType IS STRING(17);
+	EXEC SQL VAR StatusCode IS STRING(10);
+	EXEC SQL VAR StatusDesc IS STRING(65);
+	
+	EXEC SQL DECLARE ezalertdesc_cur CURSOR FOR
+    SELECT
+    	TRIM(RECORDID),
+    	TRIM(DEVICETYPE),
+		TRIM(STATUSCODE),
+        TRIM(STATUSDESC)
+    FROM EZALERTDESC;
+		
+	EXEC SQL OPEN ezalertdesc_cur;
+
+	while( 1 )
+	{
+		memset( RecordId, 0, sizeof( RecordId ) );
+		memset( DeviceType, 0, sizeof( DeviceType ) );
+		memset( StatusCode, 0, sizeof( StatusCode ) );
+		memset( StatusDesc, 0, sizeof( StatusDesc ) );
+		
+		EXEC SQL FETCH ezalertdesc_cur INTO
+		:RecordId,
+		:DeviceType,
+		:StatusCode,
+		:StatusDesc;
+		
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+        strcpy( ( ezalertdesc_ptr + i )->RecordId, RecordId );
+        strcpy( ( ezalertdesc_ptr + i )->DeviceType, DeviceType );
+        strcpy( ( ezalertdesc_ptr + i )->StatusCode, StatusCode );
+        strcpy( ( ezalertdesc_ptr + i )->StatusDesc, StatusDesc );
+    	i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezalertdesc_cur;
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;	
+}
+

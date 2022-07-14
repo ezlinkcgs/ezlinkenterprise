@@ -1,0 +1,26 @@
+BINDIR=${EZDIR_HOME}/bin
+LIBDIR=${EZDIR_HOME}/lib
+BINARY=EzAlertPoster
+FNAME=ezalertposter
+
+LIBLIST=-lezdebug_util -lezsigutil -leztaskutil -lezchannelutil -lezcfg_util -lezdbutil -lezdatetimeutil -lezalertmemutil -lezsequtil -lcurl
+INCLUDEDIR=${EZDIR_HOME}/include
+
+${BINARY}	:	${FNAME}.o ${FNAME}db.o 
+				g++ ${FNAME}.o ${FNAME}db.o -L${LIBDIR} ${LIBLIST} -o ${BINARY}	
+
+${FNAME}.o	:	${FNAME}.cpp
+			g++ -c ${FNAME}.cpp -I${INCLUDEDIR}
+
+${FNAME}db.o	:	${FNAME}db.pc
+			proc ${FNAME}db.pc
+			cc -c ${FNAME}db.c -I${ORACLE_HOME}/precomp/public -I${INCLUDEDIR}
+
+install		:
+			mv ${BINARY} ${BINDIR}
+
+clean		:
+			rm *.o
+			rm tp*
+				
+

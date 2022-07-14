@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/ezlinkenterprise/!svn/ver/2277/trunk/src/ezbusiness/ezatmmgr
+END
+ezatmmgrdb.lis
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/ezlinkenterprise/!svn/ver/2277/trunk/src/ezbusiness/ezatmmgr/ezatmmgrdb.lis
+END
+ezatmmgrutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/ezlinkenterprise/!svn/ver/2104/trunk/src/ezbusiness/ezatmmgr/ezatmmgrutil.cpp
+END
+ezatmmgr.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/ezlinkenterprise/!svn/ver/2068/trunk/src/ezbusiness/ezatmmgr/ezatmmgr.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/ezlinkenterprise/!svn/ver/2233/trunk/src/ezbusiness/ezatmmgr/Makefile
+END
+ezatmmgrdb.c
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/ezlinkenterprise/!svn/ver/2232/trunk/src/ezbusiness/ezatmmgr/ezatmmgrdb.c
+END
+ezatmmgrdb.pc
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/ezlinkenterprise/!svn/ver/2124/trunk/src/ezbusiness/ezatmmgr/ezatmmgrdb.pc
+END

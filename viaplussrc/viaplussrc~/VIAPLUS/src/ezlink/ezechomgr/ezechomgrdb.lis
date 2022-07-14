@@ -1,0 +1,9 @@
+
+Pro*C/C++: Release 11.2.0.1.0 - Production on Thu Sep 22 14:28:32 2011
+
+Copyright (c) 1982, 2009, Oracle and/or its affiliates.  All rights reserved.
+
+Error at line 7, column 11 in file /usr/include/gnu/stubs.h
+     7  # include <gnu/stubs-32.h>
+     7  ..........1
+     7  PCC-S-02015, unable to open include file

@@ -1,0 +1,374 @@
+# include <sqlca.h>
+# include <string.h>
+# include <stdlib.h>
+#include <ezdb/ezcardinfo.h>
+
+
+int ConnectDB( char * username, char * passwd , char * db )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char hUserName [32];
+		char hPassword [32];
+	EXEC SQL END DECLARE SECTION ;
+
+	strcpy( hUserName, username );
+	strcat( hUserName, "@" );
+	strcat( hUserName, db );
+	strcpy( hPassword, passwd );
+
+	EXEC SQL CONNECT :hUserName IDENTIFIED BY :hPassword ;
+
+	if ( sqlca.sqlcode != 0 )
+		return (sqlca.sqlcode);
+	else 
+		return 0 ;
+}
+
+int GetChn( char * MobileNo, char * CHN )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char hMobileNum[17];
+		char hChn[20];
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR hMobileNum IS STRING(17);
+	EXEC SQL VAR hChn IS STRING(20);
+	
+
+	memset( hMobileNum, 0, sizeof( hMobileNum ) );
+	strcpy( hMobileNum, MobileNo );
+	memset( hChn, 0, sizeof( hChn ) );
+	
+
+
+	EXEC SQL SELECT RTRIM(CHN) INTO :hChn FROM EZMOBILEINFO WHERE RTRIM(MOBILENUMER) = :hMobileNum ;	
+	if ( ( sqlca.sqlcode == 1403 ) || ( sqlca.sqlcode < 0 ) )
+		return -1;
+
+
+	strcpy( CHN, hChn );
+	return 0;
+	
+}
+
+
+
+int ReadEzCardInfo( const char *cardnumber , struct EzCardInfo *cinfo )
+{
+        EXEC SQL BEGIN DECLARE SECTION ;
+        	char instid[11];
+			char chn[ 20 ];
+			char input_chn[ 20 ];
+			char cardtype[ 11 ];
+			char custid[ 11 ];
+			char txngroupid[5];
+			char limitflag;
+			long expirydate;
+			int status;
+    		char pinoffset[ 5 ];
+    		char oldpinoffset[ 5 ];
+    		char tpinoffset[ 5 ];
+    		char oldtpinoffset[ 5 ];
+    		int  pinretrycount;
+    		int  tpinretrycount;
+    		char pvki;
+    		long lasttxndate;
+    		long lasttxntime;
+    		short ind_var;
+        EXEC SQL END DECLARE SECTION;
+		
+		EXEC SQL VAR instid IS STRING(11);
+		EXEC SQL VAR chn IS STRING(20);
+		EXEC SQL VAR input_chn IS STRING(20);
+		EXEC SQL VAR cardtype IS STRING(11);
+        EXEC SQL VAR custid IS STRING(11);
+        EXEC SQL VAR txngroupid IS STRING(5);
+        EXEC SQL VAR pinoffset IS STRING(5);
+        EXEC SQL VAR oldpinoffset IS STRING(5);
+        EXEC SQL VAR tpinoffset IS STRING(5);
+        EXEC SQL VAR oldtpinoffset IS STRING(5);
+        
+		memset( instid, 0, sizeof( instid ) );
+        memset( chn, 0, sizeof( chn ) );
+        memset( input_chn, 0, sizeof( input_chn ) );
+        memset( cardtype, 0, sizeof( cardtype ) );
+        memset( custid, 0, sizeof( custid ) );
+        memset( txngroupid, 0, sizeof( txngroupid ) );
+        memset( pinoffset, 0, sizeof( pinoffset ) );
+        memset( oldpinoffset, 0, sizeof( oldpinoffset ) );
+        memset( tpinoffset, 0, sizeof( tpinoffset ) );
+        memset( oldtpinoffset, 0, sizeof( oldtpinoffset ) );
+        
+        strcpy( input_chn, cardnumber );
+		
+		EXEC SQL SELECT TRIM(INSTID), TRIM(CHN), TRIM(CARDTYPE), TRIM(CUSTID), TRIM(TXNGROUPID), LIMITFLG, TO_NUMBER(TO_CHAR(EXPIRYDATE,'MMYY')), STATUS, TRIM(PINOFFSET), TRIM(OLDPINOFFSET), TRIM(TPINOFFSET), TRIM(OLDTPINOFFSET), PINRETRYCOUNT, TPINRETRYCOUNT, PVKI, TO_NUMBER(TO_CHAR(LASTTXNDATE, 'DDMMYY')), LASTTXNTIME  INTO :instid, :chn, :cardtype, :custid, :txngroupid, :limitflag, :expirydate, :status, :pinoffset, :oldpinoffset, :tpinoffset, :oldtpinoffset, :pinretrycount, :tpinretrycount, :pvki, :lasttxndate:ind_var, :lasttxntime:ind_var FROM EZCARDINFO WHERE TRIM(CHN)=:input_chn;
+
+        if ( sqlca.sqlcode != 0 )
+                return sqlca.sqlcode ;
+                
+		strcpy( cinfo->instid, instid );
+		strcpy( cinfo->chn, chn );
+        strcpy( cinfo->cardtype, cardtype );
+        strcpy( cinfo->custid, custid );
+        strcpy( cinfo->txngroupid, txngroupid );
+        cinfo->limitflag = limitflag;
+        cinfo->expirydate = expirydate;
+        cinfo->status = status;
+        strcpy( cinfo->pinoffset, pinoffset );
+        strcpy( cinfo->oldpinoffset, oldpinoffset );
+		strcpy( cinfo->tpinoffset, tpinoffset );
+		strcpy( cinfo->oldtpinoffset, oldtpinoffset );
+        cinfo->pinretrycount = pinretrycount;
+        cinfo->tpinretrycount = tpinretrycount;
+        cinfo->pvki = pvki;
+        cinfo->lasttxndate = lasttxndate;
+        cinfo->lasttxntime = lasttxntime;
+        
+        return sqlca.sqlcode ;
+
+}
+int ReadFirstAccount( const char *InstId, const char *CardNo, const char *AccountType, char *AccountNo, int *SqlErr )
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+                char instid[ 11 ];
+                char input_instid[ 11 ];
+                char chn[ 20 ];
+                char input_chn[ 20 ];
+                char acct_no[ 33 ];
+                char input_acct_type[ 11 ];
+                int acct_priority;
+        EXEC SQL END DECLARE SECTION ;
+
+        char TempAccountNo[ 33 ];
+        int AccountPriority = 9999;
+
+        EXEC SQL VAR instid IS STRING(11);
+        EXEC SQL VAR input_instid IS STRING(11);
+        EXEC SQL VAR chn IS STRING(20);
+        EXEC SQL VAR input_chn IS STRING(20);
+        EXEC SQL VAR acct_no IS STRING(33);
+        EXEC SQL VAR input_acct_type IS STRING(11);
+
+        memset( instid, 0, sizeof( instid ) );
+        memset( input_instid, 0, sizeof( input_instid ) );
+        memset( chn, 0, sizeof( chn ) );
+        memset( input_chn, 0, sizeof( input_chn ) );
+        memset( acct_no, 0, sizeof( acct_no ) );
+        memset( input_acct_type, 0, sizeof( input_acct_type ) );
+
+        strcpy( input_instid, InstId );
+        strcpy( input_chn, CardNo );
+        strcpy( input_acct_type, AccountType );
+
+        EXEC SQL SELECT TRIM(ACCOUNTNO), ACCOUNTPRIORITY INTO :acct_no, :acct_priority FROM EZAUTHREL WHERE TRIM(INSTID)=:input_instid AND TRIM(CHN)=:input_chn AND TRIM(ACCOUNTTYPE)=:input_acct_type;
+       	if( acct_priority < AccountPriority )
+        {
+       	        AccountPriority = acct_priority;
+               	memset( AccountNo, 0, sizeof( AccountNo ) );
+                strcpy( AccountNo, acct_no );
+       	}
+
+        *SqlErr = sqlca.sqlcode;
+        if( *SqlErr != 0 )
+                return -1;
+	else
+	        return 1;
+}
+
+int SearchEzAccountInfo( const char *InstId, const char *AccountNo, char *BranchCode, char *ProductCode )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+        char instid[ 11 ];
+        char input_instid[ 11 ];
+        char accountno[ 33 ];
+        char input_accountno[ 33 ];
+        short ind_var;
+        char branchcode[ 13 ];
+	char productcode[ 11 ];
+    	EXEC SQL END DECLARE SECTION ;
+    	
+	EXEC SQL VAR instid IS STRING(11);
+	EXEC SQL VAR input_instid IS STRING(11);
+	EXEC SQL VAR accountno IS STRING(33);
+	EXEC SQL VAR input_accountno IS STRING(33);
+    	EXEC SQL VAR branchcode IS STRING(13);
+        EXEC SQL VAR productcode IS STRING(11);
+	
+	memset( instid, 0, sizeof( instid ) );
+	memset( input_instid, 0, sizeof( input_instid ) );
+	memset( accountno, 0, sizeof( accountno ) );
+	memset( input_accountno, 0, sizeof( input_accountno ) );
+    	memset( branchcode, 0, sizeof( branchcode ) );
+	memset( productcode, 0, sizeof( productcode ) );
+
+	strcpy( input_instid, InstId );
+	strcpy( input_accountno, AccountNo );
+	
+	EXEC SQL SELECT TRIM(BRANCHCODE), TRIM(PRODUCTCODE) INTO :branchcode:ind_var, :productcode:ind_var FROM EZACCOUNTINFO WHERE TRIM(INSTID)=:input_instid AND TRIM(ACCOUNTNO)=:input_accountno;
+
+    	if ( sqlca.sqlcode != 0 )
+            return sqlca.sqlcode ;
+       
+	    strcpy( BranchCode, branchcode );
+	    strcpy( ProductCode, productcode );
+    
+    	return sqlca.sqlcode ;
+}
+
+/*
+int readPrimaryAccount( const char *instNo, const char *customerID, const char *acctType, struct ezcustomer *cust )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char iin[ 11 ];
+		char input_iin[ 11 ];
+		char custid[ 11 ];
+		char input_custid[ 11 ];
+		char name[ 51 ];
+		char address[ 101 ];
+		char pflag;
+		char pcustid[ 11 ];
+		char branch_id[ 11 ];
+		char acct_type[ 3 ];
+		char input_acct_type[ 3 ];
+		char acct_subtype[ 11 ];
+		char acct_no[ 33 ];
+		char acct_flag;
+		char default_acct_flag;
+		short ind_var;
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR iin IS STRING(11);
+	EXEC SQL VAR input_iin IS STRING(11);
+	EXEC SQL VAR custid IS STRING(11);
+	EXEC SQL VAR input_custid IS STRING(11);
+	EXEC SQL VAR name IS STRING(51);
+	EXEC SQL VAR address IS STRING(101);
+	EXEC SQL VAR pcustid IS STRING(11);
+	EXEC SQL VAR branch_id IS STRING(11);
+	EXEC SQL VAR acct_type IS STRING(3);
+	EXEC SQL VAR input_acct_type IS STRING(3);
+	EXEC SQL VAR acct_subtype IS STRING(11);
+	EXEC SQL VAR acct_no IS STRING(33);
+
+	memset( iin, 0, sizeof( iin ) );
+	memset( input_iin, 0, sizeof( iin ) );
+	memset( custid, 0, sizeof( custid ) );
+	memset( input_custid, 0, sizeof( input_custid ) );
+	memset( name, 0, sizeof( name ) );
+	memset( address, 0, sizeof( address ) );
+	memset( pcustid, 0, sizeof( pcustid ) );
+	memset( branch_id, 0, sizeof( branch_id ) );
+	memset( acct_type, 0, sizeof( acct_type ) );
+	memset( input_acct_type, 0, sizeof( input_acct_type ) );
+	memset( acct_subtype, 0, sizeof( acct_subtype ) );
+	memset( acct_no, 0, sizeof( acct_no ) );
+
+	strcpy( input_iin, instNo );
+	strcpy( input_custid, customerID );
+	strcpy( input_acct_type, acctType );
+
+	if( !strcmp( acctType, "00" ) )
+		EXEC SQL SELECT TRIM(IIN), TRIM(CUSTID), TRIM(NAME), TRIM(ADDRESS), PFLAG, TRIM(PCUSTID), TRIM(BRANCH_ID), TRIM(ACCT_TYPE), TRIM(ACCT_SUBTYPE), TRIM(ACCT_NO), ACCT_FLAG, DEFAULT_ACCT_FLAG INTO :iin, :custid, :name:ind_var, :address:ind_var, :pflag:ind_var, :pcustid:ind_var, :branch_id, :acct_type, :acct_subtype, :acct_no, :acct_flag, default_acct_flag FROM EZCUSTOMER WHERE TRIM(IIN)=:input_iin AND TRIM(CUSTID)=:input_custid AND DEFAULT_ACCT_FLAG='1';
+	else
+		EXEC SQL SELECT TRIM(IIN), TRIM(CUSTID), TRIM(NAME), TRIM(ADDRESS), PFLAG, TRIM(PCUSTID), TRIM(BRANCH_ID), TRIM(ACCT_TYPE), TRIM(ACCT_SUBTYPE), TRIM(ACCT_NO), ACCT_FLAG, DEFAULT_ACCT_FLAG INTO :iin, :custid, :name:ind_var, :address:ind_var, :pflag:ind_var, :pcustid:ind_var, :branch_id, :acct_type, :acct_subtype, :acct_no, :acct_flag, default_acct_flag:ind_var FROM EZCUSTOMER WHERE TRIM(IIN)=:input_iin AND TRIM(CUSTID)=:input_custid AND TRIM(ACCT_TYPE)=:input_acct_type AND ACCT_FLAG='1';
+
+	if( sqlca.sqlcode == 1403 )
+	{
+		if( !strcmp( acctType, "00" ) )
+			EXEC SQL SELECT TRIM(IIN), TRIM(CUSTID), TRIM(NAME), TRIM(ADDRESS), PFLAG, TRIM(PCUSTID), TRIM(BRANCH_ID), TRIM(ACCT_TYPE), TRIM(ACCT_SUBTYPE), TRIM(ACCT_NO), ACCT_FLAG, DEFAULT_ACCT_FLAG INTO :iin, :custid, :name:ind_var, :address:ind_var, :pflag:ind_var, :pcustid:ind_var, :branch_id, :acct_type, :acct_subtype, :acct_no, :acct_flag, default_acct_flag FROM EZCUSTOMER WHERE TRIM(IIN)=:input_iin AND TRIM(CUSTID)=:input_custid AND DEFAULT_ACCT_FLAG='2';
+		else
+			EXEC SQL SELECT TRIM(IIN), TRIM(CUSTID), TRIM(NAME), TRIM(ADDRESS), PFLAG, TRIM(PCUSTID), TRIM(BRANCH_ID), TRIM(ACCT_TYPE), TRIM(ACCT_SUBTYPE), TRIM(ACCT_NO), ACCT_FLAG, DEFAULT_ACCT_FLAG INTO :iin, :custid, :name:ind_var, :address:ind_var, :pflag:ind_var, :pcustid:ind_var, :branch_id, :acct_type, :acct_subtype, :acct_no, :acct_flag, default_acct_flag:ind_var FROM EZCUSTOMER WHERE TRIM(IIN)=:input_iin AND TRIM(CUSTID)=:input_custid AND TRIM(ACCT_TYPE)=:input_acct_type AND ACCT_FLAG='2';
+	}
+
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode ;
+	
+	strcpy( cust->iin, iin );
+	strcpy( cust->custid, custid );
+	strcpy( cust->name, name );
+	strcpy( cust->address, address );
+	cust->pflag = pflag;
+	strcpy( cust->pcustid, pcustid );
+	strcpy( cust->branch_id, branch_id );
+	strcpy( cust->acct_type, acct_type );
+	strcpy( cust->acct_subtype, acct_subtype );
+	strcpy( cust->acct_no, acct_no );
+	cust->acct_flag = acct_flag;
+	cust->default_acct_flag = default_acct_flag;
+	
+	return sqlca.sqlcode ;
+
+}
+*/
+int GetMobileFileInfo( char *ApplCode, char *FileName )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char hApplCode[17];
+		char hFileName[31];
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR hApplCode IS STRING(17);
+	EXEC SQL VAR hFileName IS STRING(31);
+	
+
+	memset( hApplCode, 0, sizeof( hApplCode ) );
+	memset( hFileName, 0, sizeof( hFileName ) );
+
+	strcpy( hApplCode, ApplCode );
+
+	EXEC SQL SELECT FILENAME INTO :hFileName FROM EZMOBILEFILEINFO WHERE TRIM(MOBILECODE) =:hApplCode;	
+	if ( ( sqlca.sqlcode == 1403 ) || ( sqlca.sqlcode < 0 ) )
+		return sqlca.sqlcode;
+
+	strcpy( FileName, hFileName );
+	return 0;
+}
+	
+int GetMobileTranInfo( char * ApplCode, int *Pcode, char * Act_Type )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char hApplCode[17];
+		int  hPcode;
+		char hAct_Type[3];
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR hApplCode IS STRING(17);
+	EXEC SQL VAR hAct_Type IS STRING(3);
+	
+	memset( hApplCode, 0, sizeof( hApplCode ) );
+	strcpy( hApplCode, ApplCode );
+	memset( hAct_Type, 0, sizeof( hAct_Type ) );
+
+
+	EXEC SQL SELECT PCODE , ACT_TYPE INTO :hPcode , :hAct_Type FROM EZMOBILETRANSINFO WHERE TRIM(MOBILECODE) = :hApplCode;	
+	if ( ( sqlca.sqlcode == 1403 ) || ( sqlca.sqlcode < 0 ) )
+		sqlca.sqlcode;
+
+	*Pcode = hPcode;
+	strcpy( Act_Type, hAct_Type );
+	
+	return 0;
+}
+
+int GenerateDeviceTraceNum( char * DeviceId )
+{
+        EXEC SQL BEGIN DECLARE SECTION ;                                                                                                     char hDeviceId[9];
+                int hTraceNum ;                                                                                                      EXEC SQL END DECLARE SECTION ;                                                                                       
+
+        EXEC SQL VAR hDeviceId IS STRING(9);
+
+        memset( hDeviceId, 0, sizeof( hDeviceId ) );
+                                                                                                                                     strcpy( hDeviceId, DeviceId );                                                                                       
+        EXEC SQL SELECT TRACE_NUM INTO :hTraceNum FROM DEVICE_TRACE_NUM WHERE RTRIM( DEVICE_ID ) = :hDeviceId AND TO_CHAR(TRACE_DATE,'DD-MM-YYYY') =TO_CHAR(SYSDATE, 'DD-MM-YYYY') FOR UPDATE ;
+
+        if ( sqlca.sqlcode != 0 )
+        {
+                EXEC SQL DELETE FROM DEVICE_TRACE_NUM WHERE RTRIM( DEVICE_ID ) = :hDeviceId ;
+                EXEC SQL COMMIT;                                                                                                             EXEC SQL INSERT INTO DEVICE_TRACE_NUM VALUES ( :hDeviceId, 1, SYSDATE );                                                     EXEC SQL COMMIT;
+                hTraceNum = 1 ;                                                                                                              return hTraceNum;
+        }                                                                                                                            else
+        {                                                                                                                                    EXEC SQL UPDATE DEVICE_TRACE_NUM SET TRACE_NUM = :hTraceNum+1 WHERE RTRIM( DEVICE_ID ) = :hDeviceId ;                        if ( sqlca.sqlcode != 0 )
+                        return -1;                                                                                                           EXEC SQL COMMIT;                                                                                                             return hTraceNum+1 ;
+        }
+}
+

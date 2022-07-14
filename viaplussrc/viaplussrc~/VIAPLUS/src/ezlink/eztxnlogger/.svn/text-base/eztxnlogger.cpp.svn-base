@@ -1,0 +1,648 @@
+#include <ezlink/eztxnlogger.h>
+
+void EzTxnLogger :: initTxnLogger( const char *TaskName )
+{
+	char logpath[ LOG_PATH_SIZE + 1 ];
+
+	memset( logpath, 0, sizeof( logpath ) );
+	sprintf( logpath, "%s/%s/%s", getenv( "EZDIR_HOME" ), "log", "eztxnlogger.log" );
+
+	if( openDebug( logpath, TaskName ) < 0 )
+		exit( 0 );
+
+	trace( "^^^^^^^^^^^eztxnlogger Started^^^^^^^^^^^^^");
+
+	if( InitEzTaskUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzTaskUtil");
+		trace( "^^^^^^^^^^^eztxnlogger Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		exit( 0 );
+	}
+
+	SetDebug( );
+
+	if( InitEzChannelUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzChannelUtil" );
+		trace( "^^^^^^^^^^^eztxnlogger Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+
+	if( CreateChannel( EZTXNLOGGERCHANNEL, TaskName ) < 0 )
+	{
+		trace( "Error in Creating eztxnlogger Channel" );
+		trace( "^^^^^^^^^^^eztxnlogger Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+
+	if( initDBUtil( TaskName, this ) < 0 )
+	{
+		trace( "Error in Initializing DBUtil..." );
+		trace( "^^^^^^^^^^^eztxnlogger Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+
+	if( DBConnect() < 0 )
+	{
+		trace( "Error in Connecting Database" );
+		trace( "^^^^^^^^^^^eztxnlogger Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+
+	if( eztxnmsgvalidator.initTxnMsgValidator( this, "TXNLOG" ) < 0 )
+	{
+		trace( "Error in Initializing TxnMsgValidator..." );
+		trace( "^^^^^^^^^^^eztxnlogger Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+
+	if( eztxnmsgvalidator.LoadTxnMsgDef() < 0 )
+	{
+		trace( "Error in Loading TxnMsgDef..." );
+		trace( "^^^^^^^^^^^eztxnlogger Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+
+	composeSqlString();
+
+	TaskInit();
+	initEzSigUtil( this );
+}
+
+
+void EzTxnLogger :: composeSqlString()
+{
+	memset( SQLString, 0, sizeof( SQLString ) );
+
+	sprintf( SQLString, "INSERT INTO EZTXNLOG (" );
+	strcat( SQLString, "TXNREFNUM," );
+	strcat( SQLString, "DEVICETYPE" );
+	strcat( SQLString, "MSGTYPE," );
+	strcat( SQLString, "ORGMSGTYPE," );
+	strcat( SQLString, "TXNCODE," );
+	strcat( SQLString, "TERMINALID," );
+	strcat( SQLString, "TERMLOC," );
+	strcat( SQLString, "TRACENO," );
+	strcat( SQLString, "ORGTRACENO," );
+	strcat( SQLString, "TRANDATE," );
+	strcat( SQLString, "TRANTIME," );
+	strcat( SQLString, "ORGTRANDATE," );
+	strcat( SQLString, "ORGTRANTIME," );
+	strcat( SQLString, "LOCALDATE," );
+	strcat( SQLString, "LOCALTIME," );
+	strcat( SQLString, "RESPCODE," );
+	strcat( SQLString, "REVCODE," );
+	strcat( SQLString, "REASONCODE," );
+	strcat( SQLString, "AUTHCODE," );
+	strcat( SQLString, "CAPTUREDATE," );
+	strcat( SQLString, "CAPTURETIME," );
+	strcat( SQLString, "SETTLEMENTDATE," );
+	strcat( SQLString, "BUSINESSDATE," );
+	strcat( SQLString, "ACQCURRENCYCODE," );
+	strcat( SQLString, "ACQCONVRATE," );
+	strcat( SQLString, "ACQCONVDATE," );
+	strcat( SQLString, "ISSCURRENCYCODE," );
+	strcat( SQLString, "ISSCONVRATE," );
+	strcat( SQLString, "ISSCONVDATE," );
+	strcat( SQLString, "SETTCURRENCYCODE," );
+	strcat( SQLString, "SETTCONVRATE," );
+	strcat( SQLString, "SETTCONVDATE," );
+	strcat( SQLString, "MERCHANTTYPE," );
+	strcat( SQLString, "POSENTRYCODE," );
+	strcat( SQLString, "POSCONDITIONCODE," );
+	strcat( SQLString, "POSCAPCODE," );
+	strcat( SQLString, "POSPINCAPCODE," );
+	strcat( SQLString, "CHN," );
+	strcat( SQLString, "TCHN," );
+	strcat( SQLString, "ACQBRANCHCODE," );
+	strcat( SQLString, "ISSBRANCHCODE," );
+	strcat( SQLString, "TXFBRANCHCODE," );
+	strcat( SQLString, "FORWARDBRANCHCODE," );
+	strcat( SQLString, "FROMACCTSUBTYPE," );
+	strcat( SQLString, "TOACCTSUBTYPE," );
+	strcat( SQLString, "AVAILBALANCE," );
+	strcat( SQLString, "LEDGERBALANCE," );
+	strcat( SQLString, "AMOUNT," );
+	strcat( SQLString, "TXNFEE," );
+	strcat( SQLString, "DISPAMOUNT," );
+	strcat( SQLString, "FROMACCOUNT," );
+	strcat( SQLString, "TOACCOUNT," );
+	strcat( SQLString, "REFNUM," );
+	strcat( SQLString, "AUTHNUM," );
+	strcat( SQLString, "BATCHID," );
+	strcat( SQLString, "ACCEPTORID," );
+	strcat( SQLString, "ACCEPTORNAME," );
+	strcat( SQLString, "ACQUIRERINST," );
+	strcat( SQLString, "ISSUERINST," );
+	strcat( SQLString, "FORWARDINST," );
+	strcat( SQLString, "TXFINST," );
+	strcat( SQLString, "SETTINST," );
+	strcat( SQLString, "NETWORKID," );
+	strcat( SQLString, "ACQNETWORKID," );
+	strcat( SQLString, "ISSUERNETWORKID," );
+	strcat( SQLString, "FWDNETWORKID," );
+	strcat( SQLString, "TXFNETWORKID," );
+	strcat( SQLString, "SETTNETWORKID," );
+	strcat( SQLString, "RSVFLD1," );
+	strcat( SQLString, "RSVFLD2," );
+	strcat( SQLString, "RSVFLD3," );
+	strcat( SQLString, "RSVFLD4," );
+	strcat( SQLString, "RSVFLD5," );
+	strcat( SQLString, "RSVFLD6," );
+	strcat( SQLString, "ORGCHANNEL," );
+	strcat( SQLString, "ORGPORT," );
+	strcat( SQLString, "SRCCHANNEL," );
+	strcat( SQLString, "DESTCHANNEL," );
+	strcat( SQLString, "SRCPORT," );
+	strcat( SQLString, "DESTPORT," );
+	strcat( SQLString, "REFSEQNO" );
+	strcat( SQLString, ") VALUES (" );
+	trace( "SQLString[%s]", SQLString );
+}
+
+void EzTxnLogger :: dumpTxnMsg( struct EzTxnMsg *txnmsg, const char *TxnRefNum, const char *SrcChannelName, const char *DestChannelName )
+{
+	trace("************************************************");
+	trace( "SrcChannelName[ %s ]", SrcChannelName );
+	trace( "DestChannelName[ %s ]", DestChannelName );
+	trace( "TxnRefNum [ %s ]", TxnRefNum );
+	trace( "DeviceType [ %s ]", txnmsg->DeviceType );
+	trace(" MsgType[ %d ] ", txnmsg->MsgType );
+	trace(" OrgMsgType[ %d ] ", txnmsg->OrgMsgType );
+	trace(" TxnCode[ %d ] ", txnmsg->TxnCode );
+	trace(" TerminalId[ %s ] ", txnmsg->TerminalId );
+	trace(" TerminalLocation[ %s ] ", txnmsg->TerminalLocation );
+	trace(" TraceNo[ %d ] ", txnmsg->TraceNo );
+	trace(" OrgTraceNo[ %d ] ", txnmsg->OrgTraceNo );
+	trace(" TranDate[ %d ] ", txnmsg->TranDate );
+	trace(" TranTime[ %d ] ", txnmsg->TranTime );
+	trace(" OrgTranDate[ %d ] ", txnmsg->OrgTranDate );
+	trace(" OrgTranTime[ %d ] ", txnmsg->OrgTranTime );
+	trace(" LocalDate[ %d ] ", txnmsg->LocalDate );
+	trace(" LocalTime[ %d ] ", txnmsg->LocalTime );
+	trace(" RespCode[ %d ] ", txnmsg->RespCode );
+	trace(" RevCode[ %d ] ", txnmsg->RevCode );
+	trace(" ReasonCode[ %d ] ", txnmsg->ReasonCode );
+	trace(" AuthCode[ %d ] ", txnmsg->AuthCode );
+	trace(" CaptureDate[ %d ] ", txnmsg->CaptureDate );
+	trace(" CaptureTime[ %d ] ", txnmsg->CaptureTime );
+	trace(" SettlementDate[ %d ] ", txnmsg->SettlementDate );
+	trace(" BusinessDate[ %d ] ", txnmsg->BusinessDate );
+	trace(" AcqCurrencyCode[ %d ] ", txnmsg->AcqCurrencyCode );
+	trace(" IssCurrencyCode[ %d ] ", txnmsg->IssCurrencyCode );
+	trace(" SettCurrencyCode[ %d ] ", txnmsg->SettCurrencyCode );
+	trace(" AcqConvRate[ %d ] ", txnmsg->AcqConvRate );
+	trace(" AcqConvDate[ %d ] ", txnmsg->AcqConvDate );
+	trace(" IssConvRate[ %d ] ", txnmsg->IssConvRate );
+	trace(" IssConvDate[ %d ] ", txnmsg->IssConvDate );
+	trace(" SettConvRate[ %d ] ", txnmsg->SettConvRate );
+	trace(" SettConvDate[ %d ] ", txnmsg->SettConvDate );
+	trace(" PosEntryCode[ %d ] ", txnmsg->PosEntryCode );
+	trace(" PosConditionCode[ %d ] ", txnmsg->PosConditionCode );
+	trace(" PosCapCode[ %d ] ", txnmsg->PosCapCode );
+	trace(" PosPinCapCode[ %d ] ", txnmsg->PosPinCapCode );
+	trace(" AvailBalanceFlg[ %c ]", txnmsg->AvailBalanceFlg );
+	trace(" PinVerFlg[ %c ]", txnmsg->PinVerFlg );
+	trace(" AuthFlg[ %c ]", txnmsg->AuthFlg );
+	trace(" CheckCardExpiry[ %c ]", txnmsg->CheckCardExpiry );
+	trace(" CheckServiceCode[ %c ]", txnmsg->CheckServiceCode );
+	trace(" CheckCVV[ %c ]", txnmsg->CheckCVV );
+	trace(" MerchantType[ %d ] ", txnmsg->MerchantType );
+	trace(" chn[ %s ]", txnmsg->m_chn );
+	trace(" AcqBranchCode[ %s ]", txnmsg->AcqBranchCode );
+	trace(" TxfBranchCode[ %s ]", txnmsg->TxfBranchCode );
+	trace(" IssBranchCode[ %s ] ", txnmsg->IssBranchCode );
+	trace(" ForwardBranchCode[ %s ] ", txnmsg->ForwardBranchCode );
+	trace(" FromAcctSubType[ %s ]", txnmsg->FromAcctSubType );
+	trace(" ToAcctSubType[ %s ]", txnmsg->ToAcctSubType );
+	trace(" Amount[ %s ]", txnmsg->Amount );
+	trace(" DispAmount[ %s ]", txnmsg->DispAmount );
+	trace(" TxnFee[ %s ] ", txnmsg->TxnFee );
+	trace(" FromAccount[ %s ]", txnmsg->FromAccount );
+	trace(" ToAccount[ %s ]", txnmsg->ToAccount );
+	trace(" AvailBalance[ %s ]", txnmsg->AvailBalance );
+	trace(" LedgerBalance[ %s ]", txnmsg->LedgerBalance );
+	trace(" RefNum[ %s ]", txnmsg->RefNum );
+	trace(" AuthNum[ %s ]", txnmsg->AuthNum );
+	trace(" PINBlock[ %s ]", txnmsg->PINBlock );
+	trace(" NewPINBlock[ %s ]", txnmsg->NewPINBlock );
+	trace(" PinKey[ %s ]", txnmsg->PinKey );
+	trace(" Keylen[ %d ]", txnmsg->Keylen );
+	trace(" AcceptorName[ %s ]", txnmsg->AcceptorName );
+	trace(" AcquirerInst[ %s ]", txnmsg->AcquirerInst );
+	trace(" IssuerInst[ %s ]", txnmsg->IssuerInst );
+	trace(" ForwardInst[ %s ]", txnmsg->ForwardInst );
+	trace(" TxfInst[ %s ]", txnmsg->TxfInst );
+	trace(" SettInst[ %s ]", txnmsg->SettInst );
+	trace(" NetworkId[ %s ]", txnmsg->NetworkId );
+	trace(" AcqNetworkId[ %s ]", txnmsg->AcqNetworkId );
+	trace(" IssuerNetworkId[ %s ]", txnmsg->IssuerNetworkId );
+	trace(" FwdNetworkId[ %s ]", txnmsg->FwdNetworkId );
+	trace(" TxfNetworkId[ %s ]", txnmsg->TxfNetworkId );
+	trace(" SettNetworkId[ %s ]", txnmsg->SettNetworkId );
+	trace(" NetCode[ %d ]", txnmsg->NetCode );
+	trace(" SecurityId[ %s ]", txnmsg->SecurityId );
+	trace(" RsvFld1[ %s ]", txnmsg->RsvFld1 );
+	trace(" RsvFld2[ %s ]", txnmsg->RsvFld2 );
+	trace(" RsvFld3[ %s ]", txnmsg->RsvFld3 );
+	trace(" RsvFld4[ %s ]", txnmsg->RsvFld4 );
+	trace(" RsvFld5[ %s ]", txnmsg->RsvFld5 );
+	trace(" RsvFld6[ %s ]", txnmsg->RsvFld6 );
+	trace(" SrcChannel[ %s ]", txnmsg->SrcChannel );
+	trace(" SrcPort[ %s ]", txnmsg->SrcPort );
+	trace(" OrgChannel[ %s ]", txnmsg->OrgChannel );
+	trace(" OrgPort[ %s ]", txnmsg->OrgPort );
+	trace(" DestPort[ %s ]", txnmsg->DestPort );
+	trace(" RespFile[ %s ]", txnmsg->RespFile );
+	trace("************************************************");
+}
+
+void EzTxnLogger :: composeInsertQuery( const char *TxnRefNum, const char *SrcChannelName, const char *DestChannelName, short RefSeqNo, struct EzTxnMsg *txnmsg, char *SQLQuery )
+{
+	strcpy( SQLQuery, SQLString );
+
+	//TXNREFNUM
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", TxnRefNum );
+
+	//TXNREFNUM
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->DeviceType );
+
+	//MSGTYPE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->MsgType );
+
+	//ORGMSGTYPE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->OrgMsgType );
+
+	//TXNCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->TxnCode );
+
+	//TERMINALID
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->TerminalId );
+
+	//TERMLOC
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->TerminalLocation );
+
+	//TRACENO
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->TraceNo );
+
+	//ORGTRACENO
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->OrgTraceNo );
+
+	//TRANDATE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%06d',", txnmsg->TranDate );
+
+	//TRANTIME
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->TranTime );
+
+	//ORGTRANDATE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%06d',", txnmsg->OrgTranDate );
+
+	//ORGTRANTIME
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->OrgTranTime );
+
+	//LOCALDATE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%06d',", txnmsg->LocalDate );
+
+	//LOCALTIME
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->LocalTime );
+
+	//RESPCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->RespCode );
+
+	//REVCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->RevCode );
+
+	//REASONCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->ReasonCode );
+
+	//AUTHCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->AuthCode );
+
+	//CAPTUREDATE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%06d',", txnmsg->CaptureDate );
+
+	//CAPTURETIME
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->CaptureTime );
+
+	//SETTLEMENTDATE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%06d',", txnmsg->SettlementDate );
+
+	//BUSINESSDATE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%06d',", txnmsg->BusinessDate );
+
+	//ACQCURRENCYCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->AcqCurrencyCode );
+
+	//ACQCONVRATE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->AcqConvRate );
+
+	//ACQCONVDATE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%06d',", txnmsg->AcqConvDate );
+
+	//ISSCURRENCYCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->IssCurrencyCode );
+
+	//ISSCONVRATE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->IssConvRate );
+
+	//ISSCONVDATE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%06d',", txnmsg->IssConvDate );
+
+	//SETTCURRENCYCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->SettCurrencyCode );
+
+	//SETTCONVRATE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->SettConvRate );
+
+	//SETTCONVDATE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%06d',", txnmsg->SettConvDate );
+
+	//MERCHANTTYPE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->MerchantType );
+
+	//POSENTRYCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->PosEntryCode );
+
+	//POSCONDITIONCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->PosConditionCode );
+
+	//POSCAPCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->PosCapCode );
+
+	//POSPINCAPCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d',", txnmsg->PosPinCapCode );
+
+	//CHN
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->m_chn );
+
+	//TCHN
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->t_chn );
+
+	//ACQBRANCHCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->AcqBranchCode );
+
+	//ISSBRANCHCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->IssBranchCode );
+
+	//TXFBRANCHCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->TxfBranchCode );
+
+	//FORWARDBRANCHCODE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->ForwardBranchCode );
+
+	//FROMACCTSUBTYPE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->FromAcctSubType );
+
+	//TOACCTSUBTYPE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->ToAcctSubType );
+
+	//AVAILBALANCE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->AvailBalance );
+
+	//LEDGERBALANCE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->LedgerBalance );
+
+	//AMOUNT
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->Amount );
+
+	//TXNFEE
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->TxnFee );
+
+	//DISPAMOUNT
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->DispAmount );
+
+	//FROMACCOUNT
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->FromAccount );
+
+	//TOACCOUNT
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->ToAccount );
+
+	//REFNUM
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->RefNum );
+
+	//AUTHNUM
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->AuthNum );
+
+	//BATCHID
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->BatchId );
+
+	//ACCEPTORID
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->AcceptorId );
+
+	//ACCEPTORNAME
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->AcceptorName );
+
+	//ACQUIRERINST
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->AcquirerInst );
+
+	//ISSUERINST
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->IssuerInst );
+
+	//FORWARDINST
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->ForwardInst );
+
+	//TXFINST
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->TxfInst );
+
+	//SETTINST
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->SettInst );
+
+	//NETWORKID
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->NetworkId );
+
+	//ACQNETWORKID
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->AcqNetworkId );
+
+	//ISSUERNETWORKID
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->IssuerNetworkId );
+
+	//FWDNETWORKID
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->FwdNetworkId );
+
+	//TXFNETWORKID
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->TxfNetworkId );
+
+	//SETTNETWORKID
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->SettNetworkId );
+
+	//RSVFLD1
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->RsvFld1 );
+
+	//RSVFLD2
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->RsvFld2 );
+
+	//RSVFLD3
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->RsvFld3 );
+
+	//RSVFLD4
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->RsvFld4 );
+
+	//RSVFLD5
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->RsvFld5 );
+
+	//RSVFLD6
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->RsvFld6 );
+
+	//ORGCHANNEL
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->OrgChannel );
+
+	//ORGPORT
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->OrgPort );
+
+	//SRCCHANNEL
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", SrcChannelName );
+
+	//DESTCHANNEL
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", DestChannelName );
+
+	//SRCPORT
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->SrcPort );
+
+	//DESTPORT
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%s',", txnmsg->DestPort );
+
+	//REFSEQNO
+	sprintf( SQLQuery + strlen( SQLQuery ), "'%d'", RefSeqNo );
+
+	strcat( SQLQuery, ");");
+}
+
+void EzTxnLogger :: insertToFile( struct EzTxnMsg *txnmsg, const char *TxnRefNum, const char *SrcChannelName, const char *DestChannelName, short RefSeqNo )
+{
+	char FileName[ 200 ], SQLQuery[ MAX_INSERT_QUERY_SIZE + 1 ];
+
+	FILE *fptr;
+	memset( FileName, 0, sizeof( FileName ) );
+	sprintf( FileName, "%s/%s/%s/%06d_%d.TXNLOG", getenv( "EZDIR_HOME" ), "inf", "txnlog", ezdatetimeutil.getSysDate(), getpid() );
+	fptr = fopen( FileName, "a" );
+	if( fptr == NULL )
+	{
+		trace( "Error in Opening File[%s] ...SysErr[%s] ErrNo[%d]", FileName, strerror( errno ), errno );
+		return;
+	}
+	memset( SQLQuery, 0, sizeof( SQLQuery ) );
+	composeInsertQuery( TxnRefNum, SrcChannelName, DestChannelName, RefSeqNo, txnmsg, SQLQuery );
+	fprintf( fptr, "%s\n", SQLQuery );
+	fclose( fptr );
+}
+
+void EzTxnLogger :: serviceRequest()
+{
+	struct EzTxnLogMsg txnlogmsg;
+	int MsgSize;
+
+	struct EzTxnLogQMsg eztxnlogqmsg;
+	while( 1 )
+	{
+		dbUtilClose();
+
+		trace( "EzTxnMgr Waiting For Request....");
+		memset( &txnlogmsg, 0, sizeof( struct EzTxnLogMsg ) );
+		if( ReadMessage( ( char * ) &txnlogmsg, &MsgSize ) < 0 )
+		{
+			trace( "Error in Reading Message From EzTxnLogger Channel SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			sleep( 1 );
+			continue;
+		}
+		dbUtilConnect();
+
+		trace( DEBUG_TEST, "Message Received From Channel[%s]", GetLastSenderChannelName() );
+
+		if( eztxnmsgvalidator.validateMsg( &txnlogmsg.eztxnmsg, txnlogmsg.SearchIndex, txnlogmsg.SrcChannelName, txnlogmsg.DestChannelName, txnlogmsg.RefSeqNo ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Message Validation Failed...." );
+		}
+
+		switch( txnlogmsg.CommandCode )
+		{
+			case 'I':
+				trace( DEBUG_NORMAL, "Received Insert TxnLog Message from NotificationId[%d]", txnlogmsg.NotificationId );
+				SqlErr = insertEzTxnLog( &txnlogmsg.eztxnmsg, txnlogmsg.SearchIndex, txnlogmsg.SrcChannelName, txnlogmsg.DestChannelName, txnlogmsg.RefSeqNo );
+				if( SqlErr == EZLINK_ORA_CONNECT_ERR )
+				{
+					if( DBConnect() < 0 )
+					{
+						trace( "Error in Connecting with Switch Database...." );
+						insertToFile( &txnlogmsg.eztxnmsg, txnlogmsg.SearchIndex, txnlogmsg.SrcChannelName, txnlogmsg.DestChannelName, txnlogmsg.RefSeqNo );
+					}
+					else
+					{
+						SqlErr = insertEzTxnLog( &txnlogmsg.eztxnmsg, txnlogmsg.SearchIndex, txnlogmsg.SrcChannelName, txnlogmsg.DestChannelName, txnlogmsg.RefSeqNo );
+						if( SqlErr != 0 )
+						{
+							trace( DEBUG_ERROR, "Error in inserting EZTXNLOG Table SqlErr[ %05d ]", SqlErr );
+							insertToFile( &txnlogmsg.eztxnmsg, txnlogmsg.SearchIndex, txnlogmsg.SrcChannelName, txnlogmsg.DestChannelName, txnlogmsg.RefSeqNo );
+						}
+					}
+				}
+				else if( SqlErr != 0 )
+				{
+					trace( DEBUG_ERROR, "Error in inserting EZTXNLOG Table SqlErr[ %05d ]", SqlErr );
+					insertToFile( &txnlogmsg.eztxnmsg, txnlogmsg.SearchIndex, txnlogmsg.SrcChannelName, txnlogmsg.DestChannelName, txnlogmsg.RefSeqNo );
+				}
+				break;
+
+			case 'U':
+
+				trace( DEBUG_NORMAL, "Received Update TxnLog Message from NotificationId[%d]", txnlogmsg.NotificationId );
+				SqlErr = updateEzTxnLog( &txnlogmsg.eztxnmsg, txnlogmsg.SearchIndex, txnlogmsg.SrcChannelName, txnlogmsg.DestChannelName );
+				if( SqlErr != 0 )
+				{
+					trace( DEBUG_ERROR, "Error in Updating EZTXNLOG Table SqlErr[ %05d ]", SqlErr );
+					dumpTxnMsg( &txnlogmsg.eztxnmsg, txnlogmsg.SearchIndex, txnlogmsg.SrcChannelName, txnlogmsg.DestChannelName );
+				}
+				break;
+
+			case 'S':
+				trace( DEBUG_NORMAL, "Received Read TxnLog Message from NotificationId[%d]", txnlogmsg.NotificationId );
+				memset( &txnlogmsg.eztxnmsg, 0, sizeof( struct EzTxnMsg ) );
+				memset( txnlogmsg.SrcChannelName, 0, sizeof( txnlogmsg.SrcChannelName ) );
+				SqlErr = selectEzTxnLog( &txnlogmsg.eztxnmsg, txnlogmsg.SearchIndex, txnlogmsg.SrcChannelName, txnlogmsg.DestChannelName );
+				if( SqlErr != 0 )
+				{
+					trace( "Error in reading EZTXNLOG Table for TxnRefNum[%s]...SqlErr[%05d]", txnlogmsg.SearchIndex );
+					memset( &eztxnlogqmsg, 0, sizeof( struct EzTxnLogQMsg ) );
+					eztxnlogqmsg.msgtype = txnlogmsg.NotificationId;
+					eztxnlogqmsg.txnlogmsg.CommandCode = 'S';
+					eztxnlogqmsg.txnlogmsg.Response = -1;
+
+					if( msgsnd( this->GetSourceChannelQid(), &eztxnlogqmsg, sizeof( struct EzTxnLogQMsg ) - sizeof( long ), IPC_NOWAIT ) < 0 )
+						trace( DEBUG_ERROR, "Error in Sending Response to NotificationId[%d]...SysErr[%s] ErrNo[%d]", txnlogmsg.NotificationId, strerror( errno ), errno );
+					else
+						trace( DEBUG_NORMAL, "Send Response to NotificationId[%d] ...", txnlogmsg.NotificationId );
+				}
+				else
+				{
+					trace( DEBUG_NORMAL, "Read Message from EzTxnLog Table for TxnRefNum[%s]", txnlogmsg.SearchIndex );
+					memset( &eztxnlogqmsg, 0, sizeof( struct EzTxnLogQMsg ) );
+					eztxnlogqmsg.msgtype = txnlogmsg.NotificationId;
+					eztxnlogqmsg.txnlogmsg.CommandCode = 'S';
+					eztxnlogqmsg.txnlogmsg.Response = 1;
+					memcpy( &eztxnlogqmsg.txnlogmsg.eztxnmsg, &txnlogmsg.eztxnmsg, sizeof( struct EzTxnMsg ) );
+					if( msgsnd( this->GetSourceChannelQid(), &eztxnlogqmsg, sizeof( struct EzTxnLogQMsg ) - sizeof( long ), IPC_NOWAIT ) < 0 )
+						trace( DEBUG_ERROR, "Error in Sending Response to NotificationId[%d]...SysErr[%s] ErrNo[%d]", txnlogmsg.NotificationId, strerror( errno ), errno );
+					else
+						trace( DEBUG_NORMAL, "Send Response to NotificationId[%d] ...", txnlogmsg.NotificationId );
+				}
+				break;
+			default:
+				trace( DEBUG_ERROR, "Invalid Command Received.....");
+				break;
+		}
+	}
+}
+
+int main( int argc, char **argv )
+{
+	EzTxnLogger txnloggerobj;
+	txnloggerobj.initTxnLogger( argv[ 0 ] );
+	txnloggerobj.serviceRequest();
+	return 1;
+}

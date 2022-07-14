@@ -1,0 +1,30 @@
+BINDIR=${EZDIR_HOME}/bin
+LIBDIR=${EZDIR_HOME}/lib
+INCLUDEDIR=${EZDIR_HOME}/include
+
+BINARY=EzSecurityDriver
+
+OBJFILE=ezsecuritydriver.o
+SOURCE=ezsecuritydriver.cpp
+
+OBJFILE1=ezhsmtools.o
+SOURCE1=ezhsmtools.cpp
+
+LIBLIST=-lezdebug_util -lezsigutil -leztaskutil -lezchannelutil -lezcfg_util -lezdbutil -lezsoftdesutil -lezracalutil -lezeracomutil -lezsecuritypropertyutil -lezsecuritydriverutil -lpthread -lezchanneltools -lezinstprofileutil
+
+
+${BINARY}	:	${OBJFILE} ${OBJFILE1}
+			g++ ${OBJFILE} ${OBJFILE1} -L${LIBDIR} ${LIBLIST} -o ${BINARY}	
+
+${OBJFILE}	:	${SOURCE}
+			g++ -c ${SOURCE} -I${INCLUDEDIR}
+			
+${OBJFILE1}	:	${SOURCE1}
+			g++ -c ${SOURCE1} -I${INCLUDEDIR}
+
+install		:
+			mv ${BINARY} ${BINDIR}
+
+clean		:
+			rm *.o
+	

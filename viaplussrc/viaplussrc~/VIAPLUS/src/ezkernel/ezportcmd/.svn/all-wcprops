@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/ezlinkenterprise/!svn/ver/2582/trunk/src/ezkernel/ezportcmd
+END
+ezportcmd.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/ezlinkenterprise/!svn/ver/2582/trunk/src/ezkernel/ezportcmd/ezportcmd.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/ezlinkenterprise/!svn/ver/2582/trunk/src/ezkernel/ezportcmd/Makefile
+END

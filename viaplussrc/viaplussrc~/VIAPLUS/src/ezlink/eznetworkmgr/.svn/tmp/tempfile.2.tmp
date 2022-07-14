@@ -1,0 +1,33 @@
+
+<<<<<<< .mine
+Pro*C/C++: Release 10.2.0.1.0 - Production on Thu Sep 22 14:39:09 2011
+=======
+Pro*C/C++: Release 11.2.0.1.0 - Production on Tue Sep 20 15:55:41 2011
+>>>>>>> .r2263
+
+Copyright (c) 1982, 2005, Oracle.  All rights reserved.
+
+Error at line 1, column 10 in file eznetworkmgrdb.pc
+     1  #include <ezlink/eznetworktypes.h>
+     1  .........1
+     1  PCC-S-02015, unable to open include file
+Error at line 2, column 10 in file eznetworkmgrdb.pc
+     2  #include <ezdb/eznetwork.h>
+     2  .........1
+     2  PCC-S-02015, unable to open include file
+Error at line 3, column 10 in file eznetworkmgrdb.pc
+     3  #include <ezdb/eznetworkecho.h>
+     3  .........1
+     3  PCC-S-02015, unable to open include file
+Error at line 4, column 10 in file eznetworkmgrdb.pc
+     4  #include <ezdb/eznetworkreplay.h>
+     4  .........1
+     4  PCC-S-02015, unable to open include file
+Error at line 5, column 10 in file eznetworkmgrdb.pc
+     5  #include <ezdb/eznetworkbusday.h>
+     5  .........1
+     5  PCC-S-02015, unable to open include file
+Error at line 10, column 10 in file eznetworkmgrdb.pc
+    10  #include <ezlink/eznetworkdef.h>
+    10  .........1
+    10  PCC-S-02015, unable to open include file

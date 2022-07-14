@@ -1,0 +1,9 @@
+
+Pro*C/C++: Release 11.2.0.1.0 - Production on Wed Sep 12 17:53:14 2012
+
+Copyright (c) 1982, 2009, Oracle and/or its affiliates.  All rights reserved.
+
+Error at line 4, column 10 in file ezmobile8583db.pc
+     4  #include <ezdb/ezcardinfo.h>
+     4  .........1
+     4  PCC-S-02015, unable to open include file

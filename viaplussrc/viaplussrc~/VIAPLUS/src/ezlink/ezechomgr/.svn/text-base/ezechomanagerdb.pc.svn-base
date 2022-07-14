@@ -1,0 +1,32 @@
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+int readSAFDBInfo( const char *I_NetworkId )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char NetworkId[ 17 ];
+		char Input_NetworkId[ 17 ];
+		short ind_var;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR NetworkId IS STRING(17);
+	EXEC SQL VAR Input_NetworkId IS STRING(17);
+	
+	memset( NetworkId, 0, sizeof( NetworkId ) );
+	memset( Input_NetworkId, 0, sizeof( Input_NetworkId ) );
+		
+	strcpy( Input_NetworkId, I_NetworkId );
+	
+	EXEC SQL SELECT
+		RTRIM(NETWORKID)
+	INTO
+		:NetworkId:ind_var
+	FROM EZSAFDB WHERE RTRIM(NETWORKID)=:Input_NetworkId;
+	
+	if( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+   	
+    return 0;
+}

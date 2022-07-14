@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/ezlinkenterprise/!svn/ver/2279/trunk/src/ezbusiness/ezportupdater
+END
+ezportupdaterdb.c
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/ezlinkenterprise/!svn/ver/2232/trunk/src/ezbusiness/ezportupdater/ezportupdaterdb.c
+END
+ezportupdaterdb.pc
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/ezlinkenterprise/!svn/ver/2129/trunk/src/ezbusiness/ezportupdater/ezportupdaterdb.pc
+END
+ezportupdaterdb.lis
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/ezlinkenterprise/!svn/ver/2279/trunk/src/ezbusiness/ezportupdater/ezportupdaterdb.lis
+END
+ezportupdater.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/ezlinkenterprise/!svn/ver/2031/trunk/src/ezbusiness/ezportupdater/ezportupdater.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/ezlinkenterprise/!svn/ver/2233/trunk/src/ezbusiness/ezportupdater/Makefile
+END

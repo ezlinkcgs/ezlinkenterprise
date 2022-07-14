@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/ezlinkenterprise/!svn/ver/2286/trunk/src/ezlink/ezalertmgr
+END
+ezalertmgrdb.c
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/ezlinkenterprise/!svn/ver/2280/trunk/src/ezlink/ezalertmgr/ezalertmgrdb.c
+END
+ezalertmgrdb.pc
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/ezlinkenterprise/!svn/ver/2253/trunk/src/ezlink/ezalertmgr/ezalertmgrdb.pc
+END
+ezalertmgrdb.lis
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/ezlinkenterprise/!svn/ver/2280/trunk/src/ezlink/ezalertmgr/ezalertmgrdb.lis
+END
+ezalertmgrutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/ezlinkenterprise/!svn/ver/2286/trunk/src/ezlink/ezalertmgr/ezalertmgrutil.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/ezlinkenterprise/!svn/ver/2286/trunk/src/ezlink/ezalertmgr/Makefile
+END
+ezalertmgr.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/ezlinkenterprise/!svn/ver/2286/trunk/src/ezlink/ezalertmgr/ezalertmgr.cpp
+END

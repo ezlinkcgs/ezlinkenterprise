@@ -1,0 +1,729 @@
+#include <ezlink/eztxnmgr.h>
+
+void EzTxnMgr :: initEzTxnMgr( const char *TaskName )
+{
+	char logpath[ LOG_PATH_SIZE + 1 ];
+	EzDBUtil dbutil;
+	
+	memset( logpath, 0, sizeof( logpath ) );
+	sprintf( logpath, "%s/%s/%s", getenv( "EZDIR_HOME" ), "log", "eztxnmgr.log" );
+
+	if( openDebug( logpath, TaskName ) < 0 )
+		exit( 0 );
+	
+	trace( "^^^^^^^^^^^EzTxnMgr Started^^^^^^^^^^^^^");
+	
+	if( InitEzTaskUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzTaskUtil");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		exit( 0 );
+	}
+	
+	SetDebug();
+	
+	if( InitEzChannelUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzChannelUtil" );
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();	
+	}
+
+	if( CreateChannel( "EzTxnMgr", TaskName ) < 0 )
+	{
+		trace( "Error in Creating EzTxnMgr Channel" );
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();	
+	}
+
+	if( dbutil.DBConnect() < 0 )
+	{
+		trace( "Error in Connecting with Switch Database" );
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();	
+	}
+
+	if( initEventUtil( this, GetSourceChannelName() ) < 0 )
+	{
+		trace( "Error in Initializing EventUtil");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	
+	if( eznetworkutil.initNetworkUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzNetworkUtil");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	
+	if( eztxnsequtil.initTxnSeqUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzTxnSeqUtil");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	
+	if( eztxnroutefldutil.initEzTxnRouteFldUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzTxnRouteFldUtil");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+		
+	if( ezmsgtypepropertyutil.initEzMsgTypePropertyUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzMsgTypePropertyUtil");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	
+	if( ezinstselectutil.initEzInstSelectUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzInstSelectUtil");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	
+	if( eznetworkselectutil.initEzNetworkSelectUtil( this, &eznetworkutil ) < 0 )
+	{
+		trace( "Error in Initializing EzNetworkSelectUtil");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	
+	if( eztxnrouteinfoutil.initEzTxnRouteInfoUtil( this, &eznetworkutil, &eztxnroutefldutil ) < 0 )
+	{
+		trace( "Error in Initializing EzTxnRouteInfoUtil");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	
+	if( eztxnrouteselectutil.initEzTxnRouteSelectUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzTxnRouteSelectUtil");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+
+	if( ezmsgtranslateutil.initEzMsgTranslateUtil( this,  &eznetworkutil ) < 0 )
+	{
+		trace( "Error in Initializing EzMsgTranslateUtil" );
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	
+	if( ezeventpropertyutil.initEzEventPropertyUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzEventPropertyUtil");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	
+	if( ezchannelpropertyutil.initEzChannelPropertyUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzChannelPropertyUtil");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	
+	if( eznetworkpropertyutil.initEzNetworkPropertyUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzNetworkPropertyUtil");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	
+	if( eztxnrefselectutil.initEzTxnRefSelectUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing EzTxnRefSelectUtil");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	
+	if( eztxndbupdateutil.initTxnDBMemory( this ) < 0 )
+	{
+		trace( "Error in Initializing EzTxnDBMemory");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	
+	/*if( eztxnmsgvalidator.initTxnMsgValidator() < 0 )
+	{
+		trace( "Error in Initializing EzTxnMsgValidator");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	
+	if( eztxnmsgvalidator.LoadTxnMsgConfig() < 0 )
+	{
+		trace( "Error in Loading TxnMsgConfig");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	*/
+	
+	if( eztxnlogutil.initTxnLogUtil( this, this ) < 0 )
+	{
+		trace( "Error in Initializing EzTxnLogUtil");
+		trace( "^^^^^^^^^^^EzTxnMgr Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+	
+	dbutil.DBClose();
+	TaskInit();
+	initEzSigUtil( this );
+}
+
+void EzTxnMgr :: checkForTxnDBUpdate()
+{
+	trace( DEBUG_TEST, "Checking For TxnMgr DBUpdate....");
+
+	if( eztxndbupdateutil.isEzInstSelectChanged() )
+	{
+		trace( DEBUG_NORMAL, "EzInstSelect got Changed...." );
+		if( ezinstselectutil.reLoadEzInstSelect() < 0 )
+			trace( DEBUG_ERROR, "Error in Re-Loading EzInstSelect" );
+		else
+			trace( DEBUG_ERROR, "Re-Loaded EzInstSelect" );
+	}
+
+	if( eztxndbupdateutil.isEzNetworkSelectChanged() )
+	{
+		trace( DEBUG_NORMAL, "EzNetworkSelect got Changed...." );
+		if( eznetworkselectutil.reLoadEzNetworkSelect() < 0 )
+			trace( DEBUG_ERROR, "Error in Re-Loading EzNetworkSelect" );
+		else
+			trace( DEBUG_ERROR, "Re-Loaded EzNetworkSelect" );
+	}
+
+	if( eztxndbupdateutil.isEzTxnRouteInfoChanged() )
+	{
+		trace( DEBUG_NORMAL, "EzTxnRouteInfo got Changed...." );
+		if( eztxnrouteinfoutil.reLoadEzTxnRouteInfo() < 0 )
+			trace( DEBUG_ERROR, "Error in Re-Loading EzTxnRouteInfo" );
+		else
+			trace( DEBUG_ERROR, "Re-Loaded EzTxnRouteInfo" );
+	}
+
+	if( eztxndbupdateutil.isEzTxnRouteSelectChanged() )
+	{
+		trace( DEBUG_NORMAL, "EzTxnRouteSelect got Changed...." );
+		if( eztxnrouteselectutil.reLoadEzTxnRouteSelect() < 0 )
+			trace( DEBUG_ERROR, "Error in Re-Loading EzTxnRouteSelect" );
+		else
+			trace( DEBUG_ERROR, "Re-Loaded EzTxnRouteSelect" );
+	}
+
+	if( eztxndbupdateutil.isEzTxnRouteFldChanged() )
+	{
+		trace( DEBUG_NORMAL, "EzTxnRouteFld got Changed...." );
+		if( eztxnroutefldutil.reLoadEzTxnRouteFld() < 0 )
+			trace( DEBUG_ERROR, "Error in Re-Loading EzTxnRouteFld" );
+		else
+			trace( DEBUG_ERROR, "Re-Loaded EzTxnRouteFld" );
+	}
+
+	if( eztxndbupdateutil.isEzMsgTypePropertyChanged() )
+	{
+		trace( DEBUG_NORMAL, "EzMsgTypeProperty got Changed...." );
+		if( ezmsgtypepropertyutil.reLoadEzMsgTypeProperty() < 0 )
+			trace( DEBUG_ERROR, "Error in Re-Loading EzMsgTypeProperty" );
+		else
+			trace( DEBUG_ERROR, "Re-Loaded EzMsgTypeProperty" );
+	}
+
+	if( eztxndbupdateutil.isEzMsgTranslateChanged() )
+	{
+		trace( DEBUG_NORMAL, "EzMsgTranslate got Changed...." );
+		if( ezmsgtranslateutil.reLoadEzMsgTranslate() < 0 )
+			trace( DEBUG_ERROR, "Error in Re-Loading EzMsgTranslate" );
+		else
+			trace( DEBUG_ERROR, "Re-Loading EzMsgTranslate" );
+	}
+
+	if( eztxndbupdateutil.isEzMsgTranslateChanged() )
+	{
+		trace( DEBUG_NORMAL, "EzMsgTranslate got Changed...." );
+		if( ezmsgtranslateutil.reLoadEzMsgTranslate() < 0 )
+			trace( DEBUG_ERROR, "Error in Re-Loading EzMsgTranslate" );
+		else
+			trace( DEBUG_ERROR, "Re-Loading EzMsgTranslate" );
+	}
+
+	if( eztxndbupdateutil.isEzMsgTranslateChanged() )
+	{
+		trace( DEBUG_NORMAL, "EzMsgTranslate got Changed...." );
+		if( ezmsgtranslateutil.reLoadEzMsgTranslate() < 0 )
+			trace( DEBUG_ERROR, "Error in Re-Loading EzMsgTranslate" );
+		else
+			trace( DEBUG_ERROR, "Re-Loading EzMsgTranslate" );
+	}
+}
+
+void EzTxnMgr :: ServiceRequest()
+{
+	struct EzTxnMsg txnmsg, localtxnmsg;
+	int MsgSize, Priority, NRoutes, EventTimeOut;
+	char InstId[ 13 ], NetworkId[ 17 ], RouteSelectList[ 256 ], RouteSelectId[ 17 ], ChannelName[ 33 ];
+	char EventId[ EVENT_KEY_SIZE + 1 ], MsgTranslateId[ 17 ];
+
+	while( 1 )
+	{
+		trace( "EzTxnMgr Waiting For Request....");
+		memset( &txnmsg, 0, sizeof( struct EzTxnMsg ) );
+		if( ReadMessage( ( char * ) &txnmsg, &MsgSize ) < 0 )
+		{
+			trace( "Error in Reading Message From EzTxnMgr Channel SysErr[%s] ErrNo[%d]", strerror( errno ), errno );
+			sleep( 1 );
+			continue;
+		}
+		trace( "Message Received From Channel[%s]", GetLastSenderChannelName() );
+		checkForTxnDBUpdate();
+
+		if( ezmsgtypepropertyutil.readEzMsgTypeProperty( txnmsg.MsgType ) < 0 )
+		{
+			trace( "Error in reading MsgType[%d] in ezmsgtypeproperty table...Dropping Message", txnmsg.MsgType );
+			continue;
+		}
+		
+		if( ezmsgtypepropertyutil.isTxnMsg() && ezeventpropertyutil.isEventLookUpReq( GetLastSenderChannelName(), txnmsg.MsgType, txnmsg.TxnCode, txnmsg.RespCode ) )
+		{
+			trace( DEBUG_NORMAL, "EventLookUp Configured for ChannelName[%s] MsgType[%d] TxnCode[%d] RespCode[%d]", GetLastSenderChannelName(), txnmsg.MsgType, txnmsg.TxnCode, txnmsg.RespCode );
+			
+			memset( EventId, 0, sizeof( EventId ) );
+			txnmsg.MsgType = txnmsg.MsgType - 10;
+			eztxnrefselectutil.getTxnRefNum( &txnmsg, EventId );
+
+			trace( DEBUG_NORMAL, "Destroying EventId[%s]....", EventId );
+			txnmsg.MsgType = txnmsg.MsgType + 10;
+
+			memset( &localtxnmsg, 0, sizeof( struct EzTxnMsg ) );
+			if( destroyEvent( EventId, ( char * )&localtxnmsg ) < 0 )
+			{
+				trace( DEBUG_ERROR, "Error in Destroying EventId[%s]...Might be Late Response", EventId );
+				trace( DEBUG_ERROR, "Dropping Message....");
+				continue;
+			}
+
+			trace( DEBUG_NORMAL, "Destroyed EventId[%s] Successfully", EventId );
+
+			eztxnmsgvalidator.populateTxnMsg( &txnmsg, &localtxnmsg );
+			trace( DEBUG_TEST, "Populated Transaction Message Successfully....");
+		}
+		
+		if( ezmsgtypepropertyutil.isTxnMsg() )
+		{
+			memset( InstId, 0, sizeof( InstId ) );
+			if( ezinstselectutil.getInst( &txnmsg, "$ISSINST", InstId ) < 0 )
+			{
+				memset( txnmsg.IssuerInst, 0, sizeof( txnmsg.IssuerInst ) );
+				strcpy( txnmsg.IssuerInst, "*" );
+			}
+			else
+			{
+				memset( txnmsg.IssuerInst, 0, sizeof( txnmsg.IssuerInst ) );
+				strcpy( txnmsg.IssuerInst, InstId );
+			}
+			trace( DEBUG_NORMAL, "Searched Issuer Institution as [%s]", txnmsg.IssuerInst );
+			
+			memset( InstId, 0, sizeof( InstId ) );
+			if( ezinstselectutil.getInst( &txnmsg, "$TXFINST", InstId ) < 0 )
+			{
+				memset( txnmsg.TxfInst, 0, sizeof( txnmsg.TxfInst ) );
+				strcpy( txnmsg.TxfInst, "*" );
+			}
+			else
+			{
+				memset( txnmsg.TxfInst, 0, sizeof( txnmsg.TxfInst ) );
+				strcpy( txnmsg.TxfInst, InstId );
+			}
+			trace( DEBUG_NORMAL, "Searched Transferre Institution as [%s]", txnmsg.TxfInst );
+			
+			memset( InstId, 0, sizeof( InstId ) );
+			if( ezinstselectutil.getInst( &txnmsg, "$SETTINST", InstId ) < 0 )
+			{
+				memset( txnmsg.SettInst, 0, sizeof( txnmsg.SettInst ) );
+				strcpy( txnmsg.SettInst, "*" );
+			}
+			else
+			{
+				memset( txnmsg.SettInst, 0, sizeof( txnmsg.SettInst ) );
+				strcpy( txnmsg.SettInst, InstId );
+			}
+			trace( DEBUG_NORMAL, "Searched Settlement Institution as [%s]", txnmsg.SettInst );
+			
+			memset( InstId, 0, sizeof( InstId ) );
+			if( ezinstselectutil.getInst( &txnmsg, "$FWDINST", InstId ) < 0 )
+			{
+				memset( txnmsg.ForwardInst, 0, sizeof( txnmsg.ForwardInst ) );
+				strcpy( txnmsg.ForwardInst, "*" );
+			}
+			else
+			{
+				memset( txnmsg.ForwardInst, 0, sizeof( txnmsg.ForwardInst ) );
+				strcpy( txnmsg.ForwardInst, InstId );
+			}	
+			trace( DEBUG_NORMAL, "Searched Forwarding Institution as [%s]", txnmsg.ForwardInst );
+						
+			memset( NetworkId, 0, sizeof( NetworkId ) );
+			if( eznetworkselectutil.getNtwk( &txnmsg, "$ISSNTWK", NetworkId ) < 0 )
+			{
+				memset( txnmsg.IssuerNetworkId, 0, sizeof( txnmsg.IssuerNetworkId ) );
+				strcpy( txnmsg.IssuerNetworkId, "*" );
+			}
+			else
+			{
+				memset( txnmsg.IssuerNetworkId, 0, sizeof( txnmsg.IssuerNetworkId ) );
+				strcpy( txnmsg.IssuerNetworkId, NetworkId );
+							
+			}
+			trace( DEBUG_NORMAL, "Searched Issuer Network as [%s]", txnmsg.IssuerNetworkId );
+			
+			memset( NetworkId, 0, sizeof( NetworkId ) );
+			if( eznetworkselectutil.getNtwk( &txnmsg, "$ACQNTWK", NetworkId ) < 0 )
+			{
+				memset( txnmsg.AcqNetworkId, 0, sizeof( txnmsg.AcqNetworkId ) );
+				strcpy( txnmsg.AcqNetworkId, "*" );
+			}
+			else
+			{
+				memset( txnmsg.AcqNetworkId, 0, sizeof( txnmsg.AcqNetworkId ) );
+				strcpy( txnmsg.AcqNetworkId, NetworkId );
+							
+			}
+			trace( DEBUG_NORMAL, "Searched Acquirer Network as [%s]", txnmsg.AcqNetworkId );
+			
+			memset( NetworkId, 0, sizeof( NetworkId ) );
+			if( eznetworkselectutil.getNtwk( &txnmsg, "$TXFNTWK", NetworkId ) < 0 )
+			{
+				memset( txnmsg.TxfNetworkId, 0, sizeof( txnmsg.TxfNetworkId ) );
+				strcpy( txnmsg.TxfNetworkId, "*" );
+			}
+			else
+			{
+				memset( txnmsg.TxfNetworkId, 0, sizeof( txnmsg.TxfNetworkId ) );
+				strcpy( txnmsg.TxfNetworkId, NetworkId );
+							
+			}
+			trace( DEBUG_NORMAL, "Searched Txf Network as [%s]", txnmsg.TxfNetworkId );
+			
+			memset( NetworkId, 0, sizeof( NetworkId ) );
+			if( eznetworkselectutil.getNtwk( &txnmsg, "$SETTNTWK", NetworkId ) < 0 )
+			{
+				memset( txnmsg.SettNetworkId, 0, sizeof( txnmsg.SettNetworkId ) );
+				strcpy( txnmsg.SettNetworkId, "*" );
+			}
+			else
+			{
+				memset( txnmsg.SettNetworkId, 0, sizeof( txnmsg.SettNetworkId ) );
+				strcpy( txnmsg.SettNetworkId, NetworkId );
+							
+			}
+			trace( DEBUG_NORMAL, "Searched Settlement Network as [%s]", txnmsg.SettNetworkId );
+						
+			memset( NetworkId, 0, sizeof( NetworkId ) );
+			if( eznetworkselectutil.getNtwk( &txnmsg, "$FWDTNTWK", NetworkId ) < 0 )
+			{
+				memset( txnmsg.FwdNetworkId, 0, sizeof( txnmsg.FwdNetworkId ) );
+				strcpy( txnmsg.FwdNetworkId, "*" );
+			}
+			else
+			{
+				memset( txnmsg.FwdNetworkId, 0, sizeof( txnmsg.FwdNetworkId ) );
+				strcpy( txnmsg.FwdNetworkId, NetworkId );
+							
+			}
+			trace( DEBUG_NORMAL, "Searched Forwarding Network as [%s]", txnmsg.FwdNetworkId );
+			
+		}
+		
+		if( !strlen( txnmsg.IssuerInst ) )
+		{
+			memset( txnmsg.IssuerInst, 0, sizeof( txnmsg.IssuerInst ) );
+			strcpy( txnmsg.IssuerInst, "*" );
+		}
+		
+		if( !strlen( txnmsg.AcquirerInst ) )
+		{
+			memset( txnmsg.AcquirerInst, 0, sizeof( txnmsg.AcquirerInst ) );
+			strcpy( txnmsg.AcquirerInst, "*" );
+		}
+		
+		if( !strlen( txnmsg.TxfInst ) )
+		{
+			memset( txnmsg.TxfInst, 0, sizeof( txnmsg.TxfInst ) );
+			strcpy( txnmsg.TxfInst, "*" );
+		}
+		
+		if( !strlen( txnmsg.SettInst ) )
+		{
+			memset( txnmsg.SettInst, 0, sizeof( txnmsg.SettInst ) );
+			strcpy( txnmsg.SettInst, "*" );
+		}
+		
+		if( !strlen( txnmsg.ForwardInst ) )
+		{
+			memset( txnmsg.ForwardInst, 0, sizeof( txnmsg.ForwardInst ) );
+			strcpy( txnmsg.ForwardInst, "*" );
+		}
+		
+		if( !strlen( txnmsg.IssuerNetworkId ) )
+		{
+			memset( txnmsg.IssuerNetworkId, 0, sizeof( txnmsg.IssuerNetworkId ) );
+			strcpy( txnmsg.IssuerNetworkId, "*" );
+		}
+		
+		if( !strlen( txnmsg.AcqNetworkId ) )
+		{
+			memset( txnmsg.AcqNetworkId, 0, sizeof( txnmsg.AcqNetworkId ) );
+			strcpy( txnmsg.AcqNetworkId, "*" );
+		}
+		
+		if( !strlen( txnmsg.TxfNetworkId ) )
+		{
+			memset( txnmsg.TxfNetworkId, 0, sizeof( txnmsg.TxfNetworkId ) );
+			strcpy( txnmsg.TxfNetworkId, "*" );
+		}
+		
+		if( !strlen( txnmsg.SettNetworkId ) )
+		{
+			memset( txnmsg.SettNetworkId, 0, sizeof( txnmsg.SettNetworkId ) );
+			strcpy( txnmsg.SettNetworkId, "*" );
+		}
+		
+		if( !strlen( txnmsg.FwdNetworkId ) )
+		{
+			memset( txnmsg.FwdNetworkId, 0, sizeof( txnmsg.FwdNetworkId ) );
+			strcpy( txnmsg.FwdNetworkId, "*" );
+		}
+	
+		if( !strlen( txnmsg.NetworkId ) )
+		{
+			memset( txnmsg.NetworkId, 0, sizeof( txnmsg.NetworkId ) );
+			strcpy( txnmsg.NetworkId, "*" );
+		}
+		
+		memset( txnmsg.SrcChannel, 0, sizeof( txnmsg.SrcChannel ) );
+		strcpy( txnmsg.SrcChannel, GetLastSenderChannelName() );
+		
+		memset( RouteSelectList, 0, sizeof( RouteSelectList ) );
+		if( eztxnrouteinfoutil.getRouteSelectList( &txnmsg, RouteSelectList ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in getting RouteSelect List..Dropping Message");
+			continue;
+		}
+			
+		trace( DEBUG_NORMAL, "Got RouteSelectList[%s]", RouteSelectList );
+		
+		NRoutes = eztxnfldval.getNTokens( RouteSelectList, ',' );
+
+		trace( DEBUG_TEST, "NRoutes[%d]", NRoutes );
+		
+		for( int i = 0; i < NRoutes; i++ )
+		{
+			memset( RouteSelectId, 0, sizeof( RouteSelectId ) );
+			eztxnfldval.getTokenExSpaces( RouteSelectList, RouteSelectId, ',', i + 1 );
+			
+			trace( DEBUG_TEST, "Reading RouteSelectId[%s] from EzTxnRouteSelect table", RouteSelectId );
+
+			memset( ChannelName, 0, sizeof( ChannelName ) );
+			memset( MsgTranslateId, 0, sizeof( MsgTranslateId ) );
+			if( eztxnrouteselectutil.readRoutselect( RouteSelectId, MsgTranslateId, ChannelName ) < 0 )
+			{
+				trace( DEBUG_ERROR, "Error in Reading RouteSelectId[%s] in EzTxnRouteSelect Table", RouteSelectId );
+				continue;
+			}
+
+			trace( DEBUG_TEST, "Read ChannelName[%s] MsgTranslateId[%s] from EzTxnRouteSelect for RouteSelectId[%s]",  ChannelName, MsgTranslateId, RouteSelectId );
+			
+			memset( &localtxnmsg, 0, sizeof( struct EzTxnMsg ) );
+			memcpy( &localtxnmsg, &txnmsg, sizeof( struct EzTxnMsg ) );
+							
+			if( strcmp( MsgTranslateId, "*" ) )
+			{
+				if( ezmsgtranslateutil.translateMsg( MsgTranslateId, &localtxnmsg ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Error in Reading MsgTranslateId[%s] from EzMsgTranslate Table", MsgTranslateId );
+					continue;
+				}
+			}
+			
+			if( !strcmp( ChannelName, "$ORGCHANNEL") ) 
+			{
+				if( ( strlen( localtxnmsg.OrgChannel ) ) || ( !strcmp( localtxnmsg.OrgChannel, "*" ) ) )
+				{
+					trace( DEBUG_ERROR, "Originating Channel is NULL..Cannot Route Message to Originating Channel");
+					continue;
+				}
+				memset( ChannelName, 0, sizeof( ChannelName ) );
+				strcpy( ChannelName, localtxnmsg.OrgChannel );
+				
+				if( ( strlen( localtxnmsg.OrgPort ) ) || ( !strcmp( localtxnmsg.OrgPort, "*" ) ) )
+				{
+					trace( DEBUG_ERROR, "Originating Port is NULL..Cannot Route Message to Originating Port");
+					continue;
+				}
+				memset( localtxnmsg.DestPort, 0, sizeof( localtxnmsg.DestPort ) );
+				strcpy( localtxnmsg.DestPort, localtxnmsg.OrgPort );
+			}
+			else if ( ( !strcmp( ChannelName, "$ISSNTWK" ) ) || ( !strcmp( ChannelName, "$ACQNTWK" ) ) || ( !strcmp( ChannelName, "$SETTNTWK" ) ) || ( !strcmp( ChannelName, "$FWDNTWK" ) ) || ( !strcmp( ChannelName, "$TXFNTWK" ) ) )
+			{
+				trace( DEBUG_TEST, "RouteSelectId[%s] is a Network....", RouteSelectId );
+				
+				if ( !strcmp( ChannelName, "$ISSNTWK" ) )
+				{
+					if( eznetworkutil.readNetworkMemory( localtxnmsg.IssuerNetworkId ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Reading Issuer NetworkId[%s] from NetworkMemory Table", localtxnmsg.IssuerNetworkId );
+						continue;
+					}
+					memset( localtxnmsg.NetworkId, 0, sizeof( localtxnmsg.NetworkId ) );
+					strcpy( localtxnmsg.NetworkId, localtxnmsg.IssuerNetworkId );
+				}
+				else if ( !strcmp( ChannelName, "$ACQNTWK" ) )
+				{
+					if( eznetworkutil.readNetworkMemory( localtxnmsg.AcqNetworkId ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Reading Issuer NetworkId[%s] from NetworkMemory Table", localtxnmsg.AcqNetworkId );
+						continue;
+					}
+					memset( localtxnmsg.NetworkId, 0, sizeof( localtxnmsg.NetworkId ) );
+					strcpy( localtxnmsg.NetworkId, localtxnmsg.AcqNetworkId );
+				}	
+				else if ( !strcmp( ChannelName, "$FORWARDNTWK" ) )
+				{
+					if( eznetworkutil.readNetworkMemory( localtxnmsg.FwdNetworkId ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Reading Issuer NetworkId[%s] from NetworkMemory Table", localtxnmsg.FwdNetworkId );
+						continue;
+					}
+					memset( localtxnmsg.NetworkId, 0, sizeof( localtxnmsg.NetworkId ) );
+					strcpy( localtxnmsg.NetworkId, localtxnmsg.FwdNetworkId );
+				}
+				else if ( !strcmp( ChannelName, "$TXFNTWK" ) )
+				{
+					if( eznetworkutil.readNetworkMemory( localtxnmsg.TxfNetworkId ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Reading Issuer NetworkId[%s] from NetworkMemory Table", localtxnmsg.TxfNetworkId );
+						continue;
+					}
+					memset( localtxnmsg.NetworkId, 0, sizeof( localtxnmsg.NetworkId ) );
+					strcpy( localtxnmsg.NetworkId, localtxnmsg.TxfNetworkId );
+				}
+				else if ( !strcmp( ChannelName, "$SETTNTWK" ) )
+				{
+					if( eznetworkutil.readNetworkMemory( localtxnmsg.SettNetworkId ) < 0 )
+					{
+						trace( DEBUG_ERROR, "Error in Reading Issuer NetworkId[%s] from NetworkMemory Table", localtxnmsg.SettNetworkId );
+						continue;
+					}
+					memset( localtxnmsg.NetworkId, 0, sizeof( localtxnmsg.NetworkId ) );
+					strcpy( localtxnmsg.NetworkId, localtxnmsg.SettNetworkId );
+				}
+				
+				memset( ChannelName, 0, sizeof( ChannelName ) );
+				strcpy( ChannelName, eznetworkutil.getNetworkChannelName() );
+				
+				memset( localtxnmsg.DestPort, 0, sizeof( localtxnmsg.DestPort ) );
+				strcpy( localtxnmsg.DestPort, eznetworkutil.getNetworkPortName() );
+				
+				if( eznetworkpropertyutil.readEzNetworkProperty( eznetworkutil.getNetworkPropertyId() ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Error in reading EzNetworkProperty for NetworkPropertyId[%s]", eznetworkutil.getNetworkPropertyId() );
+					continue;
+				}
+				
+				if( eznetworkpropertyutil.isKeyReq() )
+				{
+					trace( DEBUG_ERROR, "Need to translate PIN Block for NetworkId[%s]", localtxnmsg.IssuerNetworkId ) ;
+				}
+				EventTimeOut = eznetworkutil.getNetworkTimeOut();
+			}
+			if( ezmsgtypepropertyutil.isTxnMsg() )
+			{
+				/*if( eztxnmsgvalidator.CheckTxnMsgConfig( &localtxnmsg ) < 0 )
+				{
+					trace( DEBUG_ERROR, "CheckTxnMsgConfig()...Failed..Dropping Message");
+					continue;
+				}
+				*/
+				if( eztxnrouteselectutil.isInsertTxnLog() )
+				{
+					trace( DEBUG_TEST, "Need to Insert the Message in EzTxnLog Table" );
+				}
+				else if ( eztxnrouteselectutil.isUpdateTxnLog() )
+				{
+					trace( DEBUG_TEST, "Need to Update the Message in EzTxnLog Table" );
+				}
+			}
+			
+			if( ezchannelpropertyutil.readChannelProperty( ChannelName ) < 0 )
+			{
+				trace( DEBUG_ERROR, "Error in Reading ChannelName[%s] in EzChannelProperty Table", ChannelName );
+				continue;
+			}
+			
+			if( strcmp( ChannelName, "*" ) )
+			{
+				trace( DEBUG_NORMAL, "Need to Route the Message to Channel[%s]", ChannelName );
+				if( WriteChannel( ChannelName, ( char * ) &localtxnmsg, sizeof( struct EzTxnMsg ) ) < 0 )
+				{
+					trace( DEBUG_ERROR, "Error in Writing Message to Channel[%s]", ChannelName );
+					continue;
+				}
+				
+				trace( DEBUG_NORMAL, "Written Successfully Message to Channel[%s]", ChannelName );
+				
+				if( ( ezeventpropertyutil.isEventReq( ChannelName, localtxnmsg.MsgType, localtxnmsg.TxnCode, localtxnmsg.RespCode ) ) && ( ezmsgtypepropertyutil.isTxnMsg() ) )
+				{
+					trace( DEBUG_NORMAL, "Event Required for ChannelName[%s] MsgType[%d] TxnCode[%d] RespCode[%d]", ChannelName, localtxnmsg.MsgType, localtxnmsg.TxnCode, localtxnmsg.RespCode );
+					memset( EventId, 0, sizeof( EventId ) );
+					eztxnrefselectutil.getTxnRefNum( &localtxnmsg, EventId );
+					if( !ezchannelpropertyutil.isNetworkChannel() )
+					{
+						trace( DEBUG_TEST, "Channel[%s] is not a Network", ChannelName );
+						EventTimeOut = ezeventpropertyutil.getEventTimeOut();
+						trace( DEBUG_TEST, "EventTimeOut[%d]", EventTimeOut );	
+						trace( DEBUG_NORMAL, "Creating Event with with EventId[%s]....TimeOut[%d]", EventId, EventTimeOut );
+						if( createEvent( EventId, ( char * )&localtxnmsg, sizeof( struct EzTxnMsg ), EventTimeOut ) < 0 )
+							trace( DEBUG_ERROR, "Error in Creating Event with EventId[%s] EventTimeOut[%d]", EventId, EventTimeOut );
+						else
+							trace( DEBUG_ERROR, "Event Created with EventId[%s] EventTimeOut[%d]", EventId, EventTimeOut );
+					}
+				}
+			}
+		}
+	}
+}
+
+int main( int argc, char **argv )
+{
+	EzTxnMgr txnmgrobj;
+	txnmgrobj.initEzTxnMgr( argv[ 0 ] );
+	txnmgrobj.ServiceRequest();
+	return 1;
+}
+

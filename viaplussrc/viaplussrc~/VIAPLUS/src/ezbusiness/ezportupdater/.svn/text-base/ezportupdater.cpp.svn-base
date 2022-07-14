@@ -1,0 +1,149 @@
+#include <ezbusiness/ezportupdater.h>
+
+EzPortUpdater :: EzPortUpdater()
+{
+}
+
+EzPortUpdater :: ~EzPortUpdater()
+{
+}
+
+void EzPortUpdater :: initEzPortUpdater( const char *TaskName )
+{
+	char logpath[ LOG_PATH_SIZE + 1 ];
+
+	memset( logpath, 0, sizeof( logpath ) );
+	sprintf( logpath, "%s/%s/%s", getenv( "EZDIR_HOME" ), "log", "ezportupdater.log" );
+
+	if( openDebug( logpath, TaskName ) < 0 )
+		exit( 0 );
+
+	SetDebug();
+
+	if( InitEzTaskUtil( this ) < 0 )
+	{
+		trace( DEBUG_ERROR,"Error in Initializing EzTaskUtil");
+		trace( DEBUG_ERROR,"^^^^^^^^^^^EzPortUpdater Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		exit( 0 );
+	}
+
+	if( InitEzChannelUtil( this ) < 0 )
+	{
+		trace( DEBUG_ERROR,"Error in Initializing EzChannelUtil" );
+		trace( DEBUG_ERROR,"^^^^^^^^^^^EzPortUpdater Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+
+	if( CreateChannel( PORTUPDATERCHANNEL, TaskName ) < 0 )
+	{
+		trace( DEBUG_ERROR,"Error in Creating EzPortUpdater Channel" );
+		trace( DEBUG_ERROR,"^^^^^^^^^^^EzPortUpdater Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+
+	if( initDBUtil( TaskName, this ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Initializing the EzDBUtil");
+		trace( DEBUG_ERROR,"^^^^^^^^^^^EzPortUpdater Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+
+	if( DBConnect( ) < 0 )
+	{
+		trace( DEBUG_ERROR,"Error in Connecting the Database");
+		trace( DEBUG_ERROR,"^^^^^^^^^^^EzPortUpdater Ended Abnormally^^^^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+
+	TaskInit();
+	initEzSigUtil( this );
+}
+
+void EzPortUpdater :: ServiceRequest()
+{
+	int MsgSize, SqlErr;
+	struct PortStatusDetails portstatus;
+	char tempdate[7];
+	int PortStatus;
+
+	while( 1 )
+	{
+		dbUtilClose();
+		trace( DEBUG_NORMAL,"PortUpdater Waiting for Service Request...." );
+
+		memset( &portstatus, 0, sizeof( struct PortStatusDetails ) );
+		if( ReadMessage( ( char * )&portstatus, &MsgSize ) >= 0 )
+		{
+			trace( DEBUG_NORMAL,"Received Request from channel[%s] for Port[%s]", GetLastSenderChannelName(), portstatus.PortId );
+			memset( tempdate, 0, sizeof( tempdate ) );
+			sprintf( tempdate, "%06d", portstatus.Date );
+
+			dbUtilConnect();
+
+			SqlErr = readPortStatus( portstatus.PortId, &PortStatus );
+			if( SqlErr == 3114 )
+			{
+				if( DBConnect() < 0 )
+				{
+					trace( "Error in Connecting with Database...." );
+					continue;
+				}
+				SqlErr = readPortStatus( portstatus.PortId, &PortStatus );
+			}
+
+			if( SqlErr != 0 )
+			{
+				trace( "Error in Reading PortStatus for PortId[%s]..OraErr[%05d]", portstatus.PortId, SqlErr );
+				continue;
+			}
+
+			if( PortStatus != portstatus.Status )
+			{
+				SqlErr =  updatePortStatus( portstatus.PortId, portstatus.Status, tempdate, portstatus.Time );
+				if( SqlErr == 3114 )
+				{
+					if( DBConnect() < 0 )
+					{
+						trace( "Error in Connecting with Database...." );
+						continue;
+					}
+					SqlErr =  updatePortStatus( portstatus.PortId, portstatus.Status, tempdate, portstatus.Time );
+				}
+				if( SqlErr != 0 )
+				{
+					trace( DEBUG_ERROR,"Error in updating PortStatus for PortId[%s] OraErr[%05d]", portstatus.PortId, SqlErr );
+					continue;
+				}
+			}
+
+			SqlErr =  insertPortHist( portstatus.PortId, portstatus.Status, tempdate, portstatus.Time );
+			if( SqlErr == 3114 )
+			{
+				if( DBConnect() < 0 )
+				{
+					trace( "Error in Connecting with Database...." );
+					continue;
+				}
+				SqlErr =  insertPortHist( portstatus.PortId, portstatus.Status, tempdate, portstatus.Time );
+			}
+			if( SqlErr != 0 )
+			{
+				trace( DEBUG_ERROR,"Error in Inserting PortStatus for PortId[%s] OraErr[%05d]", portstatus.PortId, SqlErr );
+				continue;
+			}
+		}
+	}
+}
+
+int main( int argc, char **argv )
+{
+	EzPortUpdater ezportupdater_obj;
+	ezportupdater_obj.initEzPortUpdater( argv[ 0 ] );
+	ezportupdater_obj.ServiceRequest();
+	return 1;
+}

@@ -1,0 +1,1923 @@
+#include<sqlca.h>
+#include<stdlib.h>
+#include<string.h>
+#include<stdio.h>
+#include<ezbusiness/ezatmmgrtypes.h>
+#include<ezbusiness/ezatmejtypes.h>
+#include<ezbusiness/ezbusinesstypes.h>
+#include <ezdb/ezatmproperty.h>
+#include <ezdb/ezatmactionproperty.h>
+
+
+int getAtmCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+        int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZATMINFO;
+    if ( sqlca.sqlcode != 0 )
+    {
+    	*SqlErr = sqlca.sqlcode;
+    	return -1;
+    }
+    else
+        return reccount;
+}
+
+int getInstAtmCount( const char *InstId, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+        int reccount;
+        char hInstId[ 13 ];
+    EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR hInstId IS STRING(17);	
+	
+	memset( hInstId, 0, sizeof( hInstId ) );
+	strcpy( hInstId, InstId );
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZATMINFO WHERE RTRIM(ACQUIRERINST)=:hInstId;
+    if ( sqlca.sqlcode != 0 )
+    {
+    	*SqlErr = sqlca.sqlcode;
+    	return -1;
+    }
+    else
+        return reccount;
+}
+
+int getAtmFitCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+    	int reccount;
+	EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZATMFIT;
+    if ( sqlca.sqlcode != 0 )
+    {
+    	*SqlErr = sqlca.sqlcode;
+    	return -1;
+    }
+    else
+        return reccount;
+}
+
+int getAtmEjCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+            int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZATMEJINFO;
+    
+    if ( sqlca.sqlcode != 0 )
+    {
+    	*SqlErr = sqlca.sqlcode;
+    	return -1;
+    }
+    else
+        return reccount;
+}
+
+int getAtmPropertyCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZATMPROPERTY;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int getAtmActionPropertyCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZATMACTIONPROPERTY;
+    
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int getAtmStatusCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+        int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZATMSTATUSDESC;
+    if ( sqlca.sqlcode != 0 )
+    {
+    	*SqlErr = sqlca.sqlcode;
+    	return -1;
+    }
+    else
+        return reccount;
+}
+
+int LoadAtmId( struct AtmMemoryTable *atmptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char hAtmId[ 17 ];
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+
+	EXEC SQL VAR hAtmId IS STRING(17);
+
+	EXEC SQL DECLARE atmid_cur CURSOR FOR
+    SELECT
+    	RTRIM(ATMID)	
+    FROM EZATMINFO;
+		
+	EXEC SQL OPEN atmid_cur;
+
+	while( 1 )
+	{
+		memset( hAtmId, 0, sizeof( hAtmId ) );
+		
+		EXEC SQL FETCH atmid_cur INTO
+		:hAtmId;
+
+		if ( sqlca.sqlcode != 0 )
+			break;
+       
+		if ( sqlca.sqlcode == 1403 )
+            break;
+                	
+		memset( ( atmptr + i )->AtmId, 0, sizeof( ( atmptr + i )->AtmId ) );
+		strcpy( ( atmptr+ i )->AtmId, hAtmId );
+				
+		i++;
+	}
+	
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE atmid_cur;	
+		
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int LoadAtm( struct AtmTableInfo *atminfo_ptr, char *atmid )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char hAtmId[ 17 ];
+		char hAtmTypeId[ 17 ];
+		char hAtmLogicalGroup[ 17 ];
+		int  hMerchantId;
+		char hTerminalId[ 17 ];
+		char hAtmLocation[ 41 ];
+		char hAcquirerInst[ 13 ];
+		char hAcquirerBranchCode[ 13 ];
+		int  hAtmConfigId;
+		char hLoggingFlag;
+		char hPinVerFlag;
+		char hAtmStatus;
+		char hAtmMasterKey[ 65 ];
+		char hAtmCommKey[ 65 ];
+		int  hAtmKeyLen;
+		int  hMaxNoteDisp;
+		int  hMaxAmountDisp;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR hAtmId IS STRING(17);	
+	EXEC SQL VAR hAtmTypeId IS STRING(17);	
+	EXEC SQL VAR hAtmLogicalGroup IS STRING(17);
+	EXEC SQL VAR hTerminalId IS STRING(17);
+	EXEC SQL VAR hAtmLocation IS STRING(33);
+	EXEC SQL VAR hAcquirerInst IS STRING(13);
+	EXEC SQL VAR hAcquirerBranchCode IS STRING(13);
+	EXEC SQL VAR hAtmMasterKey IS STRING(65);
+	EXEC SQL VAR hAtmCommKey IS STRING(65);
+	
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	memset( hAtmTypeId, 0, sizeof( hAtmTypeId ) );		
+	memset( hAtmLogicalGroup, 0, sizeof( hAtmLogicalGroup ) );
+	memset( hAtmLocation, 0, sizeof( hAtmLocation ) );
+	memset( hTerminalId, 0, sizeof( hTerminalId ) );
+	memset( hAcquirerInst, 0, sizeof( hAcquirerInst ) );
+	memset( hAcquirerBranchCode, 0, sizeof( hAcquirerBranchCode ) );
+	memset( hAtmMasterKey, 0, sizeof( hAtmMasterKey ) );
+	memset( hAtmCommKey, 0, sizeof( hAtmCommKey ) );
+	
+	strcpy( hAtmId, atmid );
+	
+	EXEC SQL SELECT
+        RTRIM(ATMTYPEID),
+		RTRIM(ATMLOGICALGROUP),
+		MERCHANTID,
+		RTRIM(TERMINALID),
+		RTRIM(ATMLOCATION),
+		RTRIM(ACQUIRERINST),
+		RTRIM(ACQUIRERBRANCHCODE),
+		ATMCONFIGID,
+		LOGGINGFLAG,
+		PINVERFLAG,
+		ATMSTATUS,
+		RTRIM(ATMMASTERKEY),
+		RTRIM(ATMCOMMKEY),
+		ATMKEYLEN,
+		MAXNOTEDISP,
+		MAXAMOUNTDISP
+	INTO
+		:hAtmTypeId,
+		:hAtmLogicalGroup,
+		:hMerchantId,
+		:hTerminalId,
+		:hAtmLocation,
+		:hAcquirerInst,
+		:hAcquirerBranchCode,
+		:hAtmConfigId,
+		:hLoggingFlag,
+		:hPinVerFlag,
+		:hAtmStatus,
+		:hAtmMasterKey,
+		:hAtmCommKey,
+		:hAtmKeyLen,
+		:hMaxNoteDisp,
+		:hMaxAmountDisp
+	FROM EZATMINFO WHERE RTRIM(ATMID) = :hAtmId;
+		
+	if( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+		
+   	strcpy( atminfo_ptr->AtmTypeId, hAtmTypeId );
+	strcpy( atminfo_ptr->AtmLogicalGroup, hAtmLogicalGroup );
+	atminfo_ptr->MerchantId = hMerchantId;
+	strcpy( atminfo_ptr->TerminalId, hTerminalId );
+	strcpy( atminfo_ptr->AtmLocation, hAtmLocation );
+	strcpy( atminfo_ptr->AcquirerInst, hAcquirerInst );
+	strcpy( atminfo_ptr->AcquirerBranchCode, hAcquirerBranchCode );
+	atminfo_ptr->AtmConfigId = hAtmConfigId;
+	atminfo_ptr->LoggingFlag = hLoggingFlag;
+	atminfo_ptr->PinVerFlag = hPinVerFlag;
+	atminfo_ptr->AtmStatus = hAtmStatus;
+	strcpy( atminfo_ptr->AtmMasterKey, hAtmMasterKey );
+	strcpy( atminfo_ptr->AtmCommKey, hAtmCommKey );
+	atminfo_ptr->AtmKeyLen = hAtmKeyLen;
+	atminfo_ptr->MaxNoteDisp = hMaxNoteDisp;
+	atminfo_ptr->MaxAmountDisp = hMaxAmountDisp; 
+	return sqlca.sqlcode;
+	
+}
+
+int LoadAtmFitDetails( struct AtmFit *atmfit_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[ 17 ];
+		char InstId[ 13 ];
+		char AtmLogicalGroup[ 17 ];
+		char AtmId[ 17 ];
+		char SecurityId[ 11 ];
+		char FitRecord[ 11 ];
+		char IndirectState;
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR AtmLogicalGroup IS STRING(17);
+	EXEC SQL VAR AtmId IS STRING(17);
+	EXEC SQL VAR SecurityId IS STRING(11);
+	EXEC SQL VAR FitRecord IS STRING(11);
+		
+	EXEC SQL DECLARE atmfit_cur CURSOR FOR
+        SELECT
+        	RTRIM(RECORDID),
+           	RTRIM(INSTID),
+			RTRIM(ATMLOGICALGROUP),
+			RTRIM(ATMID),
+			RTRIM(SECURITYID),
+			RTRIM(FITRECORD),
+			INDIRECTSTATE
+	    FROM EZATMFIT;
+		
+	EXEC SQL OPEN atmfit_cur;
+	
+	while( 1 )
+	{
+		memset( RecordId, 0, sizeof( RecordId ) );
+		memset( InstId, 0, sizeof( InstId ) );
+		memset( AtmLogicalGroup, 0, sizeof( AtmLogicalGroup ) );
+		memset( FitRecord, 0, sizeof( FitRecord ) );
+		memset( SecurityId, 0, sizeof( SecurityId ) );
+		memset( AtmId, 0, sizeof( AtmId ) );
+		
+		EXEC SQL FETCH atmfit_cur INTO
+			:RecordId,
+			:InstId,
+			:AtmLogicalGroup,
+			:AtmId,
+			:SecurityId,
+			:FitRecord,
+			:IndirectState;
+		
+		if( sqlca.sqlcode == 1403 )
+			break;
+        		
+		if( sqlca.sqlcode != 0 )
+		   	break;
+                        
+		memset( atmfit_ptr + i, 0, sizeof( struct AtmFit ) );
+		strcpy( ( atmfit_ptr + i )->RecordId, RecordId );
+		strcpy( ( atmfit_ptr + i )->InstId, InstId );
+		strcpy( ( atmfit_ptr + i )->AtmLogicalGroup, AtmLogicalGroup );
+		strcpy( ( atmfit_ptr + i )->AtmId, AtmId );
+		strcpy( ( atmfit_ptr + i )->SecurityId, SecurityId );
+		strcpy( ( atmfit_ptr + i )->FitRecord, FitRecord );
+		( atmfit_ptr + i )->IndirectState = IndirectState;
+		
+		i++;
+	}
+
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE atmfit_cur;	
+
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;
+}
+
+int LoadAtmPropertyTable( struct EzAtmProperty *ezatmproperty_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		int	 hRecordId;
+		char hInstTerminalGroup[ 17 ];
+		char hAtmLogicalGroup[ 17 ];
+		char hAtmId[ 17 ];
+		char hDownloadCheckReq;
+		char hFingerPrintCheckReq;
+		char hFingerPrintCheckChannel[ 33 ];
+		char hJournalPrinterReq;
+		char hPassbookPrinterReq;
+		char hStatementPrinterReq;
+		char hPartialReversalReq;
+		char hCardReaderModel;
+		char hTxnCode[ 7 ];
+		char hRespCode[ 4 ];
+		char hDecimalPointCheckReq;
+		int  hCurrencyCode;
+		char hDecimalMultiplier;
+ 		int  hCounterRefresh;
+ 		int  hKeyRefresh;
+ 		int  i = 0;
+    EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR hInstTerminalGroup IS STRING(17);
+	EXEC SQL VAR hAtmLogicalGroup IS STRING(17);
+	EXEC SQL VAR hAtmId IS STRING(17);
+	EXEC SQL VAR hFingerPrintCheckChannel IS STRING(33);
+	EXEC SQL VAR hTxnCode IS STRING(7);
+	EXEC SQL VAR hRespCode IS STRING(4);
+	
+	EXEC SQL DECLARE ezatmproperty_cur CURSOR FOR
+    SELECT
+    	RECORDID,
+    	RTRIM(INSTTERMINALGROUP),
+		RTRIM(ATMLOGICALGROUP),
+		RTRIM(ATMID),
+		RTRIM(TXNCODE),
+		RTRIM(RESPCODE),
+		DOWNLOADCHECKREQ,
+		FINGERPRINTCHECKREQ,
+		RTRIM(FINGERPRINTCHECKCHANNEL),
+		JOURNALPRINTERREQ,
+		PASSBOOKPRINTERREQ,
+		STATEMENTPRINTERREQ,
+		PARTIALREVERSALREQ,
+		CARDREADERMODEL,
+		DECIMALPOINTCHECKREQ,
+		CURRENCYCODE,
+		DECIMALMULTIPLIER,
+		COUNTERREFERSH,
+		KEYREFERSH
+	FROM EZATMPROPERTY;
+		
+	EXEC SQL OPEN ezatmproperty_cur;
+
+	while( 1 )
+	{
+		memset( hInstTerminalGroup, 0, sizeof( hInstTerminalGroup ) );
+		memset( hAtmLogicalGroup, 0, sizeof( hAtmLogicalGroup ) );
+		memset( hAtmId, 0, sizeof( hAtmId ) );
+		memset( hFingerPrintCheckChannel, 0, sizeof( hFingerPrintCheckChannel ) );
+		memset( hTxnCode, 0, sizeof( hTxnCode ) );
+		memset( hRespCode, 0, sizeof( hRespCode ) );
+
+		EXEC SQL FETCH ezatmproperty_cur INTO
+			:hRecordId,
+			:hInstTerminalGroup,
+			:hAtmLogicalGroup,
+			:hAtmId,
+			:hTxnCode,
+			:hRespCode,
+			:hDownloadCheckReq,
+			:hFingerPrintCheckReq,
+			:hFingerPrintCheckChannel,
+			:hJournalPrinterReq,
+			:hPassbookPrinterReq,
+			:hStatementPrinterReq,
+			:hPartialReversalReq,
+			:hCardReaderModel,
+			:hDecimalPointCheckReq,
+			:hCurrencyCode,
+			:hDecimalMultiplier,
+			:hCounterRefresh,
+			:hKeyRefresh;
+		
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+		memset( ( ezatmproperty_ptr + i ), 0, sizeof( struct EzAtmProperty ) );
+		( ezatmproperty_ptr + i )->RecordId = hRecordId;
+		strcpy( ( ezatmproperty_ptr + i )->InstTerminalGroup , hInstTerminalGroup );
+		strcpy( ( ezatmproperty_ptr + i )->AtmLogicalGroup, hAtmLogicalGroup );
+		strcpy( ( ezatmproperty_ptr + i )->AtmId, hAtmId );
+		strcpy( ( ezatmproperty_ptr + i )->TxnCode, hTxnCode );
+		strcpy( ( ezatmproperty_ptr + i )->RespCode, hRespCode );
+		( ezatmproperty_ptr + i )->DownloadCheckReq = hDownloadCheckReq;
+		( ezatmproperty_ptr + i )->FingerPrintCheckReq = hFingerPrintCheckReq;
+		strcpy( ( ezatmproperty_ptr + i )->FingerPrintCheckChannel, hFingerPrintCheckChannel );
+		( ezatmproperty_ptr + i )->JournalPrinterReq = hJournalPrinterReq;
+		( ezatmproperty_ptr + i )->PassbookPrinterReq = hPassbookPrinterReq;
+		( ezatmproperty_ptr + i )->StatementPrinterReq = hStatementPrinterReq;
+		( ezatmproperty_ptr + i )->PartialReversalReq = hPartialReversalReq;
+		( ezatmproperty_ptr + i )->CardReaderModel = hCardReaderModel;
+		( ezatmproperty_ptr + i )->DecimalPointCheckReq = hDecimalPointCheckReq;
+		( ezatmproperty_ptr + i )->CurrencyCode = hCurrencyCode;
+		( ezatmproperty_ptr + i )->DecimalMultiplier = hDecimalMultiplier;
+		( ezatmproperty_ptr + i )->CounterRefresh = hCounterRefresh;
+		( ezatmproperty_ptr + i )->KeyRefresh = hKeyRefresh;
+		
+		i++;
+	}
+	
+	*SqlErr = sqlca.sqlcode;
+	
+	EXEC SQL CLOSE ezatmproperty_cur;
+	
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;	
+}
+
+int LoadAtmActionPropertyTable( struct EzAtmActionProperty *ezatmactionproperty_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		int  hRecordId;
+		char hInstTerminalGroup[ 17 ];
+		char hAtmLogicalGroup[ 17 ];
+		char hAtmId[ 17 ];
+		char hStatus[ 11 ];
+		char hSendCommand;
+		char hCommand[ 21 ];
+		char hSendResponse;
+		char hTxnCode[ 7 ];
+		char hRespCode[ 4 ];
+    EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR hInstTerminalGroup IS STRING(17);
+	EXEC SQL VAR hAtmLogicalGroup IS STRING(17);
+	EXEC SQL VAR hAtmId IS STRING(17);
+	EXEC SQL VAR hStatus IS STRING(11);
+	EXEC SQL VAR hCommand IS STRING(21);
+	EXEC SQL VAR hTxnCode IS STRING(7);
+	EXEC SQL VAR hRespCode IS STRING(4);
+	
+	EXEC SQL DECLARE ezatmactionproperty_cur CURSOR FOR
+    SELECT
+    	RECORDID,
+    	RTRIM(INSTTERMINALGROUP),
+		RTRIM(LOGICALGROUPID),
+		RTRIM(ATMID),
+		RTRIM(STATUS),
+		SENDCOMMAND,
+		RTRIM(COMMAND),
+		SENDRESPONSE,
+		RTRIM(TXNCODE),
+		RESPCODE
+	FROM EZATMACTIONPROPERTY;
+		
+	EXEC SQL OPEN ezatmactionproperty_cur;
+
+	while( 1 )
+	{
+		memset( hInstTerminalGroup, 0, sizeof( hInstTerminalGroup ) );
+		memset( hAtmLogicalGroup, 0, sizeof( hAtmLogicalGroup ) );
+		memset( hAtmId, 0, sizeof( hAtmId ) );
+		memset( hStatus, 0, sizeof( hStatus ) );
+		memset( hCommand, 0, sizeof( hCommand ) );
+		memset( hTxnCode, 0, sizeof( hTxnCode ) );
+		memset( hRespCode, 0, sizeof( hRespCode ) );
+
+		EXEC SQL FETCH ezatmactionproperty_cur INTO
+			:hRecordId,
+			:hInstTerminalGroup,
+			:hAtmLogicalGroup,
+			:hAtmId,
+			:hStatus,
+			:hSendCommand,
+			:hCommand,
+			:hSendResponse,
+			:hTxnCode,
+			:hRespCode;
+		
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+		memset( ( ezatmactionproperty_ptr + i ), 0, sizeof( struct EzAtmActionProperty ) );
+		( ezatmactionproperty_ptr + i )->RecordId = hRecordId;
+		strcpy( ( ezatmactionproperty_ptr + i )->InstTerminalGroup , hInstTerminalGroup );
+		strcpy( ( ezatmactionproperty_ptr + i )->AtmLogicalGroup, hAtmLogicalGroup );
+		strcpy( ( ezatmactionproperty_ptr + i )->AtmId, hAtmId );
+		strcpy( ( ezatmactionproperty_ptr + i )->Status, hStatus );
+		( ezatmactionproperty_ptr + i )->SendCommand = hSendCommand;
+		strcpy( ( ezatmactionproperty_ptr + i )->Command, hCommand );
+		( ezatmactionproperty_ptr + i )->SendResponse = hSendResponse;
+		strcpy( ( ezatmactionproperty_ptr + i )->TxnCode, hTxnCode );
+		strcpy( ( ezatmactionproperty_ptr + i )->RespCode, hRespCode );
+		i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezatmactionproperty_cur;
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;	
+}
+
+int LoadAtmStatusTable( struct EzAtmStatus *ezatmstatus_ptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char hStatusCode[ 11 ];
+		char hStatusFlag;
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+	
+	EXEC SQL VAR hStatusCode IS STRING(11);
+	
+	EXEC SQL DECLARE ezatmstatus_cur CURSOR FOR
+    SELECT
+    	RTRIM(STATUSCODE),
+		STATUSFLAG
+	FROM EZATMSTATUSDESC;
+		
+	EXEC SQL OPEN ezatmstatus_cur;
+
+	while( 1 )
+	{
+		memset( hStatusCode, 0, sizeof( hStatusCode ) );
+		
+		EXEC SQL FETCH ezatmstatus_cur INTO
+			:hStatusCode,
+			:hStatusFlag;
+		
+		if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+        
+		memset( ( ezatmstatus_ptr + i ), 0, sizeof( struct EzAtmStatus ) );
+		strcpy( ( ezatmstatus_ptr + i )->StatusCode, hStatusCode );
+		( ezatmstatus_ptr + i )->StatusFlag = hStatusFlag;
+		i++;
+	}
+	*SqlErr = sqlca.sqlcode;
+	EXEC SQL CLOSE ezatmstatus_cur;
+	if( *SqlErr != 1403 )
+		return -1;
+	else
+		return 1;	
+}
+
+int LoadAtmStaticCode( const char *AtmId, char *StaticCode )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char hAtmId[ 17 ];  
+		char hStaticCode[ 101 ];
+		char hDynamicCode[ 101 ];  
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR hAtmId IS STRING( 17 );
+	EXEC SQL VAR hStaticCode IS STRING( 101 );
+	EXEC SQL VAR hDynamicCode IS STRING( 101 );
+
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	strcpy( hAtmId, AtmId );
+	
+	memset( hStaticCode, 0, sizeof( hStaticCode ) );
+	
+	EXEC SQL SELECT  
+		STATICCODE
+	INTO
+		:hStaticCode
+	FROM EZATMSTATUS WHERE TRIM(ATMID)=:hAtmId; 
+	
+	if ( sqlca.sqlcode == 1403 )
+	{
+		memset( hStaticCode, 0, sizeof( hStaticCode ) );
+		memset( hDynamicCode, 0, sizeof( hDynamicCode ) );	
+		strcpy( hStaticCode, "NONE" );
+		strcpy( hDynamicCode, "NONE" );
+		strcpy( StaticCode, hStaticCode );
+		
+		EXEC SQL INSERT INTO EZATMSTATUS
+		( 
+			ATMID, 
+			STATICCODE,
+			DYNAMICCODE, 
+			LOGDATE, 
+			LOGTIME 
+		)
+		VALUES
+		( 
+			:hAtmId, 
+			:hStaticCode,
+			:hDynamicCode, 
+			sysdate,
+			0 
+		);
+		if ( sqlca.sqlcode != 0 )
+    		return ( sqlca.sqlcode );
+		else
+		{
+			EXEC SQL COMMIT; 
+			return ( sqlca.sqlcode );
+		} 
+	}
+	else if ( sqlca.sqlcode != 0 )
+    	return ( sqlca.sqlcode );
+	else
+	{
+		strcpy( StaticCode, hStaticCode );
+		return 0;
+	}
+}
+
+int GetTraceNum( char *AtmId, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+        char hAtmId[ 17 ];
+		int hTraceNum;
+		char hBatchId[ 13 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR hAtmId IS STRING(17);
+	EXEC SQL VAR hBatchId IS STRING(13);
+		
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	memset( hBatchId, 0, sizeof( hBatchId ) );
+	
+	strcpy( hAtmId, AtmId );
+	
+	EXEC SQL SELECT
+		TRACENUM
+	INTO
+		:hTraceNum
+	FROM EZATMDATAINFO WHERE RTRIM(ATMID) = :hAtmId;
+	
+	if( sqlca.sqlcode == 1403 )
+	{
+		hTraceNum = 1;
+		strcpy( hBatchId, "123456789000" );
+		EXEC SQL INSERT INTO EZATMDATAINFO
+		( 
+			ATMID, 
+			TRACENUM,	
+			BATCHID 
+		)
+		VALUES
+		( 
+			:hAtmId, 
+			:hTraceNum,
+			:hBatchId 
+		);
+		
+		if( sqlca.sqlcode != 0 )
+		{
+			*SqlErr = sqlca.sqlcode;
+			return -1;
+		}
+		else
+		{
+			*SqlErr = 0;
+			EXEC SQL COMMIT;
+			if( sqlca.sqlcode != 0 )
+            {
+            	*SqlErr = sqlca.sqlcode;
+                return -1;
+            }
+            else
+            {
+            	*SqlErr = 0;
+                return hTraceNum;
+            }
+		}
+	}
+	else if( sqlca.sqlcode != 0 )
+    {
+    	*SqlErr = sqlca.sqlcode;
+    	return -1;
+    }
+    else
+    {
+    	*SqlErr = 0;
+        return hTraceNum;
+    }
+}
+
+int LoadAtmBatchId( char *AtmId, char *BatchId )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char hAtmId[ 17 ];
+		char hBatchId[ 13 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR hAtmId IS STRING(17);
+	EXEC SQL VAR hBatchId IS STRING(13);
+		
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	memset( hBatchId, 0, sizeof( hBatchId ) );
+	
+	strcpy( hAtmId, AtmId );
+	
+	EXEC SQL SELECT
+		RTRIM(BATCHID)
+	INTO
+		:hBatchId
+	FROM EZATMDATAINFO WHERE RTRIM(ATMID) =:hAtmId;
+	
+	if( sqlca.sqlcode == 0 )
+	{
+		strcpy( BatchId, hBatchId );
+		return sqlca.sqlcode ;
+	}
+	else
+	   return sqlca.sqlcode ;
+}
+
+int LoadAtmDenom( const char *AtmId, struct DenomInfo *denominfoptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char hAtmId[ 17 ];
+		char hDenomId;
+		int  hCassPosition;
+		int  hCurrencyValue;
+		int  hCurrencyCode;
+		char hStatus;
+	EXEC SQL END DECLARE SECTION;
+	int retval = -1;
+	EXEC SQL VAR hAtmId IS STRING(17);
+	
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	strcpy( hAtmId, AtmId );
+	hDenomId = denominfoptr->DenomId;
+	
+	
+	switch( hDenomId )
+	{
+		case 'A':
+			EXEC SQL SELECT	DENOMASTATUS, DENOMAVALUE, DENOMACURRCODE INTO :hStatus, :hCurrencyValue, :hCurrencyCode FROM EZATMINFO WHERE RTRIM(ATMID) =: hAtmId;
+			break;
+			
+		case 'B':
+			EXEC SQL SELECT	DENOMBSTATUS, DENOMBVALUE, DENOMBCURRCODE INTO :hStatus, :hCurrencyValue, :hCurrencyCode FROM EZATMINFO WHERE RTRIM(ATMID) =: hAtmId;
+			break;		
+
+		case 'C':
+			EXEC SQL SELECT	DENOMCSTATUS, DENOMCVALUE, DENOMCCURRCODE INTO :hStatus, :hCurrencyValue, :hCurrencyCode FROM EZATMINFO WHERE RTRIM(ATMID) =: hAtmId;
+			break;		
+
+		case 'D':
+			EXEC SQL SELECT	DENOMDSTATUS, DENOMDVALUE, DENOMDCURRCODE INTO :hStatus, :hCurrencyValue, :hCurrencyCode FROM EZATMINFO WHERE RTRIM(ATMID) =: hAtmId;
+			break;		
+
+		case 'E':
+			EXEC SQL SELECT	DENOMESTATUS, DENOMEVALUE, DENOMECURRCODE INTO :hStatus, :hCurrencyValue, :hCurrencyCode FROM EZATMINFO WHERE RTRIM(ATMID) =: hAtmId;
+			break;		
+
+		case 'F':
+			EXEC SQL SELECT	DENOMFSTATUS, DENOMFVALUE, DENOMFCURRCODE INTO :hStatus, :hCurrencyValue, :hCurrencyCode FROM EZATMINFO WHERE RTRIM(ATMID) =: hAtmId;
+			break;		
+
+		case 'G':
+			EXEC SQL SELECT	DENOMGSTATUS, DENOMGVALUE, DENOMGCURRCODE INTO :hStatus, :hCurrencyValue, :hCurrencyCode FROM EZATMINFO WHERE RTRIM(ATMID) =: hAtmId;
+			break;		
+
+		case 'H':
+			EXEC SQL SELECT	DENOMHSTATUS, DENOMHVALUE, DENOMHCURRCODE INTO :hStatus, :hCurrencyValue, :hCurrencyCode FROM EZATMINFO WHERE RTRIM(ATMID) =: hAtmId;
+			break;		
+			
+		Default:
+			break;		
+	}
+	   
+	if( sqlca.sqlcode == 0 )
+	{
+		denominfoptr->CurrencyValue = hCurrencyValue;
+		denominfoptr->CurrencyCode = hCurrencyCode;
+		denominfoptr->Status = hStatus;
+		retval = sqlca.sqlcode;
+	}
+	else
+	   retval = sqlca.sqlcode;
+	   
+	return retval; 
+}
+
+
+int AddAtmFit( struct AtmFit *Atmfit_ptr, struct AtmFitMsg *Atmfitmsg )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[ 17 ];
+		char InstId[ 13 ];
+		char AtmLogicalGroup[ 17 ];
+		char AtmId[ 17 ];
+		char SecurityId[ 11 ];
+		char FitRecord[ 11 ];
+		char IndirectState;
+		char hInstId[ 11 ];
+		char hAtmLogicalGroup[ 17 ];
+		char hAtmId[ 17 ];
+		char hFitRecord[ 11 ];
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR AtmLogicalGroup IS STRING(17);
+	EXEC SQL VAR AtmId IS STRING(17);
+	EXEC SQL VAR SecurityId IS STRING(11);
+	EXEC SQL VAR FitRecord IS STRING(11);
+	EXEC SQL VAR hInstId IS STRING(11);
+	EXEC SQL VAR hAtmLogicalGroup IS STRING(17);
+	EXEC SQL VAR hAtmId IS STRING(17);
+	EXEC SQL VAR hFitRecord IS STRING(11);
+
+	memset( RecordId, 0, sizeof( RecordId ) );
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( AtmLogicalGroup, 0, sizeof( AtmLogicalGroup ) );
+	memset( SecurityId, 0, sizeof( SecurityId ) );
+	memset( AtmId, 0, sizeof( AtmId ) );
+	memset( FitRecord, 0, sizeof( FitRecord ) );
+	
+	memset( hInstId, 0, sizeof( hInstId ) );
+	memset( hAtmLogicalGroup, 0, sizeof( hAtmLogicalGroup ) );
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	memset( hFitRecord, 0, sizeof( hFitRecord ) );
+	
+	strcpy( hInstId, Atmfitmsg->InstId );
+	strcpy( hFitRecord, Atmfitmsg->FitRecord );
+	
+			
+	EXEC SQL SELECT
+			RTRIM(RECORDID),
+           	RTRIM(INSTID),
+			RTRIM(AtmLogicalGroup),
+			RTRIM(ATMID),
+			RTRIM(SECURITYID),
+			INDIRECTSTATE
+	INTO
+			:RecordId,
+			:InstId,
+			:AtmLogicalGroup,
+			:AtmId,
+			:SecurityId,
+			:IndirectState
+	FROM EZATMFIT WHERE ( RTRIM(INSTID)=:hInstId AND RTRIM(FITRECORD)=:hFitRecord );		
+		
+	if ( sqlca.sqlcode != 0 )
+    {
+	  	return sqlca.sqlcode;
+    }
+    else
+    {
+		strcpy( Atmfit_ptr->RecordId, RecordId );
+	   	strcpy( Atmfit_ptr->InstId, InstId );
+    	strcpy( Atmfit_ptr->AtmLogicalGroup, AtmLogicalGroup );
+    	strcpy( Atmfit_ptr->AtmId, AtmId );
+    	strcpy( Atmfit_ptr->FitRecord, hFitRecord );
+    	strcpy( Atmfit_ptr->SecurityId, SecurityId );
+    	Atmfit_ptr->IndirectState = IndirectState; 
+        return sqlca.sqlcode;
+    }
+}
+
+int InsertATMStatus( char *StaticCode, char *DynamicCode, char *AtmId, char *Date, char *Time )
+{	
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char hAtmId[ 17 ];  
+		char hDate[ 7 ];  
+		char hTime[ 7 ];  
+		char hDynamicCode[ 101 ];
+		char hStaticCode[ 101 ];  
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR hAtmId IS STRING( 17 );
+	EXEC SQL VAR hDate IS STRING( 7 );
+	EXEC SQL VAR hTime IS STRING( 7 );
+	EXEC SQL VAR hDynamicCode IS STRING( 101 );
+	EXEC SQL VAR hStaticCode IS STRING( 101 );
+
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	memset( hDate, 0, sizeof( hDate ) );
+	memset( hTime, 0, sizeof( hTime ) );
+	memset( hStaticCode, 0, sizeof( hStaticCode ) );
+	memset( hDynamicCode, 0, sizeof( hDynamicCode ) );
+	
+	strcpy( hAtmId, AtmId );
+	strcpy( hDate, Date );
+	strcpy( hTime, Time );
+	strcpy( hDynamicCode, DynamicCode );
+	if( strlen( StaticCode ) != 0 )
+		strcpy( hStaticCode, StaticCode );
+	else
+		strcpy( hStaticCode, "NONE" );
+
+	EXEC SQL INSERT INTO EZATMSTATUSHIST
+	( 
+		ATMID, 
+		STATICCODE,
+		DYNAMICCODE, 
+		LOGDATE, 
+		LOGTIME 
+	)
+	VALUES
+	( 
+		:hAtmId, 
+		:hStaticCode,
+		:hDynamicCode, 
+		to_date( :hDate, 'dd-mm-yy' ),
+		:hTime 
+	); 
+	if ( sqlca.sqlcode != 0 )
+    	return ( sqlca.sqlcode );
+	else
+	{
+		EXEC SQL COMMIT; 
+		return ( sqlca.sqlcode );
+	}	
+}
+
+int UpdateATMStatus( char *StaticCode, char *DynamicCode, char *AtmId, char *Date, char *Time )
+{	
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char hAtmId[ 17 ];  
+		char hDate[ 7 ];  
+		char hTime[ 7 ];
+		char hDynamicCode[ 101 ];  
+		char hStaticCode[ 101 ];
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR hAtmId IS STRING( 17 );
+	EXEC SQL VAR hDate IS STRING( 7 );
+	EXEC SQL VAR hTime IS STRING( 7 );
+	EXEC SQL VAR hStaticCode IS STRING( 101 );
+	EXEC SQL VAR hDynamicCode IS STRING( 101 );
+
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	memset( hDate, 0, sizeof( hDate ) );
+	memset( hTime, 0, sizeof( hTime ) );
+	memset( hStaticCode, 0, sizeof( hStaticCode ) );
+	memset( hDynamicCode, 0, sizeof( hDynamicCode ) );
+	
+	strcpy( hAtmId, AtmId );
+	strcpy( hDate, Date );
+	strcpy( hTime, Time );
+	strcpy( hStaticCode, StaticCode );
+	strcpy( hDynamicCode, DynamicCode );
+
+	EXEC SQL UPDATE EZATMSTATUS SET 
+		DYNAMICCODE=:hDynamicCode,
+		LOGDATE=to_date( :hDate, 'dd-mm-yy' ), 
+		LOGTIME=:hTime 
+	WHERE TRIM(ATMID)=:hAtmId;
+	
+	if ( sqlca.sqlcode != 0 )
+    	return ( sqlca.sqlcode );
+	else
+	{
+		EXEC SQL COMMIT;
+		if ( sqlca.sqlcode != 0 )
+        	return ( sqlca.sqlcode );
+	}
+	
+	if( strlen( hStaticCode ) != 0 )
+	{
+		EXEC SQL UPDATE EZATMSTATUS SET 
+			STATICCODE=:hStaticCode
+		WHERE TRIM(ATMID)=:hAtmId;
+		
+		if ( sqlca.sqlcode != 0 )
+        	return ( sqlca.sqlcode );
+		else
+		{
+			EXEC SQL COMMIT;
+			return ( sqlca.sqlcode );
+		}
+	} 	
+}
+
+int InsertAtmLog( struct LogDetails *logdetails )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char hAtmId[ 17 ];
+		char hAtmMsg[ 1024 ];
+		char hDate[ 7 ];  
+		char hTime[ 7 ];  
+		char hFlag;
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR hAtmId IS STRING( 17 );
+	EXEC SQL VAR hDate IS STRING( 7 );
+	EXEC SQL VAR hTime IS STRING( 10 );
+	EXEC SQL VAR hAtmMsg IS STRING( 1024 );
+	
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	memset( hDate, 0, sizeof( hDate ) );
+	memset( hTime, 0, sizeof( hTime ) );
+	memset( hAtmMsg, 0, sizeof( hAtmMsg ) );
+	
+	strcpy( hAtmId, logdetails->AtmId );
+	strcpy( hDate, logdetails->Date );
+	strcpy( hTime, logdetails->Time );
+	strcpy( hAtmMsg, logdetails->AtmMsg );
+	hFlag = logdetails->Flag;
+
+	EXEC SQL INSERT INTO EZATMLOG
+	( 
+		ATMID ,
+		ATMMSG ,
+		LOGDATE ,
+		LOGTIME ,
+		FLAG 
+	)
+	VALUES 
+	( 
+		:hAtmId,
+		:hAtmMsg,
+		to_date( :hDate, 'dd-mm-yy' ),
+		:hTime,
+		:hFlag
+	); 
+	
+	if ( sqlca.sqlcode != 0 )
+    	return ( sqlca.sqlcode );
+	else
+	{
+		EXEC SQL COMMIT; 
+		return ( sqlca.sqlcode );
+	}	
+}
+
+int InsertAtmDenomHist( struct AtmDenomStatusMsg *atmdenomstatus_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char hAtmId[ 17 ];
+		char hBatchId[ 13 ];
+		char hRefNum[ 13 ];  
+		int hDenom_A_Disp;
+		int hDenom_B_Disp;
+		int hDenom_C_Disp;
+		int hDenom_D_Disp;
+		int hDenom_E_Disp;
+		int hDenom_F_Disp;
+		int hDenom_G_Disp;
+		int hDenom_H_Disp;   
+	    char hResetDate[ 7 ];  
+		char hResetTime[ 7 ];  
+		int i, j;
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR hAtmId IS STRING( 17 );
+	EXEC SQL VAR hBatchId IS STRING( 13 );
+	EXEC SQL VAR hRefNum IS STRING( 13 );
+	EXEC SQL VAR hResetDate IS STRING( 7 );
+	EXEC SQL VAR hResetTime IS STRING( 7 );
+	
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	memset( hBatchId, 0, sizeof( hBatchId ) );
+	memset( hRefNum, 0, sizeof( hRefNum ) );
+	memset( hResetDate, 0, sizeof( hResetDate ) );
+	memset( hResetTime, 0, sizeof( hResetTime ) );
+	
+	strcpy( hAtmId, atmdenomstatus_ptr->AtmId );
+	strcpy( hBatchId, atmdenomstatus_ptr->BatchId );
+	strcpy( hRefNum, atmdenomstatus_ptr->RefNum );
+	strcpy( hResetDate, atmdenomstatus_ptr->ResetDate );
+	strcpy( hResetTime, atmdenomstatus_ptr->ResetTime );
+
+	hDenom_A_Disp = atmdenomstatus_ptr->Denom_A_Disp;
+	hDenom_B_Disp = atmdenomstatus_ptr->Denom_B_Disp;
+	hDenom_C_Disp = atmdenomstatus_ptr->Denom_C_Disp;
+	hDenom_D_Disp = atmdenomstatus_ptr->Denom_D_Disp;
+	hDenom_E_Disp = atmdenomstatus_ptr->Denom_E_Disp;
+	hDenom_F_Disp = atmdenomstatus_ptr->Denom_F_Disp;
+	hDenom_G_Disp = atmdenomstatus_ptr->Denom_G_Disp;
+	hDenom_H_Disp = atmdenomstatus_ptr->Denom_H_Disp;
+	
+	EXEC SQL INSERT INTO EZATMDENOMHIST
+	( 
+		ATMID,
+		BATCHID,
+		REFNUM,
+		DENOM_A_NOTESDISP,
+		DENOM_B_NOTESDISP,
+		DENOM_C_NOTESDISP,
+		DENOM_D_NOTESDISP,
+		DENOM_E_NOTESDISP,
+		DENOM_F_NOTESDISP,
+		DENOM_G_NOTESDISP,
+		DENOM_H_NOTESDISP,
+		LASTRESETDATE,
+		LASTRESETTIME
+	)
+	VALUES 
+	( 
+		:hAtmId,
+		:hBatchId,
+		:hRefNum,
+		:hDenom_A_Disp,
+		:hDenom_B_Disp,
+		:hDenom_C_Disp,
+		:hDenom_D_Disp,
+		:hDenom_E_Disp,
+		:hDenom_F_Disp,
+		:hDenom_G_Disp,
+		:hDenom_H_Disp,
+		to_date( :hResetDate, 'dd-mm-yy' ),
+		:hResetTime
+	);
+	if ( sqlca.sqlcode != 0 )
+    	return ( sqlca.sqlcode );
+	else
+	{
+		EXEC SQL COMMIT;
+		return ( sqlca.sqlcode );
+	} 
+}
+
+int UpdateAtmDenomStatus( struct AtmDenomStatusMsg *atmdenomstatus_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char hAtmId[ 17 ];
+		char hBatchId[ 13 ];
+		char hRefNum[ 13 ];  
+		int hDenom_A_Disp;
+		int hDenom_B_Disp;
+		int hDenom_C_Disp;
+		int hDenom_D_Disp;
+		int hDenom_E_Disp;
+		int hDenom_F_Disp;
+		int hDenom_G_Disp;
+		int hDenom_H_Disp;   
+	    char hResetDate[ 7 ];  
+		char hResetTime[ 7 ];  
+		int i, j;
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR hAtmId IS STRING( 17 );
+	EXEC SQL VAR hBatchId IS STRING( 13 );
+	EXEC SQL VAR hRefNum IS STRING( 13 );
+	EXEC SQL VAR hResetDate IS STRING( 7 );
+	EXEC SQL VAR hResetTime IS STRING( 7 );
+	
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	memset( hBatchId, 0, sizeof( hBatchId ) );
+	memset( hRefNum, 0, sizeof( hRefNum ) );
+	memset( hResetDate, 0, sizeof( hResetDate ) );
+	memset( hResetTime, 0, sizeof( hResetTime ) );
+	
+	strcpy( hAtmId, atmdenomstatus_ptr->AtmId );
+	strcpy( hBatchId, atmdenomstatus_ptr->BatchId );
+	strcpy( hRefNum, atmdenomstatus_ptr->RefNum );
+	strcpy( hResetDate, atmdenomstatus_ptr->ResetDate );
+	strcpy( hResetTime, atmdenomstatus_ptr->ResetTime );
+
+	hDenom_A_Disp = hDenom_B_Disp = hDenom_C_Disp = hDenom_D_Disp = hDenom_E_Disp = hDenom_F_Disp = hDenom_G_Disp = hDenom_H_Disp = 0; 
+		
+	EXEC SQL SELECT 
+		DENOM_A_NOTESDISP,
+		DENOM_B_NOTESDISP,
+		DENOM_C_NOTESDISP,
+		DENOM_D_NOTESDISP,
+		DENOM_E_NOTESDISP,
+		DENOM_F_NOTESDISP,
+		DENOM_G_NOTESDISP,
+		DENOM_H_NOTESDISP
+	INTO 
+		:hDenom_A_Disp,
+		:hDenom_B_Disp,
+		:hDenom_C_Disp,
+		:hDenom_D_Disp,
+		:hDenom_E_Disp,
+		:hDenom_F_Disp,
+		:hDenom_G_Disp,
+		:hDenom_H_Disp
+	FROM EZATMDENOMSTATUS WHERE TRIM(ATMID)=:hAtmId;
+	
+	hDenom_A_Disp += atmdenomstatus_ptr->Denom_A_Disp;
+	hDenom_B_Disp += atmdenomstatus_ptr->Denom_B_Disp;
+	hDenom_C_Disp += atmdenomstatus_ptr->Denom_C_Disp;
+	hDenom_D_Disp += atmdenomstatus_ptr->Denom_D_Disp;
+	hDenom_E_Disp += atmdenomstatus_ptr->Denom_E_Disp;
+	hDenom_F_Disp += atmdenomstatus_ptr->Denom_F_Disp;
+	hDenom_G_Disp += atmdenomstatus_ptr->Denom_G_Disp;
+	hDenom_H_Disp += atmdenomstatus_ptr->Denom_H_Disp;
+	
+	EXEC SQL UPDATE EZATMDENOMSTATUS SET 
+		DENOM_A_NOTESDISP=:hDenom_A_Disp,
+		DENOM_B_NOTESDISP=:hDenom_B_Disp,
+		DENOM_C_NOTESDISP=:hDenom_C_Disp,
+		DENOM_D_NOTESDISP=:hDenom_D_Disp,
+		DENOM_E_NOTESDISP=:hDenom_E_Disp,
+		DENOM_F_NOTESDISP=:hDenom_F_Disp,
+		DENOM_G_NOTESDISP=:hDenom_G_Disp,
+		DENOM_H_NOTESDISP=:hDenom_H_Disp, 
+		LASTRESETDATE=to_date( :hResetDate, 'dd-mm-yy' ),	
+		LASTRESETTIME=:hResetTime	
+	WHERE TRIM(ATMID)=:hAtmId;
+		
+	if ( sqlca.sqlcode != 0 )
+    	return ( sqlca.sqlcode );
+	else
+	{
+		EXEC SQL COMMIT; 
+		return ( sqlca.sqlcode );
+	}	
+}
+
+int TruncateAtmLog()
+{
+	EXEC SQL TRUNCATE TABLE AtmLOG;
+	return sqlca.sqlcode;
+}
+
+int TruncateAtmConnectionHist()
+{
+	EXEC SQL TRUNCATE TABLE AtmCONNECTIVITYHIST;
+	return sqlca.sqlcode;
+}
+
+int TruncateAtmStatusHist()
+{
+	EXEC SQL TRUNCATE TABLE EZATMSTATUSHIST;
+	return sqlca.sqlcode;
+}
+
+
+int UpdateAtmTraceNo( struct AtmTraceNumMsg *devtraceno )
+{	
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char hAtmId[ 17 ];  
+		int	 hTraceNum;	 
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR hAtmId IS STRING( 17 );
+	
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	
+	strcpy( hAtmId, devtraceno->AtmId );
+	hTraceNum = devtraceno->AtmTraceNo;
+		
+	EXEC SQL UPDATE EZATMDATAINFO SET 
+		TRACENUM=:hTraceNum
+	WHERE TRIM(ATMID)=:hAtmId ;
+	if ( sqlca.sqlcode != 0 )
+    	return ( sqlca.sqlcode );
+	else
+	{
+		EXEC SQL COMMIT;
+		return ( sqlca.sqlcode );
+	} 	
+}
+
+int InsertAtmTraceNo( struct AtmTraceNumMsg *devtraceno )
+{	
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char hAtmId[ 17 ];
+		char hBatchId[ 13 ];  
+		int	 hTraceNum;	 
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR hAtmId IS STRING( 17 );
+	EXEC SQL VAR hBatchId IS STRING( 17 );
+	
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	strcpy( hAtmId, devtraceno->AtmId );
+	memset( hBatchId, 0, sizeof( hBatchId ) );
+	strcpy( hBatchId, "123456789123" );
+	
+	hTraceNum = devtraceno->AtmTraceNo;
+	
+	EXEC SQL INSERT INTO EZATMDATAINFO
+	( 
+		ATMID, 
+		TRACENUM,	
+		BATCHID 
+	)
+	VALUES
+	( 
+		:hAtmId, 
+		:hTraceNum,
+		:hBatchId 
+	);
+		
+	if( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	else
+	{
+		EXEC SQL COMMIT;
+	   return ( sqlca.sqlcode );
+	}
+}
+
+
+int updateTritonStatusLog( char *AtmId, struct TritonStatusMsg *StatusMsg )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char Input_AtmId[ 9 ];
+		char hStatusDate[ 7 ];
+		char hStatusTime[ 7 ];
+	    char hPgmVersionNo[ 11 ];
+	    char hTabVersionNo[ 11 ];
+	    char hFirmVersionNo[ 11 ];
+	    char hAlarmChestDoor;
+	    char hAlarmTopDoor;
+	    char hAlarmSupervisor;
+	    char hRPPaper;
+	    char hRPRibbon;
+	    char hJPPaper;
+	    char hJPRibbon;
+	    char hDispNote;
+	    char hRPStatus;
+	    char hJPStatus;
+	    char hDispStatus;
+	    char hCommSystem;
+	    char hCardReader;
+	    char hCardsRetained[ 4 ];
+	    char hErrCode[ 4 ];
+	    char hCassADenom[ 4 ];
+	    char hCassALoaded[ 5 ];
+	    char hCassAMin[ 5 ];
+	    char hCassADisp[ 5 ];
+	    char hCassAReject[ 4 ];
+	    char hCassANotes[ 5 ];
+	    char hCassACash[ 13 ];
+	    char hCassBDenom[ 4 ];
+	    char hCassBLoaded[ 5 ];
+	    char hCassBMin[ 5 ];
+	    char hCassBDisp[ 5 ];
+	    char hCassBReject[ 4 ];
+	    char hCassBNotes[ 5 ];
+	    char hCassBCash[ 13 ];
+	    char hCassCDenom[ 4 ];
+	    char hCassCLoaded[ 5 ];
+	    char hCassCMin[ 5 ];
+	    char hCassCDisp[ 5 ];
+	    char hCassCReject[ 4 ];
+	    char hCassCNotes[ 5 ];
+	    char hCassCCash[ 13 ];
+	    char hCassDDenom[ 4 ];
+	    char hCassDLoaded[ 5 ];
+	    char hCassDMin[ 5 ];
+	    char hCassDDisp[ 5 ];
+	    char hCassDReject[ 4 ];
+		char hCassDNotes[ 5 ];
+		char hCassDCash[ 13 ];
+		char hTotCash[ 13 ];
+	    char hTotNotesPurged[ 4 ];
+	EXEC SQL END DECLARE SECTION;	
+	
+	EXEC SQL VAR Input_AtmId IS STRING(9);
+	EXEC SQL VAR hStatusDate IS STRING(7);
+	EXEC SQL VAR hStatusTime IS STRING(7);
+    EXEC SQL VAR hPgmVersionNo IS STRING(11);
+    EXEC SQL VAR hTabVersionNo IS STRING(11);
+    EXEC SQL VAR hFirmVersionNo IS STRING(11);
+    EXEC SQL VAR hCardsRetained IS STRING(4);
+    EXEC SQL VAR hErrCode IS STRING(4);
+    EXEC SQL VAR hCassADenom IS STRING(4);
+    EXEC SQL VAR hCassALoaded IS STRING(5);
+    EXEC SQL VAR hCassAMin IS STRING(5);
+    EXEC SQL VAR hCassADisp IS STRING(5);
+    EXEC SQL VAR hCassAReject IS STRING(4);
+    EXEC SQL VAR hCassANotes IS STRING(5);
+    EXEC SQL VAR hCassACash IS STRING(13);
+    EXEC SQL VAR hCassBDenom IS STRING(4);
+    EXEC SQL VAR hCassBLoaded IS STRING(5);
+    EXEC SQL VAR hCassBMin IS STRING(5);
+    EXEC SQL VAR hCassBDisp IS STRING(5);
+    EXEC SQL VAR hCassBReject IS STRING(4);
+    EXEC SQL VAR hCassBNotes IS STRING(5);
+    EXEC SQL VAR hCassBCash IS STRING(13);
+    EXEC SQL VAR hCassCDenom IS STRING(4);
+    EXEC SQL VAR hCassCLoaded IS STRING(5);
+    EXEC SQL VAR hCassCMin IS STRING(5);
+    EXEC SQL VAR hCassCDisp IS STRING(5);
+    EXEC SQL VAR hCassCReject IS STRING(4);
+    EXEC SQL VAR hCassCNotes IS STRING(5);
+    EXEC SQL VAR hCassCCash IS STRING(13);
+    EXEC SQL VAR hCassDDenom IS STRING(4);
+    EXEC SQL VAR hCassDLoaded IS STRING(5);
+    EXEC SQL VAR hCassDMin IS STRING(5);
+    EXEC SQL VAR hCassDDisp IS STRING(5);
+    EXEC SQL VAR hCassDReject IS STRING(4);
+	EXEC SQL VAR hCassDNotes IS STRING(5);
+	EXEC SQL VAR hCassDCash IS STRING(13);
+	EXEC SQL VAR hTotCash IS STRING(13);
+    EXEC SQL VAR hTotNotesPurged IS STRING(4);
+
+
+	memset( Input_AtmId, 0, sizeof( Input_AtmId ) );
+	memset( hStatusDate, 0, sizeof( hStatusDate ) );
+	memset( hStatusTime, 0, sizeof( hStatusTime ) );
+    memset( hPgmVersionNo, 0, sizeof( hPgmVersionNo ) );
+    memset( hTabVersionNo, 0, sizeof( hTabVersionNo ) );
+    memset( hFirmVersionNo, 0, sizeof( hFirmVersionNo ) );
+    memset( hCardsRetained, 0, sizeof( hCardsRetained ) );
+    memset( hErrCode, 0, sizeof( hErrCode ) );
+    memset( hCassADenom, 0, sizeof( hCassADenom ) );
+    memset( hCassALoaded, 0, sizeof( hCassALoaded ) );
+    memset( hCassAMin, 0, sizeof( hCassAMin ) );
+    memset( hCassADisp, 0, sizeof( hCassADisp ) );
+    memset( hCassAReject, 0, sizeof( hCassAReject ) );
+    memset( hCassANotes, 0, sizeof( hCassANotes ) );
+    memset( hCassACash, 0, sizeof( hCassACash ) );
+    memset( hCassBDenom, 0, sizeof( hCassBDenom ) );
+    memset( hCassBLoaded, 0, sizeof( hCassBLoaded ) );
+    memset( hCassBMin, 0, sizeof( hCassBMin ) );
+    memset( hCassBDisp, 0, sizeof( hCassBDisp ) );
+    memset( hCassBReject, 0, sizeof( hCassBReject ) );
+    memset( hCassBNotes, 0, sizeof( hCassBNotes ) );
+    memset( hCassBCash, 0, sizeof( hCassBCash ) );
+    memset( hCassCDenom, 0, sizeof( hCassCDenom ) );
+    memset( hCassCLoaded, 0, sizeof( hCassCLoaded ) );
+    memset( hCassCMin, 0, sizeof( hCassCMin ) );
+    memset( hCassCDisp, 0, sizeof( hCassCDisp ) );
+    memset( hCassCReject, 0, sizeof( hCassCReject ) );
+    memset( hCassCNotes, 0, sizeof( hCassCNotes ) );
+    memset( hCassCCash, 0, sizeof( hCassCCash ) );
+    memset( hCassDDenom, 0, sizeof( hCassDDenom ) );
+    memset( hCassDLoaded, 0, sizeof( hCassDLoaded ) );
+    memset( hCassDMin, 0, sizeof( hCassDMin ) );
+    memset( hCassDDisp, 0, sizeof( hCassDDisp ) );
+    memset( hCassDReject, 0, sizeof( hCassDReject ) );
+	memset( hCassDNotes, 0, sizeof( hCassDNotes ) );
+	memset( hCassDCash, 0, sizeof( hCassDCash ) );
+	memset( hTotCash, 0, sizeof( hTotCash ) );
+    memset( hTotNotesPurged, 0, sizeof( hTotNotesPurged ) );
+	
+	strcpy( Input_AtmId, AtmId );
+	strcpy( hStatusDate, StatusMsg->StatusDate );
+	strcpy( hStatusTime, StatusMsg->StatusTime );
+    strcpy( hPgmVersionNo, StatusMsg->PgmVersionNo );
+    strcpy( hTabVersionNo, StatusMsg->TabVersionNo );
+    strcpy( hFirmVersionNo, StatusMsg->FirmVersionNo );
+    strcpy( hCardsRetained, StatusMsg->CardsRetained );
+    strcpy( hErrCode, StatusMsg->ErrCode );
+    strcpy( hCassADenom, StatusMsg->CassADenom );
+    strcpy( hCassALoaded, StatusMsg->CassALoaded );
+    strcpy( hCassAMin, StatusMsg->CassAMin );
+    strcpy( hCassADisp, StatusMsg->CassADisp );
+    strcpy( hCassAReject, StatusMsg->CassAReject );
+    strcpy( hCassANotes, StatusMsg->CassANotes );
+    strcpy( hCassACash, StatusMsg->CassACash );
+    strcpy( hCassBDenom, StatusMsg->CassBDenom );
+    strcpy( hCassBLoaded, StatusMsg->CassBLoaded );
+    strcpy( hCassBMin, StatusMsg->CassBMin );
+    strcpy( hCassBDisp, StatusMsg->CassBDisp );
+    strcpy( hCassBReject, StatusMsg->CassBReject );
+    strcpy( hCassBNotes, StatusMsg->CassBNotes );
+    strcpy( hCassBCash, StatusMsg->CassBCash );
+    strcpy( hCassCDenom, StatusMsg->CassCDenom );
+    strcpy( hCassCLoaded, StatusMsg->CassCLoaded );
+    strcpy( hCassCMin, StatusMsg->CassCMin );
+    strcpy( hCassCDisp, StatusMsg->CassCDisp );
+    strcpy( hCassCReject, StatusMsg->CassCReject );
+    strcpy( hCassCNotes, StatusMsg->CassCNotes );
+    strcpy( hCassCCash, StatusMsg->CassCCash );
+    strcpy( hCassDDenom, StatusMsg->CassDDenom );
+    strcpy( hCassDLoaded, StatusMsg->CassDLoaded );
+    strcpy( hCassDMin, StatusMsg->CassDMin );
+    strcpy( hCassDDisp, StatusMsg->CassDDisp );
+    strcpy( hCassDReject, StatusMsg->CassDReject );
+	strcpy( hCassDNotes, StatusMsg->CassDNotes );
+	strcpy( hCassDCash, StatusMsg->CassDCash );
+	strcpy( hTotCash, StatusMsg->TotCash );
+    strcpy( hTotNotesPurged, StatusMsg->TotNotesPurged );
+    hAlarmChestDoor = StatusMsg->AlarmChestDoor;
+    hAlarmTopDoor = StatusMsg->AlarmTopDoor;
+    hAlarmSupervisor = StatusMsg->AlarmTopDoor;
+    hRPPaper = StatusMsg->RPPaper;
+    hRPRibbon = StatusMsg->RPRibbon;
+    hJPPaper = StatusMsg->JPPaper;
+    hJPRibbon = StatusMsg->JPRibbon;
+    hDispNote = StatusMsg->DispNote;
+    hRPStatus = StatusMsg->RPStatus;
+    hJPStatus = StatusMsg->JPStatus;
+    hDispStatus = StatusMsg->DispStatus;
+    hCommSystem = StatusMsg->CommSystem;
+    hCardReader = StatusMsg->CardReader;
+    
+    
+	EXEC SQL UPDATE TRITONSTATUSLOG SET 
+	PGMVERSIONNO=:hPgmVersionNo, 
+	TABVERSIONNO=:hTabVersionNo,
+	FIRMVERSIONNO=:hFirmVersionNo, 
+	ALARMCHESTDOOR=:hAlarmChestDoor,
+	ALARMTOPDOOR=:hAlarmTopDoor,
+	ALARMSUPERVISOR=:hAlarmSupervisor,
+	RPPAPER=:hRPPaper, 
+	RPRIBBON=:hRPRibbon,
+	JPPAPER=:hJPPaper,
+	JPRIBBON=:hJPRibbon,
+	DISPNOTE=:hDispNote,
+	RPSTATUS=:hRPStatus,
+	JPSTATUS=:hJPStatus,
+	DISPSTATUS=:hDispStatus,
+	COMMSYSTEM=:hCommSystem,
+	CARDREADER=:hCardReader,
+	CARDSRETAINED=:hCardsRetained,
+	ERRCODE=:hErrCode,
+	CASSADENOM=:hCassADenom,
+	CASSALOADED=:hCassALoaded,
+	CASSAMIN=:hCassAMin,
+	CASSADISP=:hCassADisp,
+	CASSAREJECT=:hCassAReject, 
+	CASSANOTES=:hCassANotes,
+	CASSACASH=:hCassACash,	
+	CASSBDENOM=:hCassBDenom,
+	CASSBLOADED=:hCassBLoaded,
+	CASSBMIN=:hCassBMin,
+	CASSBDISP=:hCassBDisp, 
+	CASSBREJECT=:hCassBReject,
+	CASSBNOTES=:hCassBNotes,
+	CASSBCASH=:hCassBCash,	
+	CASSCDENOM=:hCassCDenom,
+	CASSCLOADED=:hCassCLoaded,
+	CASSCMIN=:hCassCMin,
+	CASSCDISP=:hCassCDisp,
+	CASSCREJECT=:hCassCReject,
+	CASSCNOTES=:hCassCNotes,
+	CASSCCASH=:hCassCCash,	
+	CASSDDENOM=:hCassDDenom,
+	CASSDLOADED=:hCassDLoaded,
+	CASSDMIN=:hCassDMin,
+	CASSDDISP=:hCassDDisp,
+	CASSDREJECT=:hCassDReject,
+	CASSDNOTES=:hCassDNotes,
+	CASSDCASH=:hCassDCash,	
+	TOTCASH=:hTotCash,	
+	TOTNOTESPURGED=:hTotNotesPurged,
+	LOGDATE=to_date( :hStatusDate, 'dd-mm-yy' ),
+	LOGTIME=:hStatusTime
+	WHERE RTRIM(AtmID)=:Input_AtmId;
+//	printf("sqlcode[%d]\n", sqlca.sqlcode );
+//	printf("test1\n");
+	if( sqlca.sqlcode == 1403 )
+	{
+		EXEC SQL INSERT INTO TRITONSTATUSLOG VALUES (
+		:Input_AtmId, 
+		:hPgmVersionNo, 
+		:hTabVersionNo,
+		:hFirmVersionNo,
+		:hAlarmChestDoor,
+		:hAlarmTopDoor,
+		:hAlarmSupervisor,
+		:hRPPaper, 
+		:hRPRibbon,
+		:hJPPaper,
+		:hJPRibbon,
+		:hDispNote,
+		:hRPStatus,
+		:hJPStatus,
+		:hDispStatus,
+		:hCommSystem,
+		:hCardReader,
+		:hCardsRetained,
+		:hErrCode,
+		:hCassADenom,
+		:hCassALoaded,
+		:hCassAMin,
+		:hCassADisp,
+		:hCassAReject,
+		:hCassANotes,
+		:hCassACash,
+		:hCassBDenom,
+		:hCassBLoaded,
+		:hCassBMin,
+		:hCassBDisp,
+		:hCassBReject,
+		:hCassBNotes,
+		:hCassBCash,
+		:hCassCDenom,
+		:hCassCLoaded,
+		:hCassCMin,
+		:hCassCDisp,
+		:hCassCReject,
+		:hCassCNotes,
+		:hCassCCash,
+		:hCassDDenom,
+		:hCassDLoaded,
+		:hCassDMin,
+		:hCassDDisp,
+		:hCassDReject,
+		:hCassDNotes,
+		:hCassDCash,
+		:hTotCash,
+		:hTotNotesPurged,
+		to_date( :hStatusDate, 'dd-mm-yy' ),
+		:hStatusTime
+ 		);
+
+		if( sqlca.sqlcode == 0 )
+			EXEC SQL COMMIT;
+	}
+	else
+	{
+		if( sqlca.sqlcode == 0 )
+			EXEC SQL COMMIT;
+	}
+	return sqlca.sqlcode;
+}
+
+int LoadAtmEjDetails( const char *AtmId, struct ATMEjBuffer *atmej_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char hInstId[ INST_SIZE + 1 ];
+		char hAtmId[ ATM_ID_SIZE + 1 ];
+		char hAtmTypeId[ ATM_ID_SIZE + 1 ];
+		char hAtmLogicalGroup[ ATM_ID_SIZE + 1 ];
+		char hAtmStatus;
+		char hAtmEjPortName[ ATM_ID_SIZE + 1 ];
+		char hCurrentFile[ 26 ];
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR hInstId IS STRING(12);
+	EXEC SQL VAR hAtmId IS STRING(17);
+	EXEC SQL VAR hAtmTypeId IS STRING(17);
+	EXEC SQL VAR hAtmLogicalGroup IS STRING(17);
+	EXEC SQL VAR hAtmEjPortName IS STRING(17);
+	EXEC SQL VAR hCurrentFile IS STRING(26);
+	
+	memset( hInstId, 0, sizeof( hInstId ) );
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	memset( hAtmTypeId, 0, sizeof( hAtmTypeId ) );
+	memset( hAtmLogicalGroup, 0, sizeof( hAtmLogicalGroup ) );
+	memset( hAtmEjPortName, 0, sizeof( hAtmEjPortName ) );
+	memset( hCurrentFile, 0, sizeof( hCurrentFile ) );
+	
+	strcpy( hAtmId, AtmId );
+		
+		
+	EXEC SQL SELECT
+			RTRIM(INSTID),
+			RTRIM(ATMTYPEID),
+			RTRIM(LOGICALGROUP),
+			ATMSTATUS,
+			RTRIM(EJPORTNAME),
+			RTRIM(LASTFILENAME)
+	INTO
+			:hInstId,
+			:hAtmTypeId,
+			:hAtmLogicalGroup,
+			:hAtmStatus,
+			:hAtmEjPortName,
+			:hCurrentFile
+	FROM EZATMEJINFO WHERE RTRIM(ATMID)=:hAtmId;		
+	
+	
+	if ( sqlca.sqlcode < 0 )
+    {
+		return sqlca.sqlcode;
+    }
+    else
+    {
+    	memset( atmej_ptr, 0, sizeof( struct ATMEjBuffer ) );
+       	strcpy( atmej_ptr->InstId, hInstId );
+    	strcpy( atmej_ptr->AtmId, hAtmId );
+		strcpy( atmej_ptr->AtmTypeId, hAtmTypeId );
+		strcpy( atmej_ptr->AtmLogicalGroup, hAtmLogicalGroup );
+		strcpy( atmej_ptr->AtmEjPortName, hAtmEjPortName );
+		atmej_ptr->AtmStatus = hAtmStatus;
+		strcpy( atmej_ptr->CurrentFile, hCurrentFile );
+		return sqlca.sqlcode;
+    }
+}
+
+
+int ReadAtmPropertyTable( struct EzAtmProperty *ezatmproperty_ptr, int RecordId )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		int	 hRecordId;
+		char hInstTerminalGroup[ 17 ];
+		char hAtmLogicalGroup[ 17 ];
+		char hAtmId[ 17 ];
+		char hDownloadCheckReq;
+		char hFingerPrintCheckReq;
+		char hFingerPrintCheckChannel[ 33 ];
+		char hJournalPrinterReq;
+		char hPassbookPrinterReq;
+		char hStatementPrinterReq;
+		char hPartialReversalReq;
+		char hCardReaderModel;
+		char hTxnCode[ 7 ];
+		char hRespCode[ 4 ];
+		char hDecimalPointCheckReq;
+		int  hCurrencyCode;
+		char hDecimalMultiplier;
+ 		int  hCounterRefresh;
+ 		int  hKeyRefresh;
+ 	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR hInstTerminalGroup IS STRING(17);
+	EXEC SQL VAR hAtmLogicalGroup IS STRING(17);
+	EXEC SQL VAR hAtmId IS STRING(17);
+	EXEC SQL VAR hFingerPrintCheckChannel IS STRING(33);
+	EXEC SQL VAR hTxnCode IS STRING(7);
+	EXEC SQL VAR hRespCode IS STRING(4);
+	
+	hRecordId = RecordId;
+		
+    EXEC SQL SELECT 
+    	RTRIM(INSTTERMINALGROUP),
+		RTRIM(ATMLOGICALGROUP),
+		RTRIM(ATMID),
+		RTRIM(TXNCODE),
+		RESPCODE,
+		DOWNLOADCHECKREQ,
+		FINGERPRINTCHECKREQ,
+		RTRIM(FINGERPRINTCHECKCHANNEL),
+		JOURNALPRINTERREQ,
+		PASSBOOKPRINTERREQ,
+		STATEMENTPRINTERREQ,
+		PARTIALREVERSALREQ,
+		CARDREADERMODEL,
+		DECIMALPOINTCHECKREQ,
+		CURRENCYCODE,
+		DECIMALMULTIPLIER,
+		COUNTERREFERSH,
+		KEYREFERSH
+	INTO
+		:hInstTerminalGroup,
+		:hAtmLogicalGroup,
+		:hAtmId,
+		:hTxnCode,
+		:hRespCode,
+		:hDownloadCheckReq,
+		:hFingerPrintCheckReq,
+		:hFingerPrintCheckChannel,
+		:hJournalPrinterReq,
+		:hPassbookPrinterReq,
+		:hStatementPrinterReq,
+		:hPartialReversalReq,
+		:hCardReaderModel,
+		:hDecimalPointCheckReq,
+		:hCurrencyCode,
+		:hDecimalMultiplier,
+		:hCounterRefresh,
+		:hKeyRefresh
+	FROM EZATMPROPERTY WHERE RECORDID=:hRecordId;
+		
+	if ( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+    {    
+		memset( ezatmproperty_ptr, 0, sizeof( struct EzAtmProperty ) );
+		ezatmproperty_ptr->RecordId = hRecordId;
+		strcpy( ezatmproperty_ptr->InstTerminalGroup , hInstTerminalGroup );
+		strcpy( ezatmproperty_ptr->AtmLogicalGroup, hAtmLogicalGroup );
+		strcpy( ezatmproperty_ptr->AtmId, hAtmId );
+		strcpy( ezatmproperty_ptr->TxnCode, hTxnCode );
+		strcpy( ezatmproperty_ptr->RespCode, hRespCode );
+		ezatmproperty_ptr->DownloadCheckReq = hDownloadCheckReq;
+		ezatmproperty_ptr->FingerPrintCheckReq = hFingerPrintCheckReq;
+		strcpy( ezatmproperty_ptr->FingerPrintCheckChannel, hFingerPrintCheckChannel );
+		ezatmproperty_ptr->JournalPrinterReq = hJournalPrinterReq;
+		ezatmproperty_ptr->PassbookPrinterReq = hPassbookPrinterReq;
+		ezatmproperty_ptr->StatementPrinterReq = hStatementPrinterReq;
+		ezatmproperty_ptr->PartialReversalReq = hPartialReversalReq;
+		ezatmproperty_ptr->CardReaderModel = hCardReaderModel;
+		ezatmproperty_ptr->DecimalPointCheckReq = hDecimalPointCheckReq;
+		ezatmproperty_ptr->CurrencyCode = hCurrencyCode;
+		ezatmproperty_ptr->DecimalMultiplier = hDecimalMultiplier;
+		ezatmproperty_ptr->CounterRefresh = hCounterRefresh;
+		ezatmproperty_ptr->KeyRefresh = hKeyRefresh;
+		return sqlca.sqlcode;
+	}
+}
+
+int ReadAtmActionPropertyTable( struct EzAtmActionProperty *ezatmactionproperty_ptr, int RecordId )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		int  hRecordId;
+		char hInstTerminalGroup[ 17 ];
+		char hAtmLogicalGroup[ 17 ];
+		char hAtmId[ 17 ];
+		char hStatus[ 11 ];
+		char hSendCommand;
+		char hCommand[ 21 ];
+		char hSendResponse;
+		char hTxnCode[ 7 ];
+		char hRespCode[ 4 ];
+    EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR hInstTerminalGroup IS STRING(17);
+	EXEC SQL VAR hAtmLogicalGroup IS STRING(17);
+	EXEC SQL VAR hAtmId IS STRING(17);
+	EXEC SQL VAR hStatus IS STRING(11);
+	EXEC SQL VAR hCommand IS STRING(21);
+	EXEC SQL VAR hTxnCode IS STRING(7);
+	EXEC SQL VAR hRespCode IS STRING(4);
+	
+	hRecordId = RecordId;
+	
+    EXEC SQL SELECT
+       	RTRIM(INSTTERMINALGROUP),
+		RTRIM(LOGICALGROUPID),
+		RTRIM(ATMID),
+		RTRIM(STATUS),
+		SENDCOMMAND,
+		RTRIM(COMMAND),
+		SENDRESPONSE,
+		RTRIM(TXNCODE),
+		RESPCODE
+	INTO
+		:hInstTerminalGroup,
+		:hAtmLogicalGroup,
+		:hAtmId,
+		:hStatus,
+		:hSendCommand,
+		:hCommand,
+		:hSendResponse,
+		:hTxnCode,
+		:hRespCode
+	FROM EZATMACTIONPROPERTY WHERE RECORDID=:hRecordId;
+		
+	if ( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+    {    
+		memset( ezatmactionproperty_ptr, 0, sizeof( struct EzAtmActionProperty ) );
+		ezatmactionproperty_ptr->RecordId = hRecordId;
+		strcpy( ezatmactionproperty_ptr->InstTerminalGroup , hInstTerminalGroup );
+		strcpy( ezatmactionproperty_ptr->AtmLogicalGroup, hAtmLogicalGroup );
+		strcpy( ezatmactionproperty_ptr->AtmId, hAtmId );
+		strcpy( ezatmactionproperty_ptr->Status, hStatus );
+		ezatmactionproperty_ptr->SendCommand = hSendCommand;
+		strcpy( ezatmactionproperty_ptr->Command, hCommand );
+		ezatmactionproperty_ptr->SendResponse = hSendResponse;
+		strcpy( ezatmactionproperty_ptr->TxnCode, hTxnCode );
+		strcpy( ezatmactionproperty_ptr->RespCode, hRespCode );
+		return sqlca.sqlcode;
+	}
+}
+
+int ReadAtmStatusTable( struct EzAtmStatus *ezatmstatus_ptr, const char *StatusCode )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char hStatusCode[ 11 ];
+		char hStatusFlag;
+    EXEC SQL END DECLARE SECTION;
+
+	memset( hStatusCode, 0, sizeof( hStatusCode ) );
+	strcpy( hStatusCode, StatusCode );
+	
+	EXEC SQL SELECT
+       	STATUSFLAG
+	INTO
+		:hStatusFlag
+	FROM EZATMSTATUSDESC WHERE STATUSCODE=:hStatusCode;
+		
+	if ( sqlca.sqlcode != 0 )
+    	return sqlca.sqlcode;
+    else
+    {    
+		memset( ezatmstatus_ptr, 0, sizeof( struct EzAtmStatus ) );
+		strcpy( ezatmstatus_ptr->StatusCode, hStatusCode );
+		ezatmstatus_ptr->StatusFlag = hStatusFlag;
+		return sqlca.sqlcode;
+	}
+}

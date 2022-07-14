@@ -1,0 +1,241 @@
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+int updateNewConfigId( const char *I_MachineId, const char *I_ConfigId )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char MachineId[ 33 ];  
+		char ConfigId[ 13 ];  
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR MachineId IS STRING( 33 );
+	EXEC SQL VAR ConfigId IS STRING( 13 );
+	
+	memset( MachineId, 0, sizeof( MachineId ) );
+	memset( ConfigId, 0, sizeof( ConfigId ) );
+	
+	strcpy( MachineId, I_MachineId );
+	strcpy( ConfigId, I_ConfigId );
+	
+	EXEC SQL UPDATE EZMMS_TERMINALPROFILE SET CONFIG_ID=:ConfigId WHERE RTRIM(MACHINE_ID)=:MachineId;
+	
+	if ( sqlca.sqlcode != 0 )
+    	return ( sqlca.sqlcode );
+	else
+	{
+		EXEC SQL COMMIT;
+		return ( sqlca.sqlcode );
+	}
+}
+
+int updateTermMasterKeyinTable( const char *I_MachineId, const char *I_TermMasterKey )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+		char MachineId[ 33 ];  
+		char TermMasterKey[ 65 ];  
+	EXEC SQL END DECLARE SECTION ;
+
+	EXEC SQL VAR MachineId IS STRING( 33 );
+	EXEC SQL VAR TermMasterKey IS STRING( 65 );
+	
+	memset( MachineId, 0, sizeof( MachineId ) );
+	memset( TermMasterKey, 0, sizeof( TermMasterKey ) );
+	
+	strcpy( MachineId, I_MachineId );
+	strcpy( TermMasterKey, I_TermMasterKey );
+	
+	EXEC SQL UPDATE EZMMS_TERMINALPROFILE SET 
+		TERM_MASTER_KEY=:TermMasterKey
+	WHERE TRIM(MACHINE_ID)=:MachineId;
+	
+	if ( sqlca.sqlcode != 0 )
+    	return ( sqlca.sqlcode );
+	else
+	{
+		EXEC SQL COMMIT;
+		if ( sqlca.sqlcode != 0 )
+        	return ( sqlca.sqlcode );
+	}
+}
+
+int readInstName( const char *I_InstId, const char *I_InstName )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+    	char InstId[ 13 ];
+		char InstName[ 33 ];
+		short ind_var;
+    EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR InstName IS STRING(33);
+        
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( InstName, 0, sizeof( InstName ) );
+	
+	strcpy( InstId, I_InstId );  
+    	
+	EXEC SQL SELECT 
+		TRIM(INSTNAME)
+	INTO 
+		:InstName
+	FROM EZINSTPROFILE WHERE TRIM(INSTID)=:InstId;
+
+    if ( sqlca.sqlcode != 0 )
+            return sqlca.sqlcode;
+    strcpy( I_InstName, InstName );
+  	return sqlca.sqlcode ;
+}
+
+int readMerchantAddr( const char *I_InstId, const char *I_MerchantId, char *I_MerchantName )
+{
+	 EXEC SQL BEGIN DECLARE SECTION ;
+    	char InstId[ 13 ];
+		char MerchantId[ 16 ];
+		char MerchantName[ 33 ];
+		short ind_var;
+    EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR MerchantName IS STRING(33);
+        
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( MerchantId, 0, sizeof( MerchantId ) );
+	memset( MerchantName, 0, sizeof( MerchantName ) );
+	
+	strcpy( InstId, I_InstId );  
+    strcpy( MerchantId, I_MerchantId );
+	
+	EXEC SQL SELECT 
+		TRIM(MERCHANTNAME)
+	INTO 
+		:MerchantName
+	FROM EZMMSMERCHANTADDR WHERE TRIM(INSTID)=:InstId AND TRIM(MERCHANTID)=:MerchantId;
+
+    if ( sqlca.sqlcode != 0 )
+            return sqlca.sqlcode;
+    strcpy( I_MerchantName, MerchantName );
+  	return sqlca.sqlcode ;
+}
+
+int readStoreAddr( const char *I_InstId, const char *I_MerchantId, const char *I_StoreId, char *I_StoreName, char *I_StoreLocation, char *I_CityName, char *I_CityCode )
+{
+	 EXEC SQL BEGIN DECLARE SECTION ;
+    	char InstId[ 13 ];
+		char MerchantId[ 16 ];
+		char StoreId[ 33 ];
+		char StoreName[ 33 ];
+		char StoreLocation[ 65 ];
+		char CityName[ 33 ];
+		char CityCode[ 17 ];
+		short ind_var;
+    EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR MerchantId IS STRING(16);
+	EXEC SQL VAR StoreId IS STRING(33);
+	EXEC SQL VAR StoreName IS STRING(33);
+	EXEC SQL VAR StoreLocation IS STRING(33);
+	EXEC SQL VAR CityName IS STRING(33);
+	EXEC SQL VAR CityCode IS STRING(33);
+	        
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( MerchantId, 0, sizeof( MerchantId ) );
+	memset( StoreId, 0, sizeof( StoreId ) );
+	memset( StoreName, 0, sizeof( StoreName ) );
+	memset( StoreLocation, 0, sizeof( StoreLocation ) );
+	memset( CityName, 0, sizeof( CityName ) );
+	memset( CityCode, 0, sizeof( CityCode ) );
+	
+	strcpy( InstId, I_InstId );  
+    strcpy( MerchantId, I_MerchantId );
+	strcpy( StoreId, I_StoreId );
+	
+	EXEC SQL SELECT 
+		TRIM(STORENAME),
+		TRIM(STORELOCATION),
+		TRIM(CITYNAME),
+		TRIM(CITYCODE)
+	INTO 
+		:StoreName,
+		:StoreLocation,
+		:CityName,
+		:CityCode
+	FROM EZMMSSTOREADDR WHERE TRIM(INSTID)=:InstId AND TRIM(MERCHANTID)=:MerchantId AND TRIM(STOREID)=:StoreId;
+
+    if ( sqlca.sqlcode != 0 )
+            return sqlca.sqlcode;
+            
+    strcpy( I_StoreName, StoreName );
+    strcpy( I_StoreLocation, StoreLocation );
+    strcpy( I_CityName, CityName );
+    strcpy( I_CityCode, CityCode );
+  	return sqlca.sqlcode ;
+}
+
+int readOperatorInfo( const char *I_InstId, const char *I_MachineId, const char *I_TerminalId, char *OperatorInfo )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char MachineId[ 33 ];
+		char TerminalId[ 9 ];
+		char UserName[ 33 ];
+		char OperatorList[ 254 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING( 13 );
+	EXEC SQL VAR MachineId IS STRING(33);
+	EXEC SQL VAR TerminalId IS STRING(9);
+	EXEC SQL VAR OperatorList IS STRING( 254 );
+	EXEC SQL VAR UserName IS STRING( 33 );
+	
+	memset( InstId, 0, sizeof( InstId ) );
+	strcpy( InstId, I_InstId );
+	memset( MachineId, 0, sizeof( MachineId ) );
+	strcpy( MachineId, I_MachineId );
+	memset( TerminalId, 0, sizeof( TerminalId ) );
+	strcpy( TerminalId, I_TerminalId );
+	
+	memset( OperatorList, 0, sizeof( OperatorList ) );
+	
+	EXEC SQL DECLARE operatorinfo_cur CURSOR FOR
+    SELECT
+    	TRIM(USERNAME)
+    FROM EZMMS_TERMINALUSER WHERE USERMASTERCODE='2' AND TRIM( MACHINEID)=:MachineId AND (TERMINALID)=:TerminalId AND TRIM(INST_ID)=:InstId;
+    
+    EXEC SQL OPEN operatorinfo_cur;
+   
+    while( 1 )
+    {
+    	memset( UserName, 0, sizeof( UserName ) );
+    	
+    	EXEC SQL FETCH operatorinfo_cur INTO
+    		:UserName;
+    	
+    	if ( sqlca.sqlcode == 1403 )
+        	break;
+		
+		if ( sqlca.sqlcode != 0 )
+        	break;
+    	
+    	if( strlen( OperatorList ) > 1 )
+    	{
+    		strcat( OperatorList, "\x1c" );
+    		strcat( OperatorList, UserName );
+    	}
+    	else
+    	{
+    		strcpy( OperatorList, UserName );
+    	}
+    	
+    	
+    }
+	
+	EXEC SQL CLOSE operatorinfo_cur;
+	
+	strcpy( OperatorInfo, OperatorList );
+	return sqlca.sqlcode; 
+
+}

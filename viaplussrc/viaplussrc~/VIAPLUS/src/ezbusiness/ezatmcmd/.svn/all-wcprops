@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/ezlinkenterprise/!svn/ver/2580/trunk/src/ezbusiness/ezatmcmd
+END
+ezatmcmddb.lis
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/ezlinkenterprise/!svn/ver/2276/trunk/src/ezbusiness/ezatmcmd/ezatmcmddb.lis
+END
+ezatmcmd.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/ezlinkenterprise/!svn/ver/2580/trunk/src/ezbusiness/ezatmcmd/ezatmcmd.cpp
+END
+ezatmcmddb.pc
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/ezlinkenterprise/!svn/ver/2122/trunk/src/ezbusiness/ezatmcmd/ezatmcmddb.pc
+END
+ezatmcmddb.c
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/ezlinkenterprise/!svn/ver/2363/trunk/src/ezbusiness/ezatmcmd/ezatmcmddb.c
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/ezlinkenterprise/!svn/ver/2233/trunk/src/ezbusiness/ezatmcmd/Makefile
+END

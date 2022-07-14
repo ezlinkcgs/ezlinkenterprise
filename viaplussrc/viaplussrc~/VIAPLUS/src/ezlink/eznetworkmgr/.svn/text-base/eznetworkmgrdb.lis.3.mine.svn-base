@@ -1,0 +1,13 @@
+
+Pro*C/C++: Release 10.1.0.3.0 - Production on Wed Jan 28 11:00:58 2009
+
+Copyright (c) 1982, 2004, Oracle.  All rights reserved.
+
+Error at line 1, column 10 in file eznetworkmgrdb.pc
+     1  #include <ezlink/eznetworktypes.h>
+     1  .........1
+     1  PCC-S-02015, unable to open include file
+Error at line 2, column 10 in file eznetworkmgrdb.pc
+     2  #include <ezdb/eznetwork.h>
+     2  .........1
+     2  PCC-S-02015, unable to open include file

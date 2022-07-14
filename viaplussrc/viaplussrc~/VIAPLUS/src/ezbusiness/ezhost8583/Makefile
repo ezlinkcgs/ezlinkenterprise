@@ -1,0 +1,20 @@
+BINDIR=${EZDIR_HOME}/bin
+LIBDIR=${EZDIR_HOME}/lib
+BINARY=EzHost8583
+OBJFILE=ezhost8583.o
+SOURCE=ezhost8583.cpp
+LIBLIST=-lezdebug_util -lezcfg_util -lezsigutil -leztaskutil -lezchannelutil -lezfmt_util -leziso8583util -leznetworkutil -lezechoutil -lezpadssutil -leznetworkfeeutil -lezinstextntwkprofileutil
+INCLUDEDIR=${EZDIR_HOME}/include
+
+${BINARY}	:	${OBJFILE} 
+			g++ ${OBJFILE} -L${LIBDIR} ${LIBLIST} -o ${BINARY}	
+
+${OBJFILE}	:	${SOURCE}
+			g++ -c ${SOURCE} -I${INCLUDEDIR}
+
+install		:
+			mv ${BINARY} ${BINDIR}
+
+clean		:
+			rm *.o
+				

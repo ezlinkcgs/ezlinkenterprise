@@ -1,0 +1,97 @@
+#include <ezbusiness/ezatmejmgr.h>
+
+void *EzAtmEJMgr :: ezatmejmgrobj = 0;
+
+EzAtmEJMgr :: EzAtmEJMgr()
+{
+	ezatmejmgrobj = this;
+}
+
+EzAtmEJMgr :: ~EzAtmEJMgr()
+{
+
+}
+
+int EzAtmEJMgr :: InitEzAtmEJMgr( const char * TaskName )
+{
+	char logpath[ LOG_PATH_SIZE + 1 ];
+	memset( logpath, 0, sizeof( logpath ) );
+	sprintf( logpath, "%s/%s/%s", getenv( "EZDIR_HOME" ), "log", "ezatmejmgr.log"  );
+
+    if( openDebug( logpath, TaskName ) < 0 )
+    	exit( 0  );
+    SetDebug();
+
+    if( InitEzTaskUtil( this ) < 0 )
+    {
+           trace( DEBUG_ERROR, "Error in Initializing EzTaskUtil" );
+           trace( DEBUG_ERROR, "^^^^^^^^^^^EzAtmEJMgr Ended Abnormally^^^^^^^^^^^^^" );
+           closeDebug( );
+           exit( 0  );
+	}
+
+    if( InitEzChannelUtil( this ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Initializing EzChannelUtil"  );
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzAtmEJMgr Ended Abnormally^^^^^^^^^^^^^" );
+	    closeDebug( );
+	    TaskExit( );
+	}
+
+	if( CreateChannel( ATMEJCHANNEL, TaskName ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Creating EzAtmEJMgr Channel"  );
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzAtmEJMgr Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug( );
+		TaskExit( );
+	}
+
+	if( InitEzAtmEjUtil( this ) < 0 )
+	{
+		trace( DEBUG_ERROR, "Error in Initializing the EzAtmEjUtil"  );
+		trace( DEBUG_ERROR, "^^^^^^^^^^^EzAtmEJMgr Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug( );
+		TaskExit( );
+	}
+	TaskInit( );
+	initEzSigUtil( this  );
+}
+
+void EzAtmEJMgr :: ServiceRequest()
+{
+	char ReadBuf[ BUFFER_SIZE + 1 ];
+	char ChannelName[ CHANNEL_NAME_SIZE + 1 ], AtmId[ ATM_ID_SIZE + 1 ];
+	struct EzAtmEjQMsg ezatmejqmsg;
+	int BufSize = 0;
+
+	while( 1 )
+	{
+		trace( DEBUG_NORMAL, "Waiting for Message in EzAtmEJMgr Channel" );
+		memset( ReadBuf, 0, sizeof( ReadBuf ) );
+		if( ReadMessage( ReadBuf, &BufSize ) < 0 )
+		{
+			trace( DEBUG_ERROR, "Error in Reading EzAtmEJMgr Channel" );
+			continue;
+		}
+
+		memset( ChannelName, 0, sizeof( ChannelName ) );
+		strcpy( ChannelName, GetLastSenderChannelName() );
+		trace( DEBUG_NORMAL, "Message of size [%d] Received from Channel[%s]", BufSize, GetLastSenderChannelName() );
+		if( strcmp( ChannelName, "ezejcmd" ) )
+		{
+			memset( &ezatmejqmsg, 0, sizeof( struct EzAtmEjQMsg ) );
+			if( BuildAndPostCommand( &ezatmejqmsg ) < 0 )
+			{
+				trace( DEBUG_ERROR,"Failed in BuildAndPostCommand");
+			}
+		}
+	}
+}
+
+int main( int argc, char **argv )
+{
+	EzAtmEJMgr ezatmejmgrobj;
+	ezatmejmgrobj.InitEzAtmEJMgr( argv[ 0 ] );
+	ezatmejmgrobj.ServiceRequest( );
+	return 1;
+}

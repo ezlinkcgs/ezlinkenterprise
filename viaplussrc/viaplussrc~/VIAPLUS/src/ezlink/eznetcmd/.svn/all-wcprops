@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/ezlinkenterprise/!svn/ver/2579/trunk/src/ezlink/eznetcmd
+END
+eznetcmddb.c
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/ezlinkenterprise/!svn/ver/2232/trunk/src/ezlink/eznetcmd/eznetcmddb.c
+END
+eznetcmddb.pc
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/ezlinkenterprise/!svn/ver/2139/trunk/src/ezlink/eznetcmd/eznetcmddb.pc
+END
+eznetcmddb.lis
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/ezlinkenterprise/!svn/ver/2280/trunk/src/ezlink/eznetcmd/eznetcmddb.lis
+END
+eznetcmd.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/ezlinkenterprise/!svn/ver/2579/trunk/src/ezlink/eznetcmd/eznetcmd.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/ezlinkenterprise/!svn/ver/2397/trunk/src/ezlink/eznetcmd/Makefile
+END

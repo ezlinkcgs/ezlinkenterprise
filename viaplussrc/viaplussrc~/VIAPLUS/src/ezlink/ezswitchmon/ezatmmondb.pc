@@ -1,0 +1,884 @@
+#include <ezlink/ezinstdbtypes.h>
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+
+int GetAtmCount( char *TermId )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	    int hAtmCount;
+	    char AtmId[ 17 ];
+    EXEC SQL END DECLARE SECTION;
+    
+    memset( AtmId, 0, sizeof( AtmId ) );
+    strcpy( AtmId, TermId );
+
+    EXEC SQL SELECT COUNT(*) INTO :hAtmCount FROM EZMON_ATMINFO where ATMID = :AtmId;
+    
+    return hAtmCount;
+}
+
+int UpdateWithdrawal(char *DateTime, char *TxnInfo, char *TermId,char *WithdrawalInfo, int Resp )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+	
+		char hAtmId[ 17 ];
+		char hDate[ 13 ];
+		char hTxnInfo[ 129 ];
+		char hwithdrawalInfo[ 129 ]; 
+		int hNwithdrawal;
+		int hNwithdrawalsuccess;
+		int hNwithdrawalFailure;
+		int hRespCode = Resp;
+		
+	EXEC SQL END DECLARE SECTION ;
+
+
+	EXEC SQL VAR hDate IS STRING( 7 );
+	EXEC SQL VAR  hTxnInfo IS STRING( 129 );
+	EXEC SQL VAR  hwithdrawalInfo IS STRING( 129 );
+	
+	
+	
+	
+		memset( hDate, 0, sizeof( hDate ) );
+		memset( hAtmId, 0, sizeof( hAtmId ) );
+		memset( hTxnInfo, 0, sizeof( hTxnInfo ) );
+		memset( hwithdrawalInfo, 0, sizeof( hwithdrawalInfo ) );
+		strcpy( hDate, DateTime );
+		strcpy( hAtmId, TermId );
+		strcpy( hwithdrawalInfo, WithdrawalInfo );
+		strcpy( hTxnInfo, TxnInfo );	
+	
+	
+	EXEC SQL SELECT	
+				NWITHDRAWAL,
+				NWITHDRAWALSUCCESS,
+				NWITHDRAWALFAILURE 
+	INTO
+				:hNwithdrawal,
+				:hNwithdrawalsuccess,
+				:hNwithdrawalFailure 
+	FROM EZMON_ATMINFO	WHERE ATMID =:hAtmId;
+	
+	if ( sqlca.sqlcode != 0 )
+	
+    		    return (sqlca.sqlcode);
+	
+	
+		if( Resp == 0 )
+		{
+			hNwithdrawal = hNwithdrawal+1;
+			hNwithdrawalsuccess = hNwithdrawalsuccess+1;
+	
+			EXEC SQL UPDATE EZMON_ATMINFO SET
+						 NWITHDRAWAL=:hNwithdrawal,
+						 NWITHDRAWALSUCCESS =:hNwithdrawalsuccess,
+						 LASTTXNDATETIME=to_timestamp(:hDate,'dd-mm-yy' ),
+						 LASTWITHDRAWALDATETIME=to_date(:hDate,'dd-mm-yy' ),	
+						 LASTTXNINFO=:hTxnInfo,
+						 LASTWITHDRAWALINFO=:hwithdrawalInfo 
+			WHERE ATMID=:hAtmId;
+	
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        	else
+        	{
+    
+        		EXEC SQL COMMIT;
+        		if ( sqlca.sqlcode != 0 )
+        		{
+    
+    		    	return (sqlca.sqlcode);
+        		}
+        		else
+                return 1 ;
+			}
+		}
+		else
+		{
+			hNwithdrawal = hNwithdrawal+1;
+			hNwithdrawalFailure = hNwithdrawalFailure+1;
+			
+			EXEC SQL UPDATE EZMON_ATMINFO SET 
+					NWITHDRAWAL=:hNwithdrawal,
+					NWITHDRAWALFAILURE=:hNwithdrawalFailure,
+					LASTTXNDATETIME=to_timestamp( :hDate, 'dd-mm-yy hh:mm:ss' ),
+					LASTWITHDRAWALDATETIME=to_timestamp( :hDate, 'dd-mm-yy hh:mm:ss' ),
+					LASTTXNINFO=:hTxnInfo,
+					LASTWITHDRAWALINFO=:hwithdrawalInfo
+			WHERE RTRIM(ATMID)=:hAtmId;
+			
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        	else
+             {
+                EXEC SQL COMMIT;
+        		if ( sqlca.sqlcode != 0 )
+        		{
+    
+    		    	return (sqlca.sqlcode);
+        		}
+        		else
+                return 0 ;
+             }   
+			
+		}
+	
+}
+
+
+int UpdateBalance(char *DateTime,char *AtmId, int Resp,char *TxnInfo )
+{
+		EXEC SQL BEGIN DECLARE SECTION ;
+			char hDate[ 13 ];
+			char hAtmId[ 17 ];
+			char hTxnInfo[ 129 ];
+			int hNbal;
+			int hNbalSuccess;
+			int hNbalFailure;
+		EXEC SQL END DECLARE SECTION ;
+		EXEC SQL VAR  hTxnInfo IS STRING( 129 );
+		
+		EXEC SQL VAR hDate IS STRING( 7 );
+		EXEC SQL VAR  hTxnInfo IS STRING( 129 );
+		memset( hDate, 0, sizeof( hDate ) );
+		memset( hAtmId, 0, sizeof( hAtmId ) );
+		memset( hTxnInfo, 0, sizeof( hTxnInfo ) );
+		strcpy( hDate, DateTime );
+		strcpy( hAtmId, AtmId );
+		strcpy( hTxnInfo, TxnInfo );
+		
+		EXEC SQL SELECT 
+			NBALANCEINQUIRYSUCCESS,
+			NBALANCEINQUIRYFAILURE,
+			NBALANCEINQUIRY 
+	    INTO
+	    	 :hNbalSuccess,
+	    	 :hNbalFailure,
+	    	 :hNbal 
+	    FROM EZMON_ATMINFO WHERE ATMID=:hAtmId;
+		
+		if ( sqlca.sqlcode != 0 )
+			return (sqlca.sqlcode);
+		
+			
+		
+		if( Resp == 0 )
+		{
+			hNbalSuccess = hNbalSuccess+1;
+			hNbal = hNbal+1;
+			
+			EXEC SQL UPDATE EZMON_ATMINFO SET
+					NBALANCEINQUIRYSUCCESS = :hNbalSuccess,
+					NBALANCEINQUIRY = :hNbal,
+					LASTTXNDATETIME=to_date( :hDate,'dd-mm-yy' ),
+					LASTTXNINFO=:hTxnInfo
+			WHERE ATMID=:hAtmId;
+			
+			if ( sqlca.sqlcode != 0 )
+			    return (sqlca.sqlcode);
+    		   
+    	   	else
+    	   	{
+
+        		EXEC SQL COMMIT;
+        		if ( sqlca.sqlcode != 0 )
+        		{
+    
+    		    	return (sqlca.sqlcode);
+        		}
+        		else
+                return 0 ;
+			}
+		}	
+		else
+		{
+			hNbalFailure = hNbalFailure+1;
+			hNbal = hNbal+1;
+			EXEC SQL UPDATE EZMON_ATMINFO SET
+					NBALANCEINQUIRYFailure = :hNbalFailure,
+					NBALANCEINQUIRY = :hNbal,
+					LASTTXNDATETIME=to_date( :hDate, 'dd-mm-yy' ),
+					LASTTXNINFO=:hTxnInfo
+			WHERE ATMID=:hAtmId;
+			
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        	else
+        	{
+                EXEC SQL COMMIT;
+        		if ( sqlca.sqlcode != 0 )
+        		{
+    
+    		    	return (sqlca.sqlcode);
+        		}
+        		else
+                return 0 ;
+			}	
+		} 
+}	
+
+int UpdateMinistmt(char *DateTime,char *AtmId, int Resp, char *TxnInfo )
+{
+		EXEC SQL BEGIN DECLARE SECTION ;
+			char hDate[ 13 ];
+			char hAtmId[ 17 ];
+			char hTxnInfo[ 129 ];
+			int hNministmtSuccess;
+			int hNministmt;
+			int hNministmtFailure;
+		EXEC SQL END DECLARE SECTION ;
+		
+		memset( hDate, 0, sizeof( hDate ) );
+		memset( hAtmId, 0, sizeof( hAtmId ) );
+		memset( hTxnInfo, 0, sizeof( hTxnInfo ) );
+		strcpy( hDate, DateTime );
+		strcpy( hAtmId, AtmId );
+		strcpy( hTxnInfo, TxnInfo );
+		
+		
+		EXEC SQL SELECT 
+				NMINISTMTSUCCESS,
+				NMINISTMTFAILURE,
+				NMINISTMT 
+	    INTO 
+	    		:hNministmtSuccess,
+	    		:hNministmtFailure,
+	    		:hNministmt
+	    FROM EZMON_ATMINFO WHERE ATMID=:hAtmId;
+	    
+	    if ( sqlca.sqlcode != 0 )
+			return (sqlca.sqlcode);
+	    
+		
+		if( Resp == 0 )
+		{
+			hNministmtSuccess = hNministmtSuccess+1;
+			hNministmt = hNministmt+1;
+			 
+			EXEC SQL UPDATE EZMON_ATMINFO SET
+					NMINISTMTSUCCESS = :hNministmtSuccess,
+					NMINISTMT = :hNministmt,
+					LASTTXNDATETIME=to_date( :hDate, 'dd-mm-yy' ),
+					LASTTXNINFO=:hTxnInfo
+			WHERE ATMID=:hAtmId;
+			
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        	else
+            {
+                EXEC SQL COMMIT;
+        		if ( sqlca.sqlcode != 0 )
+        		{
+    
+    		    	return (sqlca.sqlcode);
+        		}
+        		else
+                return 0 ;
+            }
+			
+		}
+		else
+		{
+			hNministmtFailure = hNministmtFailure+1;
+			hNministmt = hNministmt+1;
+			
+			EXEC SQL UPDATE EZMON_ATMINFO SET
+					NMINISTMTFAILURE = :hNministmtFailure,
+					NMINISTMT = :hNministmt,
+					LASTTXNDATETIME=to_date( :hDate, 'dd-mm-yy' ),
+					LASTTXNINFO=:hTxnInfo
+			WHERE ATMID=:hAtmId;
+			
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        	else
+            {
+           		EXEC SQL COMMIT;
+        		if ( sqlca.sqlcode != 0 )
+        		{
+    
+    		    	return (sqlca.sqlcode);
+        		}
+        		else
+                return 0 ;
+            }
+				
+		} 
+}	
+
+
+int UpdateFndtrn(char *DateTime,char *AtmId, int Resp,char *TxnInfo )
+{
+		EXEC SQL BEGIN DECLARE SECTION ;
+			char hDate[ 13 ];
+			char hAtmId[ 17 ];
+			char hTxnInfo[ 129 ];
+			int hNfndtrnSuccess;
+			int hNfndtrn;
+			int hNfndtrnFailure;
+		EXEC SQL END DECLARE SECTION ;
+		
+		memset( hDate, 0, sizeof( hDate ) );
+		memset( hAtmId, 0, sizeof( hAtmId ) );
+		memset( hTxnInfo, 0, sizeof( hTxnInfo ) );
+		strcpy( hDate, DateTime );
+		strcpy( hAtmId, AtmId );
+		
+		
+		EXEC SQL SELECT
+				 NFUNDTXFSUCCESS,
+				 NFUNTXFFAILURE,
+				 NFUNDTXF 
+	   INTO 
+	   			:hNfndtrnSuccess,
+	   			:hNfndtrnFailure,
+	   			:hNfndtrn
+	   FROM EZMON_ATMINFO WHERE ATMID=:hAtmId;
+	   
+	   if ( sqlca.sqlcode != 0 )
+		return (sqlca.sqlcode);
+	   
+		
+		if( Resp == 0 )
+		{
+			hNfndtrnSuccess = hNfndtrnSuccess+1;
+			hNfndtrn = hNfndtrn+1;
+			 
+			EXEC SQL UPDATE EZMON_ATMINFO SET
+					NFUNDTXFSUCCESS = :hNfndtrnSuccess,
+					NFUNDTXF = :hNfndtrn,
+					LASTTXNDATETIME=to_date( :hDate, 'dd-mm-yy' ),
+					LASTTXNINFO=:hTxnInfo
+			WHERE ATMID=:hAtmId;
+			
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        	else
+                return 0 ;
+			
+		}
+		else
+		{
+			hNfndtrnFailure = hNfndtrnFailure+1;
+			hNfndtrn = hNfndtrn+1;
+			EXEC SQL UPDATE EZMON_ATMINFO SET
+					NFUNDTXFFailure = :hNfndtrnFailure,
+					NFUNDTXF = :hNfndtrn,
+					LASTTXNDATETIME=to_date( :hDate, 'dd-mm-yy' ),
+					LASTTXNINFO=:hTxnInfo
+			WHERE ATMID=:hAtmId;
+			
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        	else
+			{
+			    EXEC SQL COMMIT;
+        		if ( sqlca.sqlcode != 0 )
+        		{
+    
+    		    	return (sqlca.sqlcode);
+        		}
+        		else
+                return 0 ;
+			}        
+				
+		} 
+}	
+		
+
+int UpdatePinchange(char *DateTime,char *AtmId, int Resp,char *TxnInfo )
+{
+		EXEC SQL BEGIN DECLARE SECTION ;
+			char hDate[ 13 ];
+			char hAtmId[ 17 ];
+			char hTxnInfo[ 129 ];
+			int hResp;
+			int hNpinchangeSuccess;
+			int hNpinchange;
+			int hNpinchangeFailure;
+		EXEC SQL END DECLARE SECTION ;
+		
+		memset( hDate, 0, sizeof( hDate ) );
+		memset( hAtmId, 0, sizeof( hAtmId ) );
+		memset( hTxnInfo, 0, sizeof( hTxnInfo ) );
+		strcpy( hDate, DateTime );
+		strcpy( hAtmId, AtmId );
+		hResp = Resp;
+		
+		EXEC SQL SELECT
+					 NPINCHANGESUCCESS,
+					 NPINCHANGEFAILURE,
+					 NPINCHANGE  
+		INTO
+					 :hNpinchangeSuccess,
+					 :hNpinchangeFailure,
+					 :hNpinchange 
+		FROM EZMON_ATMINFO WHERE ATMID=:hAtmId;
+		
+		if ( sqlca.sqlcode != 0 )
+			return (sqlca.sqlcode);
+		
+		
+		if( hResp == 0 )
+		{
+			hNpinchangeSuccess = hNpinchangeSuccess+1;
+			hNpinchange = hNpinchange+1;
+			 
+			EXEC SQL UPDATE EZMON_ATMINFO SET
+					NPINCHANGESUCCESS = :hNpinchangeSuccess,
+					NPINCHANGE = :hNpinchange,
+					LASTTXNDATETIME=to_date( :hDate, 'dd-mm-yy' ),
+					LASTTXNINFO=:hTxnInfo
+			WHERE ATMID=:hAtmId;
+			
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        	else
+                return 0 ;
+			
+		}
+		else
+		{
+			hNpinchangeFailure = hNpinchangeFailure+1;
+			hNpinchange = hNpinchange+1;
+			EXEC SQL UPDATE EZMON_ATMINFO SET
+					NPINCHANGEFAILURE = :hNpinchangeFailure,
+					NPINCHANGE = :hNpinchange,
+					LASTTXNDATETIME=to_date( :hDate, 'dd-mm-yy' ),
+					LASTTXNINFO=:hTxnInfo
+			WHERE ATMID=:hAtmId;
+			
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        	else
+ 			{
+			    EXEC SQL COMMIT;
+        		if ( sqlca.sqlcode != 0 )
+        		{
+    
+    		    	return (sqlca.sqlcode);
+        		}
+        		else
+                return 0 ;
+			}        				
+		} 
+}
+
+int UpdateStmtReq(char *DateTime,char *AtmId, int Resp,char *TxnInfo )
+{
+		EXEC SQL BEGIN DECLARE SECTION ;
+			char hDate[ 13 ];
+			char hAtmId[ 17 ];
+			char hTxnInfo[ 129 ];
+			int hResp;
+			int hNstmtreqSuccess;
+			int hNstmtreq;
+			int hNstmtreqFailure;
+		EXEC SQL END DECLARE SECTION ;
+		
+		memset( hDate, 0, sizeof( hDate ) );
+		memset( hAtmId, 0, sizeof( hAtmId ) );
+		memset( hTxnInfo, 0, sizeof( hTxnInfo ) );
+		strcpy( hDate, DateTime );
+		strcpy( hAtmId, AtmId );
+		hResp = Resp;
+		
+		EXEC SQL SELECT 
+				NSTMTREQSUCCESS,
+				NSTMTREQFAILURE,
+				NSTMTREQ  
+		INTO
+				 :hNstmtreqSuccess,
+				 :hNstmtreqFailure,
+				 :hNstmtreq
+	    FROM EZMON_ATMINFO WHERE ATMID=:hAtmId;
+	    
+	    if ( sqlca.sqlcode != 0 )
+			return (sqlca.sqlcode);
+	    
+		
+		if( hResp == 0 )
+		{
+			hNstmtreqSuccess = hNstmtreqSuccess+1;
+			hNstmtreq = hNstmtreq+1;
+			 
+			EXEC SQL UPDATE EZMON_ATMINFO SET
+					NSTMTREQSUCCESS = :hNstmtreqSuccess,
+					NSTMTREQ = :hNstmtreq,
+					LASTTXNDATETIME=to_date( :hDate, 'dd-mm-yy' ),
+					LASTTXNINFO=:hTxnInfo
+			WHERE ATMID=:hAtmId;
+			
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        	else
+                return 0 ;
+			
+		}
+		else
+		{
+			hNstmtreqFailure = hNstmtreqFailure+1;
+			hNstmtreq = hNstmtreq+1;
+			EXEC SQL UPDATE EZMON_ATMINFO SET
+					NSTMTREQFAILURE = :hNstmtreqFailure,
+					NSTMTREQ = :hNstmtreq,
+					LASTTXNDATETIME=to_date( :hDate, 'dd-mm-yy' ),
+					LASTTXNINFO=:hTxnInfo
+			WHERE ATMID=:hAtmId;
+			
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        	else
+			{
+			    EXEC SQL COMMIT;
+        		if ( sqlca.sqlcode != 0 )
+        		{
+    
+    		    	return (sqlca.sqlcode);
+        		}
+        		else
+                return 0 ;
+			}        
+				
+		} 
+}	
+int UpdateChequeReq(char *DateTime,char *AtmId, int Resp,char *TxnInfo )
+{
+		EXEC SQL BEGIN DECLARE SECTION ;
+			char hDate[ 13 ];
+			char hAtmId[ 17 ];
+			char hTxnInfo[ 129 ];
+			int hResp;
+			int hNchqreqSuccess;
+			int hNchqreq;
+			int hNchqreqFailure;
+		EXEC SQL END DECLARE SECTION ;
+		
+		memset( hDate, 0, sizeof( hDate ) );
+		memset( hAtmId, 0, sizeof( hAtmId ) );
+		memset( hTxnInfo, 0, sizeof( hTxnInfo ) );
+		strcpy( hDate, DateTime );
+		strcpy( hAtmId, AtmId );
+		hResp = Resp;
+		
+		EXEC SQL SELECT
+				 NCHEQUEBOOKSUCCESS,
+				 NCHEQUEBOOKFAILURE,
+				 NCHEQUEBOOK
+	   INTO
+	   		   	 :hNchqreqSuccess,
+	   			  :hNchqreqFailure,
+	   			  :hNchqreq
+	   FROM EZMON_ATMINFO WHERE ATMID=:hAtmId;
+	   
+	   if ( sqlca.sqlcode != 0 )
+		return (sqlca.sqlcode);
+	   
+		
+		if( hResp == 0 )
+		{
+			hNchqreqSuccess = hNchqreqSuccess+1;
+			hNchqreq = hNchqreq+1;
+			 
+			EXEC SQL UPDATE EZMON_ATMINFO SET
+					NCHEQUEBOOKSUCCESS = :hNchqreqSuccess,
+					NCHEQUEBOOK = :hNchqreq,
+					LASTTXNDATETIME=to_date( :hDate, 'dd-mm-yy' ),
+					LASTTXNINFO=:hTxnInfo
+			WHERE ATMID=:hAtmId;
+			
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        	else
+                return 0 ;
+			
+		}
+		else
+		{
+			hNchqreqFailure = hNchqreqFailure+1;
+			hNchqreq = hNchqreq+1;
+			EXEC SQL UPDATE EZMON_ATMINFO SET
+					NCHEQUEBOOKFAILURE = :hNchqreqFailure,
+					NCHEQUEBOOK = :hNchqreq,
+					LASTTXNDATETIME=to_date( :hDate, 'dd-mm-yy' ),
+					LASTTXNINFO=:hTxnInfo
+			WHERE ATMID=:hAtmId;
+			
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        	else
+			{
+			    EXEC SQL COMMIT;
+        		if ( sqlca.sqlcode != 0 )
+        		{
+    
+    		    	return (sqlca.sqlcode);
+        		}
+        		else
+                return 0 ;
+			}        
+				
+		} 
+}	
+	
+int InsertEzmonAtminfo( char *DateTime, char *TermId )
+{
+		EXEC SQL BEGIN DECLARE SECTION ;
+		char hDate[ 13 ];
+		char hAtmId[ 17 ];
+		char hAtmType[ 17 ];
+		char hLogicalGrp[ 17 ];
+		char hInstId[ 13 ];
+		int hResp;
+		
+	EXEC SQL END DECLARE SECTION ;
+	
+	memset( hDate, 0, sizeof( hDate ) );
+	memset( hAtmId, 0, sizeof( hAtmId ) );
+	memset( hLogicalGrp, 0, sizeof( hLogicalGrp ) );
+	memset( hAtmType, 0, sizeof( hAtmType ) );
+	memset( hInstId, 0, sizeof( hInstId ) );
+	
+	strcpy( hAtmId, TermId );
+	strcpy( hDate, DateTime );
+
+	
+	EXEC SQL SELECT 
+				ATMLOGICALGROUP,
+				ATMTYPEID,
+				INSTID 
+	INTO 
+				:hLogicalGrp,
+				:hAtmType,
+				:hInstId
+    FROM EZATMINFO WHERE ATMID=:hAtmId;
+    
+    if ( sqlca.sqlcode != 0 )
+		return (sqlca.sqlcode);
+    
+	
+	
+	EXEC SQL INSERT INTO EZMON_ATMINFO
+		( 
+			ATMID, 
+			ATMTYPE,
+	 		INSTITUTIONID,
+	 		ATMLOGICALGROUP,
+	 		NWITHDRAWAL,
+	 		NWITHDRAWALSUCCESS,
+	 		NWITHDRAWALFAILURE,
+	 		NFULLREVERSALREQ,
+	 		NFULLREVERSALSUCCESS,
+	 		NFULLREVERSALFAILURE,
+	 		NPARTIALREVERSALREQ,
+	 		NPARTIALREVERSALSUCCESS,
+	 		NPARTIALREVERSALFAILURE,
+	 		NSUSPECTREVERSAL,
+	 		NTIMEOUTREVERSAL,
+	 		NBALANCEINQUIRY,
+	 		NBALANCEINQUIRYSUCCESS,
+	 		NBALANCEINQUIRYFAILURE,
+	 		NFUNDTXF,
+	 		NFUNDTXFSUCCESS,
+	 		NFUNDTXFFAILURE,
+	 		NPINCHANGE,
+	 		NPINCHANGESUCCESS,
+	 		NPINCHANGEFAILURE,
+	 		NOAR,
+	 		NOARSUCCESS,
+	 		NOARFAILURE,
+	 		NCHEQUEBOOK,
+	 		NCHEQUEBOOKSUCCESS,
+	 		NCHEQUEBOOKFAILURE,
+	 		NMINISTMT,
+	 		NMINISTMTSUCCESS,
+	 		NMINISTMTFAILURE,
+	 		NSTMTREQ,
+	 		NSTMTREQSUCCESS,
+	 		NSTMTREQFAILURE
+	 			 		
+	 
+		)
+		VALUES
+		( 
+			:hAtmId, 
+			:hAtmType,
+			:hInstId,
+			:hLogicalGrp,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0
+		);
+		if ( sqlca.sqlcode != 0 )
+    	    return (sqlca.sqlcode);
+        else
+		{
+		    EXEC SQL COMMIT;
+    	    if ( sqlca.sqlcode != 0 )
+        	{
+    	
+    		    	return (sqlca.sqlcode);
+        	}
+       		else
+       		     return 0 ;
+		}        
+		 
+		
+}	
+int UpdateReversal( char *DateTime, int Resp, char *chn, char *AtmId )
+{
+	EXEC SQL BEGIN DECLARE SECTION ;
+	char hDate[ 13 ];
+	char hTxnInfo[ 128 ];
+	char hAtmId[ 17 ];
+	int hNsuspectReversal;
+	int hNpartialReversal;
+	int hNfullReversal;
+	int hNtimeoutReversal;
+	EXEC SQL END DECLARE SECTION ;
+	
+	memset( hDate, 0, sizeof( hDate ) );
+	strcpy( hDate, DateTime );
+	memset( hAtmId, 0, sizeof( AtmId ) );
+	
+	
+	if( Resp == 112 )
+	{
+		memset( hTxnInfo, 0, sizeof( hTxnInfo ) );
+		sprintf( hTxnInfo, "%s%s", chn,"SuspectReversal" );
+		
+		EXEC SQL SELECT
+				 NSUSPECTREVERSAL
+		INTO
+	   		   	 :hNsuspectReversal
+		FROM EZMON_ATMINFO WHERE ATMID=:hAtmId;
+		
+		if ( sqlca.sqlcode != 0 )
+			return (sqlca.sqlcode);
+				
+		hNsuspectReversal = hNsuspectReversal+1;
+		
+		EXEC SQL UPDATE EZMON_ATM SET
+					LASTTXNDATETIME = :hDate,
+					LASTTXNINFO = :hTxnInfo,
+					NSUSPECTREVERSAL = hNsuspectReversal
+		WHERE ATMID = :hAtmId;
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        else
+		{
+		    EXEC SQL COMMIT;
+        	if ( sqlca.sqlcode != 0 )
+        	{
+        		    	return (sqlca.sqlcode);
+       		}
+       		else
+               return 0 ;
+		}        
+	
+	}
+	if( Resp == 102 )
+	{
+		memset( hTxnInfo, 0, sizeof( hTxnInfo ) );
+		sprintf( hTxnInfo, "%s%s", chn,"PartialReversal" );
+		
+		EXEC SQL SELECT
+				 NPARTIALREVERSALREQ
+		INTO
+	   		   	 :hNpartialReversal
+		FROM EZMON_ATMINFO WHERE ATMID=:hAtmId;
+		
+		if ( sqlca.sqlcode != 0 )
+			return (sqlca.sqlcode);
+				
+		hNpartialReversal = hNpartialReversal+1;
+		
+		EXEC SQL UPDATE EZMON_ATM SET
+					LASTTXNDATETIME = :hDate,
+					LASTTXNINFO = :hTxnInfo,
+					NPARTIALREVERSALREQ = hNpartialReversal
+		WHERE ATMID = :hAtmId;
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        else
+		{
+		    EXEC SQL COMMIT;
+        	if ( sqlca.sqlcode != 0 )
+        	{
+        		    	return (sqlca.sqlcode);
+       		}
+       		else
+               return 0 ;
+		}        
+	
+	}
+
+	if( Resp == 106 || 34 )
+	{
+		memset( hTxnInfo, 0, sizeof( hTxnInfo ) );
+		sprintf( hTxnInfo, "%s%s", chn,"TimeoutReversal" );
+		
+		EXEC SQL SELECT
+				 NTIMEOUTREVERSAL
+		INTO
+	   		   	 :hNtimeoutReversal
+		FROM EZMON_ATMINFO WHERE ATMID=:hAtmId;
+		
+		if ( sqlca.sqlcode != 0 )
+			return (sqlca.sqlcode);
+				
+		hNtimeoutReversal = hNtimeoutReversal+1;
+		
+		EXEC SQL UPDATE EZMON_ATM SET
+					LASTTXNDATETIME = :hDate,
+					LASTTXNINFO = :hTxnInfo,
+					NTIMEOUTREVERSAL = hNtimeoutReversal
+		WHERE ATMID = :hAtmId;
+			if ( sqlca.sqlcode != 0 )
+    		    return (sqlca.sqlcode);
+        else
+		{
+		    EXEC SQL COMMIT;
+        	if ( sqlca.sqlcode != 0 )
+        	{
+        		    	return (sqlca.sqlcode);
+       		}
+       		else
+               return 0 ;
+		}        
+	
+	}
+}

@@ -1,0 +1,1234 @@
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <ezlink/ezinstdbtypes.h>
+
+int readEzInstRouteType( const char *I_InstRouteType, struct EzInstRouteTypeMemory *instroutetype_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstRouteType[ 17 ];
+		char Input_InstRouteType[ 17 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstRouteType IS STRING(17);
+	
+	memset( InstRouteType, 0, sizeof( InstRouteType ) );
+	memset( Input_InstRouteType, 0, sizeof( Input_InstRouteType ) );
+	
+	strcpy( Input_InstRouteType, I_InstRouteType );
+	
+	EXEC SQL SELECT
+		RTRIM(INSTROUTETYPE)
+	INTO
+		:InstRouteType
+	FROM EZINSTROUTETYPE WHERE RTRIM(INSTROUTETYPE)=:Input_InstRouteType;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+
+	strcpy( instroutetype_ptr->InstRouteType, InstRouteType );
+	return sqlca.sqlcode;
+}
+
+int readEzInstProfile( const char *I_InstId, struct EzInstProfileMemory *instprofile_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char Input_InstId[ 13 ];
+		char InstRouteType[ 17 ];
+		char InstType[ 17 ];
+		char InstSecurityGroup[ 17 ];
+        char InstTerminalGroup[ 17 ];
+        char InstAuthGroup[ 17 ];
+        char InstCurrencyCode[ 6 ];
+        int MaxATMPINCount;
+        int MaxTelePINCount;
+        char PrimaryBin[ 13 ];
+        char PADSSEnabled;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR Input_InstId IS STRING(13);
+	EXEC SQL VAR InstRouteType IS STRING(17);
+	EXEC SQL VAR InstType IS STRING(17);
+	EXEC SQL VAR InstSecurityGroup IS STRING(17);
+	EXEC SQL VAR InstTerminalGroup IS STRING(17);
+	EXEC SQL VAR InstAuthGroup IS STRING(17);
+	EXEC SQL VAR InstCurrencyCode IS STRING(17);
+	EXEC SQL VAR PrimaryBin IS STRING(13);
+	
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( Input_InstId, 0, sizeof( Input_InstId ) );
+	memset( InstRouteType, 0, sizeof( InstRouteType ) );
+	memset( InstType, 0, sizeof( InstType ) );
+	memset( InstSecurityGroup, 0, sizeof( InstSecurityGroup ) );
+	memset( InstTerminalGroup, 0, sizeof( InstTerminalGroup ) );
+	memset( InstAuthGroup, 0, sizeof( InstAuthGroup) );
+	memset( InstCurrencyCode, 0, sizeof( InstCurrencyCode ) );
+	memset( PrimaryBin, 0, sizeof( PrimaryBin ) );
+	
+	strcpy( Input_InstId, I_InstId );
+	
+	EXEC SQL SELECT
+		RTRIM(INSTID),
+		RTRIM(INSTROUTETYPE),
+		RTRIM(INSTTYPE),
+		RTRIM(INSTSECURITYGROUP),
+		RTRIM(INSTTERMINALGROUP),
+		RTRIM(INSTAUTHGROUP),
+		RTRIM(INSTCURRENCYCODE),
+		MAXATMPINCOUNT,
+		MAXTELEPINCOUNT,
+		RTRIM(PRIMARYBIN),
+		PADSSENABLED
+	INTO
+		:InstId,
+		:InstRouteType,
+		:InstType,
+		:InstSecurityGroup,
+		:InstTerminalGroup,
+		:InstAuthGroup,
+		:InstCurrencyCode,
+		:MaxATMPINCount,
+		:MaxTelePINCount,
+		:PrimaryBin,
+		:PADSSEnabled
+	FROM EZINSTPROFILE WHERE RTRIM(INSTID)=:Input_InstId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+
+	strcpy( instprofile_ptr->InstId, InstId );
+	strcpy( instprofile_ptr->InstRouteType, InstRouteType );
+	strcpy( instprofile_ptr->InstType, InstType );
+	strcpy( instprofile_ptr->InstSecurityGroup, InstSecurityGroup );
+	strcpy( instprofile_ptr->InstTerminalGroup, InstTerminalGroup );
+	strcpy( instprofile_ptr->InstAuthGroup, InstAuthGroup );
+	strcpy( instprofile_ptr->InstCurrencyCode, InstCurrencyCode );
+	instprofile_ptr->MaxATMPINCount = MaxATMPINCount ;
+	instprofile_ptr->MaxTelePINCount = MaxTelePINCount;
+	strcpy( instprofile_ptr->PrimaryBin, PrimaryBin );
+	instprofile_ptr->PADSSEnabled = PADSSEnabled;
+	return sqlca.sqlcode;
+}
+
+int readEzInstSelect( const char *I_RecordNo, struct EzInstSelectMemory *instselect_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[ 17 ];
+		char Input_RecordId[ 17 ];
+		char DeviceType[ 17 ];
+		char FieldType[ 65 ];
+		char FromOffset[ 17 ];
+		char ToOffset[ 17 ];
+		char FieldVal[ 129 ];
+		int Priority;
+		char InstId[ 13 ];
+		char InstType[ 11 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR Input_RecordId IS STRING(17);
+	EXEC SQL VAR DeviceType IS STRING(17);
+	EXEC SQL VAR FieldType IS STRING(65);
+	EXEC SQL VAR FromOffset IS STRING(17);
+	EXEC SQL VAR ToOffset IS STRING(17);
+	EXEC SQL VAR FieldVal IS STRING(129);
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR InstType IS STRING(11);
+	
+	memset( RecordId, 0, sizeof( RecordId ) );
+	memset( Input_RecordId, 0, sizeof( Input_RecordId ) );
+	memset( DeviceType, 0, sizeof( DeviceType ) );
+	memset( FieldType, 0, sizeof( FieldType ) );
+	memset( FromOffset, 0, sizeof( FromOffset ) );
+	memset( ToOffset, 0, sizeof( ToOffset ) );
+	memset( FieldVal, 0, sizeof( FieldVal ) );
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( InstType, 0, sizeof( InstType ) );
+	
+	strcpy( Input_RecordId, I_RecordNo );
+	
+	EXEC SQL SELECT
+		RTRIM(RECORDID),
+		RTRIM(DEVICETYPE),
+		RTRIM(FIELDTYPE),
+		RTRIM(FROMOFFSET),
+		RTRIM(TOOFFSET),
+		RTRIM(FIELDVAL),
+		PRIORITY,
+		RTRIM(INSTID),
+		RTRIM(INSTTYPE)
+	INTO
+		:RecordId,
+		:DeviceType,
+		:FieldType,
+		:FromOffset,
+		:ToOffset,
+		:FieldVal,
+		:Priority,
+		:InstId,
+		:InstType
+	FROM EZINSTSELECT WHERE RTRIM(RECORDID)=:Input_RecordId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+
+	strcpy( instselect_ptr->RecordId, RecordId );
+	strcpy( instselect_ptr->DeviceType, DeviceType );
+	strcpy( instselect_ptr->FieldType, FieldType );
+	strcpy( instselect_ptr->FromOffset, FromOffset );
+	strcpy( instselect_ptr->ToOffset, ToOffset );
+	instselect_ptr->Priority = Priority;
+	strcpy( instselect_ptr->FieldVal, FieldVal );
+	strcpy( instselect_ptr->InstId, InstId );
+	strcpy( instselect_ptr->InstType, InstType );
+	
+	return sqlca.sqlcode;
+}
+
+int readEzBINSelect( const char *I_RecordNo, struct EzBINSelectMemory *binselect_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[ 17 ];
+		char Input_RecordId[ 17 ];
+		char BIN[ 13 ];
+		char InstId[ 13 ];
+		char BINRangeReq;
+		short Priority;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR Input_RecordId IS STRING(17);
+	EXEC SQL VAR BIN IS STRING(13);
+	EXEC SQL VAR InstId IS STRING(13);
+	
+	memset( RecordId, 0, sizeof( RecordId ) );
+	memset( Input_RecordId, 0, sizeof( Input_RecordId ) );
+	memset( BIN, 0, sizeof( BIN ) );
+	memset( InstId, 0, sizeof( InstId ) );
+	
+	strcpy( Input_RecordId, I_RecordNo );
+	
+	EXEC SQL SELECT
+		RTRIM(RECORDID),
+    	RTRIM(BIN),
+    	RTRIM(INSTID),
+		BINRANGEREQ,
+		PRIORITY
+	INTO
+		:RecordId,
+		:BIN,
+		:InstId,
+		:BINRangeReq,
+		:Priority
+	FROM EZBINSELECT WHERE RTRIM(RECORDID)=:Input_RecordId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+
+	strcpy( binselect_ptr->RecordId, RecordId );
+	strcpy( binselect_ptr->BIN, BIN );
+	strcpy( binselect_ptr->InstId, InstId );
+	binselect_ptr->BINRangeReq = BINRangeReq;
+	binselect_ptr->Priority = Priority;
+	
+	return sqlca.sqlcode;
+}
+
+
+int readEzNetworkSelect( const char *I_RecordNo, struct EzNetworkSelectMemory *networkselect_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[ 17 ];
+		char Input_RecordId[ 17 ];
+		char InstId[ 13 ];
+		int Priority;
+		char NetworkType[ 11 ];
+		char FieldType[ 65 ];
+		char FromOffset[ 33 ];
+		char ToOffset[ 33 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR Input_RecordId IS STRING(17);
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR NetworkType IS STRING(11);
+	EXEC SQL VAR FieldType IS STRING(65);
+	EXEC SQL VAR FromOffset IS STRING(33);
+	EXEC SQL VAR ToOffset IS STRING(33);
+	
+	memset( RecordId, 0, sizeof( RecordId ) );
+	memset( Input_RecordId, 0, sizeof( Input_RecordId ) );
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( NetworkType, 0, sizeof( NetworkType ) );
+	memset( FieldType, 0, sizeof( FieldType ) );
+	memset( FromOffset, 0, sizeof( FromOffset ) );
+	memset( ToOffset, 0, sizeof( ToOffset ) );
+
+	strcpy( Input_RecordId, I_RecordNo );
+
+	EXEC SQL SELECT
+		RTRIM(RECORDID),
+		RTRIM(INSTID),
+		PRIORITY,
+		RTRIM(NETWORKTYPE),
+		RTRIM(FIELDTYPE),
+		RTRIM(FROMOFFSET),
+		RTRIM(TOOFFSET)
+	INTO
+		:RecordId,
+		:InstId,
+		:Priority,
+		:NetworkType,
+		:FieldType,
+		:FromOffset,
+		:ToOffset
+	FROM EZNETWORKSELECT WHERE RTRIM(RECORDID)=:Input_RecordId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	
+	strcpy( networkselect_ptr->RecordId, RecordId );
+	strcpy( networkselect_ptr->InstId, InstId );
+	networkselect_ptr->Priority = Priority;
+	strcpy( networkselect_ptr->NetworkType, NetworkType );
+	strcpy( networkselect_ptr->FieldType, FieldType );
+	strcpy( networkselect_ptr->FromOffset, FromOffset );
+	strcpy( networkselect_ptr->ToOffset, ToOffset );
+	return sqlca.sqlcode;
+}
+
+int readEzBINProfile( const char *I_InstId, const char *I_BIN, struct EzBINProfileMemory *binprofile_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char Input_InstId[ 13 ];
+		char BIN[ 13 ];
+		char Input_BIN[ 13 ];
+		char TxnList[ 65 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR Input_InstId IS STRING(13);
+	EXEC SQL VAR BIN IS STRING(13);
+	EXEC SQL VAR Input_BIN IS STRING(13);
+	EXEC SQL VAR TxnList IS STRING(65);
+	
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( Input_InstId, 0, sizeof( Input_InstId ) );
+	memset( BIN, 0, sizeof( BIN ) );
+	memset( Input_BIN, 0, sizeof( Input_BIN ) );
+	memset( TxnList, 0, sizeof( TxnList ) );
+	
+	strcpy( Input_InstId, I_InstId );
+	strcpy( Input_BIN, I_BIN );
+	
+	EXEC SQL SELECT
+		RTRIM(INSTID),
+		RTRIM(BIN),
+		RTRIM(TXNLIST)
+	INTO
+		:InstId,
+		:BIN,
+		:TxnList
+	FROM EZBINPROFILE WHERE RTRIM(INSTID)=:Input_InstId AND RTRIM(BIN)=:Input_BIN;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+		
+	strcpy( binprofile_ptr->InstId, InstId );
+	strcpy( binprofile_ptr->BIN, BIN );
+	strcpy( binprofile_ptr->TxnList, TxnList );
+	return sqlca.sqlcode;
+}
+
+int readEzBranchProfile( const char *I_InstId, const char *I_BranchCode, struct EzBranchProfileMemory *branchprofile_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char Input_InstId[ 13 ];
+		char BranchCode[ 13 ];
+		char Input_BranchCode[ 13 ];
+		char BranchMapCode[ 13 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR Input_InstId IS STRING(13);
+	EXEC SQL VAR BranchCode IS STRING(13);
+	EXEC SQL VAR Input_BranchCode IS STRING(13);
+	EXEC SQL VAR BranchMapCode IS STRING(13);
+	
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( Input_InstId, 0, sizeof( Input_InstId ) );
+	memset( BranchCode, 0, sizeof( BranchCode ) );
+	memset( Input_BranchCode, 0, sizeof( Input_BranchCode ) );
+	memset( BranchMapCode, 0, sizeof( BranchMapCode ) );
+	
+	strcpy( Input_InstId, I_InstId );
+	strcpy( Input_BranchCode, I_BranchCode );
+	
+	EXEC SQL SELECT
+		RTRIM(INSTID),
+		RTRIM(BRANCHCODE),
+		RTRIM(BRANCHMAPCODE)
+	INTO
+		:InstId,
+		:BranchCode,
+		:BranchMapCode
+	FROM EZBRANCHPROFILE WHERE RTRIM(INSTID)=:Input_InstId AND RTRIM(BRANCHCODE)=:Input_BranchCode;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	
+	strcpy( branchprofile_ptr->InstId, InstId );
+	strcpy( branchprofile_ptr->BranchCode, BranchCode );
+	strcpy( branchprofile_ptr->BranchMapCode, BranchMapCode );
+		
+	return sqlca.sqlcode;
+}
+
+int readEzAuthProperty( const char *I_RecordNo, struct EzAuthPropertyMemory *ezauthproperty_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[ 17 ];
+		char Input_RecordId[ 17 ];
+		char AuthGroupId[ 17 ];
+		char MsgType[ 5 ];
+		char TxnCode[ 7 ];
+		char RespCode[ 4 ];
+		char AuthList[ 256 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR Input_RecordId IS STRING(17);
+	EXEC SQL VAR AuthGroupId IS STRING(17);
+	EXEC SQL VAR MsgType IS STRING(5);
+	EXEC SQL VAR TxnCode IS STRING(7);
+	EXEC SQL VAR RespCode IS STRING(4);
+	EXEC SQL VAR AuthList IS STRING(256);
+	
+	memset( RecordId, 0, sizeof( RecordId ) );
+	memset( Input_RecordId, 0, sizeof( Input_RecordId ) );
+	memset( AuthGroupId, 0, sizeof( AuthGroupId ) );
+	memset( MsgType, 0, sizeof( MsgType ) );
+	memset( TxnCode, 0, sizeof( TxnCode ) );
+	memset( RespCode, 0, sizeof( RespCode ) );
+	memset( AuthList, 0, sizeof( AuthList ) );
+	
+	strcpy( Input_RecordId, I_RecordNo );
+		
+	EXEC SQL SELECT
+		RTRIM(RECORDID),
+        RTRIM(AUTHGROUPID),
+        RTRIM(MSGTYPE),
+        RTRIM(TXNCODE),
+        RTRIM(RESPCODE),
+        RTRIM(AUTHLIST)
+	INTO
+		:RecordId,
+		:AuthGroupId,
+		:MsgType,
+		:TxnCode,
+		:RespCode,
+		:AuthList
+	FROM EZAUTHPROPERTY WHERE RTRIM(RECORDID)=:Input_RecordId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	
+	strcpy( ezauthproperty_ptr->RecordId, RecordId );
+	strcpy( ezauthproperty_ptr->AuthGroupId, AuthGroupId );
+	strcpy( ezauthproperty_ptr->MsgType, MsgType );
+	strcpy( ezauthproperty_ptr->TxnCode, TxnCode );
+	strcpy( ezauthproperty_ptr->RespCode, RespCode );
+	strcpy( ezauthproperty_ptr->AuthList, AuthList );
+		
+	return sqlca.sqlcode;
+}
+
+int readEzChannelProperty( const char *I_ChannelName, struct EzChannelPropertyMemory *ezchannelproperty_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char ChannelName[ 33 ];
+		char Input_ChannelName[ 33 ];
+		char ChannelType[ 11 ];
+		char DeviceType[ 17 ];
+		char LayerId[ 11 ];
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL VAR ChannelName IS STRING(33);
+	EXEC SQL VAR Input_ChannelName IS STRING(33);
+	EXEC SQL VAR ChannelType IS STRING(11);
+	EXEC SQL VAR DeviceType IS STRING(17);
+	EXEC SQL VAR LayerId IS STRING(11);
+
+	memset( ChannelName, 0, sizeof( ChannelName ) );
+	memset( Input_ChannelName, 0, sizeof( Input_ChannelName ) );
+	memset( ChannelType, 0, sizeof( ChannelType ) );
+	memset( DeviceType, 0, sizeof( DeviceType ) );
+	memset( LayerId, 0, sizeof( LayerId ) );
+	
+	strcpy( Input_ChannelName, I_ChannelName );
+	
+	EXEC SQL SELECT
+		RTRIM(CHANNELNAME),
+		RTRIM(CHANNELTYPE),
+		RTRIM(DEVICETYPE),
+		RTRIM(LAYERID)
+	INTO
+		:ChannelName,
+		:ChannelType,
+		:DeviceType,
+		:LayerId
+	FROM EZCHANNELPROPERTY WHERE RTRIM(CHANNELNAME)=:Input_ChannelName;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+		
+	strcpy( ezchannelproperty_ptr->ChannelName, ChannelName );
+	strcpy( ezchannelproperty_ptr->ChannelType, ChannelType );
+	strcpy( ezchannelproperty_ptr->DeviceType, DeviceType );
+	strcpy( ezchannelproperty_ptr->LayerId, LayerId );
+
+	return sqlca.sqlcode;
+}
+
+int readEzMsgTypePropertyTable( int I_MsgType, struct EzMsgTypePropertyMemory *ezmsgtypeproperty_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		int MsgType;
+		int Input_MsgType;
+		char MsgProperty;
+		char LookUpProperty;
+	EXEC SQL END DECLARE SECTION;
+	
+	
+	Input_MsgType = I_MsgType;
+	
+	EXEC SQL SELECT
+		MSGTYPE,
+        MSGPROPERTY,
+        LOOKUPPROPERTY
+	INTO
+		:MsgType,
+		:MsgProperty,
+		:LookUpProperty
+	FROM EZMSGTYPEPROPERTY WHERE RTRIM(MSGTYPE)=:Input_MsgType;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+		
+	ezmsgtypeproperty_ptr->MsgType = MsgType;
+	ezmsgtypeproperty_ptr->MsgProperty = MsgProperty;
+	ezmsgtypeproperty_ptr->LookUpProperty = LookUpProperty;
+
+	return sqlca.sqlcode;
+}
+
+int readEzEventProperty( const char *I_RecordId, struct EzEventPropertyMemory *ezeventproperty_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		int RecordNo;
+		char RecordId[ 17 ];
+		char Input_RecordId[ 17 ];
+		char ChannelName[ 33 ];
+		char MsgType[ 5 ];
+		char TxnCode[ 7 ];
+		char RespCode[ 4 ];
+		char EventFlag;
+		int EventTimeOut;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR Input_RecordId IS STRING(17);
+	EXEC SQL VAR ChannelName IS STRING(33);
+	EXEC SQL VAR MsgType IS STRING(5);
+	EXEC SQL VAR TxnCode IS STRING(7);
+	EXEC SQL VAR RespCode IS STRING(4);
+	
+	memset( RecordId, 0, sizeof( RecordId ) );
+	memset( Input_RecordId, 0, sizeof( Input_RecordId ) );
+	memset( ChannelName, 0, sizeof( ChannelName ) );
+	memset( MsgType, 0, sizeof( MsgType ) );
+	memset( TxnCode, 0, sizeof( TxnCode ) );
+	memset( RespCode, 0, sizeof( RespCode ) );
+
+	strcpy( Input_RecordId, I_RecordId );
+	
+	EXEC SQL SELECT
+		RECORDNO,
+		RTRIM(RECORDID),
+		RTRIM(CHANNELNAME),
+		RTRIM(MSGTYPE),
+		RTRIM(TXNCODE),
+		RTRIM(RESPCODE),
+        EVENTFLAG,
+        EVENTTIMEOUT
+	INTO
+		:RecordNo,
+		:RecordId,
+		:ChannelName,
+		:MsgType,
+		:TxnCode,
+		:RespCode,
+		:EventFlag,
+		:EventTimeOut
+	FROM EZEVENTPROPERTY WHERE RTRIM(RECORDID)=:Input_RecordId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	
+	ezeventproperty_ptr->RecordNo = RecordNo;
+	strcpy( ezeventproperty_ptr->RecordId, RecordId );
+	strcpy( ezeventproperty_ptr->ChannelName, ChannelName );
+	strcpy( ezeventproperty_ptr->MsgType, MsgType );
+	strcpy( ezeventproperty_ptr->TxnCode, TxnCode );
+	strcpy( ezeventproperty_ptr->RespCode, RespCode );
+	ezeventproperty_ptr->EventFlag = EventFlag;
+	ezeventproperty_ptr->EventTimeOut = EventTimeOut;
+	
+	return sqlca.sqlcode;
+}
+
+
+int readEzMsgTranslate( const char *I_MsgTranslateId, struct EzMsgTranslateMemory *ezmsgtranslate_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char MsgTranslateId[ 17 ];
+		char Input_MsgTranslateId[ 17 ];
+		char TranslateDesc[ 256 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR MsgTranslateId IS STRING(17);
+	EXEC SQL VAR Input_MsgTranslateId IS STRING(17);
+	EXEC SQL VAR TranslateDesc IS STRING(256);
+	
+	memset( MsgTranslateId, 0, sizeof( MsgTranslateId ) );
+	memset( Input_MsgTranslateId, 0, sizeof( Input_MsgTranslateId ) );
+	memset( TranslateDesc, 0, sizeof( TranslateDesc ) );
+	
+	strcpy( Input_MsgTranslateId, I_MsgTranslateId );
+	
+	EXEC SQL SELECT
+		RTRIM(MSGTRANSLATEID),
+		RTRIM(TRANSLATEDESC)
+	INTO
+		:MsgTranslateId,
+		:TranslateDesc
+	FROM EZMSGTRANSLATE WHERE RTRIM(MSGTRANSLATEID)=:Input_MsgTranslateId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	
+	strcpy( ezmsgtranslate_ptr->MsgTranslateId, MsgTranslateId );
+	strcpy( ezmsgtranslate_ptr->TranslateDesc, TranslateDesc );
+	
+	return sqlca.sqlcode;
+}
+
+int readEzTxnRefSelect( const char *I_RecordId, struct EzTxnRefSelectMemory *eztxnrefselect_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		int RecordNo;
+		char RecordId[ 17 ];
+		char Input_RecordId[ 17 ];
+		char DeviceType[ 17 ];
+		char MsgType[ 5 ];
+		char TxnCode[ 7 ];
+		char RespCode[ 4 ];
+		char KeyFields[ 151 ]; 
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR Input_RecordId IS STRING(17);
+	EXEC SQL VAR DeviceType IS STRING(17);
+	EXEC SQL VAR MsgType IS STRING(5);
+	EXEC SQL VAR TxnCode IS STRING(7);
+	EXEC SQL VAR RespCode IS STRING(4);
+	EXEC SQL VAR KeyFields IS STRING(151);
+	
+	memset( RecordId, 0, sizeof( RecordId ) );
+	memset( Input_RecordId, 0, sizeof( Input_RecordId ) );
+	memset( DeviceType, 0, sizeof( DeviceType ) );
+	memset( MsgType, 0, sizeof( MsgType ) );
+	memset( TxnCode, 0, sizeof( TxnCode ) );
+	memset( RespCode, 0, sizeof( RespCode ) );
+	memset( KeyFields, 0, sizeof( KeyFields ) );
+		
+	strcpy( Input_RecordId, I_RecordId );
+	
+	EXEC SQL SELECT
+		RECORDNO,
+		RTRIM(RECORDID),
+		RTRIM(DEVICETYPE),
+		RTRIM(MSGTYPE),
+        RTRIM(TXNCODE),
+        RTRIM(RESPCODE),
+        RTRIM(KEYFIELDS)
+	INTO
+		:RecordNo,
+		:RecordId,
+		:DeviceType,
+		:MsgType,
+		:TxnCode,
+		:RespCode,
+		:KeyFields
+	FROM EZTXNREFSELECT WHERE RTRIM(RECORDID)=:Input_RecordId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	
+	eztxnrefselect_ptr->RecordNo = RecordNo;
+	strcpy( eztxnrefselect_ptr->RecordId, RecordId );
+	strcpy( eztxnrefselect_ptr->DeviceType, DeviceType );
+	strcpy( eztxnrefselect_ptr->MsgType, MsgType );
+	strcpy( eztxnrefselect_ptr->TxnCode, TxnCode );
+	strcpy( eztxnrefselect_ptr->RespCode, RespCode );
+	strcpy( eztxnrefselect_ptr->KeyFields, KeyFields );
+		
+	return sqlca.sqlcode;
+}
+
+int readEzTxnRouteInfo( const char *I_RecordId, struct EzTxnRouteInfoMemory *eztxnrouteinfo_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		int RecordNo;
+		char RecordId[ 129 ];
+		char Input_RecordId[ 129 ];
+		char IssuerInstRouteType[ 17 ];
+		char AcquirerInstRouteType[ 17 ];
+		char TxfInstRouteType[ 17 ];
+		char SettInstRouteType[ 17 ];
+		char FwdInstRouteType[ 17 ];
+		char DeviceType[ 65 ];
+		char DeviceSubType[ 65 ];
+		char MsgType[ 65 ];
+		char TxnCode[ 129 ];
+		char RespCode[ 65 ];
+		char RouteExp1[ 129 ];
+		int RouteExpPriority1;
+		char RouteExp2[ 129 ];
+		int RouteExpPriority2;		
+		char ChannelName[ 65 ];
+		char NetworkTypeList[ 65 ];
+		char NetworkStatusList[ 65 ];
+		int NetworkListPriority;
+		char RouteCondition[ 129 ];
+		int RouteConditionPriority;
+		char RouteSelectList[ 129 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR RecordId IS STRING(129);
+	EXEC SQL VAR Input_RecordId IS STRING(129);
+	EXEC SQL VAR IssuerInstRouteType IS STRING(17);
+	EXEC SQL VAR AcquirerInstRouteType IS STRING(17);
+	EXEC SQL VAR TxfInstRouteType IS STRING(17);
+	EXEC SQL VAR SettInstRouteType IS STRING(17);
+	EXEC SQL VAR FwdInstRouteType IS STRING(17);
+	EXEC SQL VAR DeviceType IS STRING(65);
+	EXEC SQL VAR DeviceSubType IS STRING(65);
+	EXEC SQL VAR MsgType IS STRING(65);
+	EXEC SQL VAR TxnCode IS STRING(129);
+	EXEC SQL VAR RespCode IS STRING(65);
+	EXEC SQL VAR RouteExp1 IS STRING(129);
+	EXEC SQL VAR RouteExp2 IS STRING(129);
+	EXEC SQL VAR ChannelName IS STRING(65);
+	EXEC SQL VAR NetworkTypeList IS STRING(65);
+	EXEC SQL VAR NetworkStatusList IS STRING(65);
+	EXEC SQL VAR RouteCondition IS STRING(129);
+	EXEC SQL VAR RouteSelectList IS STRING(129);
+	
+	memset( RecordId, 0, sizeof( RecordId ) );
+	memset( Input_RecordId, 0, sizeof( Input_RecordId ) );
+	memset( IssuerInstRouteType, 0, sizeof( IssuerInstRouteType ) );
+	memset( AcquirerInstRouteType, 0, sizeof( AcquirerInstRouteType ) );
+	memset( TxfInstRouteType, 0, sizeof( TxfInstRouteType ) );
+	memset( SettInstRouteType, 0, sizeof( SettInstRouteType ) );
+	memset( FwdInstRouteType, 0, sizeof( FwdInstRouteType ) );
+	memset( DeviceType, 0, sizeof( DeviceType ) );
+	memset( DeviceSubType, 0, sizeof( DeviceSubType ) );
+	memset( MsgType, 0, sizeof( MsgType ) );
+	memset( TxnCode, 0, sizeof( TxnCode ) );
+	memset( RespCode, 0, sizeof( RespCode ) );
+	memset( RouteExp1, 0, sizeof( RouteExp1 ) );
+	memset( RouteExp2, 0, sizeof( RouteExp2 ) );
+	memset( ChannelName, 0, sizeof( ChannelName ) );
+	memset( NetworkTypeList, 0, sizeof( NetworkTypeList ) );
+	memset( NetworkStatusList, 0, sizeof( NetworkStatusList ) );
+	memset( RouteCondition, 0, sizeof( RouteCondition ) );
+	memset( RouteSelectList, 0, sizeof( RouteSelectList ) );
+		
+	strcpy( Input_RecordId, I_RecordId );
+	
+	EXEC SQL SELECT
+		RECORDNO,
+		RTRIM(RECORDID),
+	 	RTRIM(ISSUERINSTROUTETYPE),	
+	 	RTRIM(ACQUIRERINSTROUTETYPE),
+	 	RTRIM(TXFINSTROUTETYPE),
+	 	RTRIM(SETTINSTROUTETYPE),
+	 	RTRIM(FWDINSTROUTETYPE),
+	 	RTRIM(DEVICETYPE),
+	 	RTRIM(DEVICESUBTYPE),
+	 	RTRIM(MSGTYPE),
+	 	RTRIM(TXNCODE),
+	 	RTRIM(RESPCODE),
+	 	RTRIM(ROUTEEXP1),
+	 	ROUTEEXPPRIORITY1,
+	 	RTRIM(ROUTEEXP2),
+	 	ROUTEEXPPRIORITY2,
+	 	RTRIM(CHANNELNAME),
+	 	RTRIM(NETWORKTYPELIST),
+	 	RTRIM(NETWORKSTATUSLIST),
+	 	NETWORKLISTPRIORITY,
+	 	RTRIM(ROUTECONDITION),
+	 	ROUTECONDITIONPRIORITY,
+	 	RTRIM(ROUTESELECTLIST)
+	INTO
+		:RecordNo,
+		:RecordId,
+		:IssuerInstRouteType,
+		:AcquirerInstRouteType,
+		:TxfInstRouteType,
+		:SettInstRouteType,
+		:FwdInstRouteType,
+		:DeviceType,
+		:DeviceSubType,
+		:MsgType,
+		:TxnCode,
+		:RespCode,
+		:RouteExp1,
+		:RouteExpPriority1,
+		:RouteExp2,
+		:RouteExpPriority2,
+		:ChannelName,
+		:NetworkTypeList,
+		:NetworkStatusList,
+		:NetworkListPriority,
+		:RouteCondition,
+		:RouteConditionPriority,
+		:RouteSelectList
+	FROM EZTXNROUTEINFO WHERE RTRIM(RECORDID)=:Input_RecordId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	
+	eztxnrouteinfo_ptr->RecordNo = RecordNo;
+	strcpy( eztxnrouteinfo_ptr->RecordId, RecordId );
+    strcpy( eztxnrouteinfo_ptr->IssuerInstRouteType, IssuerInstRouteType );
+    strcpy( eztxnrouteinfo_ptr->AcquirerInstRouteType, AcquirerInstRouteType );
+    strcpy( eztxnrouteinfo_ptr->TxfInstRouteType, TxfInstRouteType );
+    strcpy( eztxnrouteinfo_ptr->SettInstRouteType, SettInstRouteType );
+    strcpy( eztxnrouteinfo_ptr->FwdInstRouteType, FwdInstRouteType );
+    strcpy( eztxnrouteinfo_ptr->DeviceType, DeviceType );
+    strcpy( eztxnrouteinfo_ptr->DeviceSubType, DeviceSubType );
+    strcpy( eztxnrouteinfo_ptr->MsgType, MsgType );
+    strcpy( eztxnrouteinfo_ptr->TxnCode, TxnCode );
+    strcpy( eztxnrouteinfo_ptr->RespCode, RespCode );
+    strcpy( eztxnrouteinfo_ptr->RouteExp1, RouteExp1 );
+    strcpy( eztxnrouteinfo_ptr->RouteExp2, RouteExp2 );
+    eztxnrouteinfo_ptr->RouteExpPriority1 = RouteExpPriority1;
+    eztxnrouteinfo_ptr->RouteExpPriority2 = RouteExpPriority2;
+    strcpy( eztxnrouteinfo_ptr->ChannelName, ChannelName );
+    strcpy( eztxnrouteinfo_ptr->NetworkTypeList, NetworkTypeList );
+    strcpy( eztxnrouteinfo_ptr->NetworkStatusList, NetworkStatusList );
+    eztxnrouteinfo_ptr->NetworkListPriority = NetworkListPriority;
+    strcpy( eztxnrouteinfo_ptr->RouteCondition, RouteCondition );
+    eztxnrouteinfo_ptr->RouteConditionPriority = RouteConditionPriority;
+    strcpy( eztxnrouteinfo_ptr->RouteSelectList, RouteSelectList );
+	
+	return sqlca.sqlcode;
+}
+
+int readEzTxnRouteSelect( const char *I_RouteSelectId, struct EzTxnRouteSelectMemory *eztxnrouteinfo_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RouteSelectId[ 17 ];
+		char Input_RouteSelectId[ 17 ];
+		char ChannelName[ 33 ];
+		char MsgTranslateId[ 17 ];
+		char LogFlag;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR RouteSelectId IS STRING(17);
+	EXEC SQL VAR Input_RouteSelectId IS STRING(17);
+	EXEC SQL VAR ChannelName IS STRING(33);
+	EXEC SQL VAR MsgTranslateId IS STRING(17);
+	
+	memset( RouteSelectId, 0, sizeof( RouteSelectId ) );
+	memset( Input_RouteSelectId, 0, sizeof( Input_RouteSelectId ) );
+	memset( ChannelName, 0, sizeof( ChannelName ) );
+	memset( MsgTranslateId, 0, sizeof( MsgTranslateId ) );	
+	
+	strcpy( Input_RouteSelectId, I_RouteSelectId );
+	
+	EXEC SQL SELECT
+		RTRIM(ROUTESELECTID),
+        RTRIM(CHANNELNAME),
+        RTRIM(MSGTRANSLATEID),
+        LOGFLAG
+	INTO
+		:RouteSelectId,
+		:ChannelName,
+		:MsgTranslateId,
+		:LogFlag
+	FROM EZTXNROUTESELECT WHERE RTRIM(ROUTESELECTID)=:Input_RouteSelectId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	
+	strcpy( eztxnrouteinfo_ptr->RouteSelectId, RouteSelectId );
+	strcpy( eztxnrouteinfo_ptr->ChannelName, ChannelName );
+	strcpy( eztxnrouteinfo_ptr->MsgTranslateId, MsgTranslateId );
+	eztxnrouteinfo_ptr->LogFlag = LogFlag;
+	
+	return sqlca.sqlcode;
+}
+
+int readEzInBoundMsgProperty( const char *I_RecordId, struct EzInBoundMsgPropertyMemory *ezinboundmsgproperty_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		int RecordNo;
+		char RecordId[ 17 ];
+		char Input_RecordId[ 17 ];
+		char MsgType[ 5 ];
+		char ChannelType[ 11 ];
+		char ChannelName[ 33 ];
+		char MsgFlag;
+		char LogFlag;
+		char MsgProcessFlag;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR Input_RecordId IS STRING(17);
+	EXEC SQL VAR MsgType IS STRING(5);
+	EXEC SQL VAR ChannelType IS STRING(11);
+	EXEC SQL VAR ChannelName IS STRING(33);
+	
+	memset( RecordId, 0, sizeof( RecordId ) );
+	memset( Input_RecordId, 0, sizeof( Input_RecordId ) );
+	memset( MsgType, 0, sizeof( MsgType ) );
+	memset( ChannelType, 0, sizeof( ChannelType ) );
+	memset( ChannelName, 0, sizeof( ChannelName ) );
+	
+	strcpy(Input_RecordId, I_RecordId );
+	
+	EXEC SQL SELECT
+		RECORDNO,
+		RTRIM(RECORDID),
+		RTRIM(MSGTYPE),
+		RTRIM(CHANNELTYPE),
+        RTRIM(CHANNELNAME),
+        MSGFLAG,
+        LOGFLAG,
+        MSGPROCESSFLAG
+	INTO
+		:RecordNo,
+		:RecordId,
+		:MsgType,
+		:ChannelType,
+		:ChannelName,
+		:MsgFlag,
+		:LogFlag,
+		:MsgProcessFlag
+	FROM EZINBOUNDMSGPROPERTY WHERE RTRIM(RECORDID)=:Input_RecordId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+		
+	ezinboundmsgproperty_ptr->RecordNo = RecordNo;
+	strcpy( ezinboundmsgproperty_ptr->RecordId, RecordId );
+	strcpy( ezinboundmsgproperty_ptr->MsgType, MsgType );
+	strcpy( ezinboundmsgproperty_ptr->ChannelType, ChannelType );
+	strcpy( ezinboundmsgproperty_ptr->ChannelName, ChannelName );
+	ezinboundmsgproperty_ptr->MsgFlag = MsgFlag;
+	ezinboundmsgproperty_ptr->LogFlag = LogFlag;
+	ezinboundmsgproperty_ptr->MsgProcessFlag = MsgProcessFlag;
+	return sqlca.sqlcode;
+}
+
+int readEzDeviceTypeMap( const char *I_DeviceGroupId, struct EzDeviceTypeMapMemory *ezdevicetypemap_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char DeviceGroupId[ 17 ];
+		char Input_DeviceGroupId[ 17 ];
+		int DeviceGroupVal;
+    EXEC SQL END DECLARE SECTION;
+    
+    EXEC SQL VAR DeviceGroupId IS STRING(17);
+    EXEC SQL VAR Input_DeviceGroupId IS STRING(17);
+    
+    memset( DeviceGroupId, 0, sizeof( DeviceGroupId ) );
+    memset( Input_DeviceGroupId, 0, sizeof( Input_DeviceGroupId ) );
+    
+    strcpy( Input_DeviceGroupId, I_DeviceGroupId );
+    
+    EXEC SQL SELECT
+		RTRIM(DEVICEGROUPID),
+		DEVICEGROUPVAL
+	INTO
+		:DeviceGroupId,
+		:DeviceGroupVal
+	FROM EZDEVICETYPEMAP WHERE RTRIM(DEVICEGROUPID)=:Input_DeviceGroupId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+		
+    strcpy( ezdevicetypemap_ptr->DeviceGroupId, DeviceGroupId );
+    ezdevicetypemap_ptr->DeviceGroupVal = DeviceGroupVal;
+
+	return sqlca.sqlcode;
+}
+
+int readEzTxnMsgOrder( const char *I_RecordId, struct EzTxnMsgOrderMemory *eztxnmsgorder_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char RecordId[ 17 ];
+		char Input_RecordId[ 17 ];
+		char SrcChannel[ 33 ];
+		char DestChannel[ 33 ];
+		char MsgType[ 5 ];
+		char TxnCode[ 7 ];
+		char RespCode[ 4 ];
+		short OrderNo;
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR RecordId IS STRING(17);
+	EXEC SQL VAR Input_RecordId IS STRING(17);
+	EXEC SQL VAR SrcChannel IS STRING(33);
+	EXEC SQL VAR DestChannel IS STRING(33);
+	EXEC SQL VAR MsgType IS STRING(5);
+	EXEC SQL VAR TxnCode IS STRING(7);
+	EXEC SQL VAR RespCode IS STRING(4);
+	
+	memset( RecordId, 0, sizeof( RecordId ) );
+	memset( Input_RecordId, 0, sizeof( Input_RecordId ) );
+	memset( SrcChannel, 0, sizeof( SrcChannel ) );
+	memset( DestChannel, 0, sizeof( DestChannel ) );
+	memset( MsgType, 0, sizeof( MsgType ) );
+	memset( TxnCode, 0, sizeof( TxnCode ) );
+	memset( RespCode, 0, sizeof( RespCode ) );
+	
+	
+	strcpy( Input_RecordId, I_RecordId );
+	
+	EXEC SQL SELECT
+		RTRIM(RECORDID),
+		RTRIM(SRCCHANNEL),
+		RTRIM(DESTCHANNEL),
+		RTRIM(MSGTYPE),
+		RTRIM(TXNCODE),
+		RTRIM(RESPCODE),
+       	ORDERNO
+	INTO
+		:RecordId,
+		:SrcChannel,
+		:DestChannel,
+		:MsgType,
+		:TxnCode,
+		:RespCode,
+		:OrderNo
+	FROM EZTXNMSGORDER WHERE RTRIM(RECORDID)=:Input_RecordId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	
+	strcpy( eztxnmsgorder_ptr->RecordId, RecordId );
+	strcpy( eztxnmsgorder_ptr->SrcChannel, SrcChannel );
+	strcpy( eztxnmsgorder_ptr->DestChannel, DestChannel );
+	strcpy( eztxnmsgorder_ptr->MsgType, MsgType );
+	strcpy( eztxnmsgorder_ptr->TxnCode, TxnCode );
+	strcpy( eztxnmsgorder_ptr->RespCode, RespCode );
+	eztxnmsgorder_ptr->OrderNo = OrderNo;
+	
+	return sqlca.sqlcode;
+}
+
+int readEzInstExtNtwkProfile( const char *I_InstId, const char *I_ExtNetworkId, struct EzInstExtNtwkProfileMemory *ezinstextntwkprofile_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char InstId[ 13 ];
+		char Input_InstId[ 13 ]; 
+		char ExtNetworkId[ 17 ];
+		char Input_ExtNetworkId[ 17 ];
+		char AcqInstCode[ 17 ];
+		char TxnCodeList[ 65 ];
+		char AddFee1[ 129 ];
+		char AddFee2[ 129 ];
+		char AddFee3[ 129 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR InstId IS STRING(13);
+	EXEC SQL VAR Input_InstId IS STRING(13);
+	EXEC SQL VAR ExtNetworkId IS STRING(17);
+	EXEC SQL VAR Input_ExtNetworkId IS STRING(17);
+	EXEC SQL VAR AcqInstCode IS STRING(17);
+	EXEC SQL VAR TxnCodeList IS STRING(65);
+	EXEC SQL VAR AddFee1 IS STRING(129);
+	EXEC SQL VAR AddFee2 IS STRING(129);
+	EXEC SQL VAR AddFee3 IS STRING(129);
+	
+	memset( InstId, 0, sizeof( InstId ) );
+	memset( Input_InstId, 0, sizeof( Input_InstId ) );
+	memset( ExtNetworkId, 0, sizeof( ExtNetworkId ) );
+	memset( Input_ExtNetworkId, 0, sizeof( Input_ExtNetworkId ) );
+	memset( AcqInstCode, 0, sizeof( AcqInstCode ) );
+	memset( TxnCodeList, 0, sizeof( TxnCodeList ) );
+	memset( AddFee1, 0, sizeof( AddFee1 ) );
+	memset( AddFee2, 0, sizeof( AddFee2 ) );
+	memset( AddFee3, 0, sizeof( AddFee3 ) );
+		
+	strcpy( Input_InstId, I_InstId );
+	strcpy( Input_ExtNetworkId, I_ExtNetworkId );
+	
+	EXEC SQL SELECT
+		RTRIM(INSTID),
+		RTRIM(EXTNETWORKID),
+		RTRIM(ACQINSTCODE),
+		RTRIM(TXNCODELIST),
+		RTRIM(ADDFEE1),
+		RTRIM(ADDFEE2),
+        RTRIM(ADDFEE3)
+    INTO
+		:InstId,
+		:ExtNetworkId,
+		:AcqInstCode,
+		:TxnCodeList,
+		:AddFee1,
+		:AddFee2,
+		:AddFee3
+	FROM EZINSTEXTNTWKPROFILE WHERE RTRIM(INSTID)=:Input_InstId AND RTRIM(EXTNETWORKID)=:Input_ExtNetworkId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	
+	strcpy( ezinstextntwkprofile_ptr->InstId, InstId );
+	strcpy( ezinstextntwkprofile_ptr->ExtNetworkId, ExtNetworkId );
+	strcpy( ezinstextntwkprofile_ptr->AcqInstCode, AcqInstCode );
+	strcpy( ezinstextntwkprofile_ptr->TxnCodeList, TxnCodeList );
+	strcpy( ezinstextntwkprofile_ptr->AddFee1, AddFee1 );
+	strcpy( ezinstextntwkprofile_ptr->AddFee2, AddFee2 );
+	strcpy( ezinstextntwkprofile_ptr->AddFee3, AddFee3 );
+	
+	return sqlca.sqlcode;
+}
+
+int readEzExtNtwkProfile( const char *I_ExtNetworkId, struct EzExtNtwkProfileMemory *ezextntwkprofile_ptr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char ExtNetworkId[ 17 ];
+		char Input_ExtNetworkId[ 17 ];
+		char TxnCodeList[ 65 ];
+		char TxnCountCheckReq[ 33 ];
+		char TxnAmountCheckReq[ 33 ];
+		char MaxAmountPerTxn[ 129 ];
+		char MaxAmount[ 129 ];
+		char MaxAmountInterval[ 129 ];
+		char MaxAmountIntervalType[ 33 ];
+		char MaxAmountAction[ 33 ];
+		char MaxAmountFee[ 129 ];
+		char MaxCount[ 129 ];
+		char MaxCountInterval[ 129 ];
+		char MaxCountIntervalType[ 33 ];
+		char MaxCountAction[ 33 ];
+		char MaxCountFee[ 129 ];
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL VAR ExtNetworkId IS STRING(17);
+	EXEC SQL VAR Input_ExtNetworkId IS STRING(17);
+	EXEC SQL VAR TxnCodeList IS STRING(65);
+	EXEC SQL VAR TxnCountCheckReq IS STRING(33);
+	EXEC SQL VAR TxnAmountCheckReq IS STRING(33);
+	EXEC SQL VAR MaxAmountPerTxn IS STRING(129);
+	EXEC SQL VAR MaxAmount IS STRING(129);
+	EXEC SQL VAR MaxAmountInterval IS STRING(129);
+	EXEC SQL VAR MaxAmountIntervalType IS STRING(33);
+	EXEC SQL VAR MaxAmountAction IS STRING(33);
+	EXEC SQL VAR MaxAmountFee IS STRING(129);
+	EXEC SQL VAR MaxCount IS STRING(129);
+	EXEC SQL VAR MaxCountInterval IS STRING(129);
+	EXEC SQL VAR MaxCountIntervalType IS STRING(33);
+	EXEC SQL VAR MaxCountAction IS STRING(33);
+	EXEC SQL VAR MaxCountFee IS STRING(129);
+	
+	
+	memset( ExtNetworkId, 0, sizeof( ExtNetworkId ) );
+	memset( Input_ExtNetworkId, 0, sizeof( Input_ExtNetworkId ) );
+	memset( TxnCodeList, 0, sizeof( TxnCodeList ) );
+	memset( TxnCountCheckReq, 0, sizeof( TxnCountCheckReq ) ); 
+	memset( TxnAmountCheckReq, 0, sizeof( TxnAmountCheckReq ) );
+	memset( MaxAmountPerTxn, 0, sizeof( MaxAmountPerTxn ) );
+	memset( MaxAmount, 0, sizeof( MaxAmount ) );
+	memset( MaxAmountInterval, 0, sizeof( MaxAmountInterval ) ); 
+	memset( MaxAmountIntervalType, 0, sizeof( MaxAmountIntervalType ) ); 
+	memset( MaxAmountAction, 0, sizeof( MaxAmountAction ) );
+	memset( MaxAmountFee, 0, sizeof( MaxAmountFee ) );
+	memset( MaxCount, 0, sizeof( MaxCount ) );
+	memset( MaxCountInterval, 0, sizeof( MaxCountInterval ) ); 
+	memset( MaxCountIntervalType, 0, sizeof( MaxCountIntervalType ) ); 
+	memset( MaxCountAction, 0, sizeof( MaxCountAction ) );
+	memset( MaxCountFee, 0, sizeof( MaxCountFee ) );
+	
+	strcpy( Input_ExtNetworkId, I_ExtNetworkId );
+	
+	EXEC SQL SELECT
+		RTRIM(EXTNETWORKID),
+		RTRIM(TXNCODELIST),
+		RTRIM(TXNCOUNTCHECKREQ),
+		RTRIM(TXNAMOUNTCHECKREQ),
+        RTRIM(MAXAMOUNTPERTXN),
+        RTRIM(MAXAMOUNT),
+        RTRIM(MAXAMOUNTINTERVAL),
+        RTRIM(MAXAMOUNTINTERVALTYPE),
+        RTRIM(MAXAMOUNTACTION),
+        RTRIM(MAXAMOUNTFEE),
+        RTRIM(MAXCOUNT),
+        RTRIM(MAXCOUNTINTERVAL),
+        RTRIM(MAXCOUNTINTERVALTYPE),
+        RTRIM(MAXCOUNTACTION),
+        RTRIM(MAXCOUNTFEE)
+    INTO
+		:ExtNetworkId,
+		:TxnCodeList,
+		:TxnCountCheckReq,
+		:TxnAmountCheckReq,
+		:MaxAmountPerTxn,
+		:MaxAmount,
+		:MaxAmountInterval,
+		:MaxAmountIntervalType,
+		:MaxAmountAction,
+		:MaxAmountFee,
+		:MaxCount,
+		:MaxCountInterval,
+		:MaxCountIntervalType,
+		:MaxCountAction,
+		:MaxCountFee
+	FROM EZEXTNTWKPROFILE WHERE RTRIM(EXTNETWORKID)=:Input_ExtNetworkId;
+	
+	if ( sqlca.sqlcode != 0 )
+		return sqlca.sqlcode;
+	
+	strcpy( ezextntwkprofile_ptr->ExtNetworkId, ExtNetworkId );
+	strcpy( ezextntwkprofile_ptr->TxnCodeList, TxnCodeList );
+	strcpy( ezextntwkprofile_ptr->TxnCountCheckReq, TxnCountCheckReq );
+	strcpy( ezextntwkprofile_ptr->TxnAmountCheckReq, TxnAmountCheckReq );
+	strcpy( ezextntwkprofile_ptr->MaxAmountPerTxn, MaxAmountPerTxn );
+	strcpy( ezextntwkprofile_ptr->MaxAmount, MaxAmount );
+	strcpy( ezextntwkprofile_ptr->MaxAmountInterval, MaxAmountInterval );
+	strcpy( ezextntwkprofile_ptr->MaxAmountIntervalType, MaxAmountIntervalType );
+	strcpy( ezextntwkprofile_ptr->MaxAmountAction, MaxAmountAction );
+	strcpy( ezextntwkprofile_ptr->MaxAmountFee, MaxAmountFee );
+	strcpy( ezextntwkprofile_ptr->MaxCount, MaxCount );
+	strcpy( ezextntwkprofile_ptr->MaxCountInterval, MaxCountInterval );
+	strcpy( ezextntwkprofile_ptr->MaxCountIntervalType, MaxCountIntervalType );
+	strcpy( ezextntwkprofile_ptr->MaxCountAction, MaxCountAction );
+	strcpy( ezextntwkprofile_ptr->MaxCountFee, MaxCountFee );
+		
+	return sqlca.sqlcode;
+}
+
+
+
+

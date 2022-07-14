@@ -1,0 +1,17 @@
+
+<<<<<<< .mine
+Pro*C/C++: Release 10.2.0.1.0 - Production on Fri Sep 23 14:17:54 2011
+=======
+Pro*C/C++: Release 11.2.0.1.0 - Production on Thu Sep 22 14:24:28 2011
+>>>>>>> .r2284
+
+Copyright (c) 1982, 2009, Oracle and/or its affiliates.  All rights reserved.
+
+Error at line 1, column 10 in file ezalertdbmgrdb.pc
+     1  #include <ezlink/ezalertdbtypes.h>
+     1  .........1
+     1  PCC-S-02015, unable to open include file
+Error at line 7, column 11 in file /usr/include/gnu/stubs.h
+     7  # include <gnu/stubs-32.h>
+     7  ..........1
+     7  PCC-S-02015, unable to open include file

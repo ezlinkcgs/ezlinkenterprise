@@ -1,0 +1,117 @@
+#include<sqlca.h>
+#include<stdlib.h>
+#include<string.h>
+#include<stdio.h>
+#include<ezbusiness/ezesmetypes.h>
+
+
+int getSMSCInfoCount( int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+        int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZSMSCINFO;
+    if ( sqlca.sqlcode != 0 )
+    {
+    	*SqlErr = sqlca.sqlcode;
+    	return -1;
+    }
+    else
+        return reccount;
+}
+
+
+int readSMSCInfo( struct EzSMSCInfo *smscinfoptr, int *SqlErr )
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+		char hSMSCName[ 33 ];
+		char hIpAddress[ 16 ];
+		int hPortNo;
+		char hTcpIpHeaderType[ 11 ];
+		int hTcpIpHeaderLen;
+		char hSystemId[ 51 ];
+		char hPassword[ 51 ];
+		char hSystemType[ 51 ];
+		char hTxnChannel[ 33 ];
+		int hConnectionInterval;
+	EXEC SQL END DECLARE SECTION;
+
+	int i = 0;
+
+	EXEC SQL VAR hSMSCName IS STRING(33);
+	EXEC SQL VAR hIpAddress IS STRING(16);
+	EXEC SQL VAR hTcpIpHeaderType IS STRING(11);
+	EXEC SQL VAR hSystemId IS STRING(51);
+	EXEC SQL VAR hPassword IS STRING(51);
+	EXEC SQL VAR hSystemType IS STRING(51);
+	EXEC SQL VAR hTxnChannel IS STRING(33);
+
+	EXEC SQL DECLARE smsc_cur CURSOR FOR
+        SELECT
+        	RTRIM(NAME),
+        	RTRIM(IPADDRESS),
+			PORTNO,
+			RTRIM(TCPIPHEADERTYPE),
+			TCPIPHEADERLEN,
+			RTRIM(SYSTEMID),
+			RTRIM(PASSWORD),
+			RTRIM(SYSTEMTYPE),
+			RTRIM(TXNCHANNEL),
+			CONNECTIONINTERVAL
+		FROM EZSMSCINFO;
+		
+	EXEC SQL OPEN smsc_cur;
+
+	while( 1 )
+	{
+		memset( hSMSCName, 0, sizeof( hSMSCName ) );
+		memset( hIpAddress, 0, sizeof( hIpAddress ) );
+		memset( hTcpIpHeaderType, 0, sizeof( hTcpIpHeaderType ) );
+		memset( hSystemId, 0, sizeof( hSystemId ) );
+		memset( hPassword, 0, sizeof( hPassword ) );
+		memset( hSystemType, 0, sizeof( hSystemType ) );
+		memset( hTxnChannel, 0, sizeof( hTxnChannel ) );
+		
+		EXEC SQL FETCH smsc_cur INTO
+		:hSMSCName,
+		:hIpAddress,
+		:hPortNo,
+		:hTcpIpHeaderType,
+		:hTcpIpHeaderLen,
+		:hSystemId,
+		:hPassword,
+		:hSystemType,
+		:hTxnChannel,
+		:hConnectionInterval;
+
+		if ( sqlca.sqlcode != 0 )
+        {
+            EXEC SQL CLOSE smsc_cur;
+            return sqlca.sqlcode ;
+        }
+
+		if ( sqlca.sqlcode == 1403 )
+            break;
+        
+		strcpy( ( smscinfoptr + i )->SMSCName, hSMSCName );
+		strcpy( ( smscinfoptr + i )->IpAddress, hIpAddress );
+		strcpy( ( smscinfoptr + i )->TcpIpHeaderType, hTcpIpHeaderType );
+		strcpy( ( smscinfoptr + i )->SystemId, hSystemId );
+		strcpy( ( smscinfoptr + i )->Password, hPassword );
+		strcpy( ( smscinfoptr + i )->SystemType, hSystemType );
+		strcpy( ( smscinfoptr + i )->TxnChannel, hTxnChannel );
+		( smscinfoptr + i )->PortNo = hPortNo;			
+		( smscinfoptr + i )->TcpIpHeaderLen = hTcpIpHeaderLen;	
+		( smscinfoptr + i )->ConnectionInterval = hConnectionInterval;
+		i++;
+	}
+
+	EXEC SQL CLOSE smsc_cur;	
+	
+	*SqlErr = sqlca.sqlcode;
+	if( sqlca.sqlcode != 0 )
+		return -1;
+	else
+		return 1;
+}

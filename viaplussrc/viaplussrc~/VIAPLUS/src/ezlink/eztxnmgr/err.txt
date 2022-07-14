@@ -1,0 +1,27 @@
+eztxnmgr.cpp:62: error: prototype for ‘int EzTxnMgr::ServiceTimeOut(EzTxnMsg*, const char*)’ does not match any in class ‘EzTxnMgr’
+/home/hari/EzLinkEnterprise/include/ezlink/eztxnmgr.h:27: error: candidate is: int EzTxnMgr::ServiceTimeOut(EzTxnMsg*)
+eztxnmgr.cpp: In member function ‘int EzTxnMgr::ServiceTimeOut(EzTxnMsg*, const char*)’:
+eztxnmgr.cpp:67: error: no matching function for call to ‘EzTxnMgr::ReadEzEventProperty(EzTxnMsg*&, const char*&, EzEventProperty*)’
+/home/hari/EzLinkEnterprise/include/ezlink/eztxnmgrutil.h:47: note: candidates are: int EzTxnMgrUtil::ReadEzEventProperty(const char*, const char*, EzTxnMsg, EzEventProperty*)
+eztxnmgr.cpp:73: error: ‘eventproperty’ was not declared in this scope
+eztxnmgr.cpp:82: error: ‘SetNetworkDown’ was not declared in this scope
+eztxnmgr.cpp:122: error: ‘EZLINK_TXN_ReversalAdviceRequest’ was not declared in this scope
+eztxnmgr.cpp: At global scope:
+eztxnmgr.cpp:135: error: no ‘int EzTxnMgr::LookForAllNetworkStatus(const char*, const char*, EzTxnRouteSelect*)’ member function declared in class ‘EzTxnMgr’
+eztxnmgr.cpp:140: error: no ‘int EzTxnMgr::ExecuteNetworkDownAction(EzTxnMsg*, EzNetworkProperty*)’ member function declared in class ‘EzTxnMgr’
+eztxnmgr.cpp: In member function ‘void EzTxnMgr::ServiceRequest()’:
+eztxnmgr.cpp:168: error: no matching function for call to ‘EzTxnMgr::ServiceTimeOut(EzTxnMsg&)’
+/home/hari/EzLinkEnterprise/include/ezlink/eztxnmgr.h:27: note: candidates are: int EzTxnMgr::ServiceTimeOut(EzTxnMsg*)
+eztxnmgr.cpp:62: note:                 int EzTxnMgr::ServiceTimeOut(EzTxnMsg*, const char*)
+eztxnmgr.cpp:174: error: ‘IsTransactionMsg’ was not declared in this scope
+eztxnmgr.cpp:177: error: ‘IsValidSearchIndex’ was not declared in this scope
+eztxnmgr.cpp:183: error: ‘IsRequestMsgType’ was not declared in this scope
+eztxnmgr.cpp:213: error: no matching function for call to ‘EzTxnMgr::ReadEzTxnRouteInfo(EzTxnMsg&, char [17])’
+/home/hari/EzLinkEnterprise/include/ezlink/eztxnmgrutil.h:45: note: candidates are: int EzTxnMgrUtil::ReadEzTxnRouteInfo(EzTxnMsg, const char*, char*)
+eztxnmgr.cpp:254: error: no matching function for call to ‘EzTxnMgr::ExecuteNetworkDownAction(EzTxnMsg&, char [11])’
+eztxnmgr.cpp:140: note: candidates are: int EzTxnMgr::ExecuteNetworkDownAction(EzTxnMsg*, EzNetworkProperty*)
+eztxnmgr.cpp:273: error: no matching function for call to ‘EzTxnMgr::ReadEzNetworkProperty(char [13], char [11], EzNetworkProperty*)’
+/home/hari/EzLinkEnterprise/include/ezlink/eztxnmgrutil.h:48: note: candidates are: int EzTxnMgrUtil::ReadEzNetworkProperty(const char*, EzNetworkProperty*)
+eztxnmgr.cpp:302: error: ‘struct EzTxnRouteSelect’ has no member named ‘LoggingFlag’
+eztxnmgr.cpp:325: error: ‘GenerateTimerKey’ was not declared in this scope
+make: *** [eztxnmgr.o] Error 1

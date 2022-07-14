@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/ezlinkenterprise/!svn/ver/2138/trunk/src/ezlink/ezlicensemgr
+END
+ezlicensemgr.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/ezlinkenterprise/!svn/ver/2138/trunk/src/ezlink/ezlicensemgr/ezlicensemgr.cpp
+END
+ezlicenseparseutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/ezlinkenterprise/!svn/ver/1412/trunk/src/ezlink/ezlicensemgr/ezlicenseparseutil.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/ezlinkenterprise/!svn/ver/2138/trunk/src/ezlink/ezlicensemgr/Makefile
+END

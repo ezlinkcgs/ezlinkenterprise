@@ -1,0 +1,9 @@
+
+Pro*C/C++: Release 10.2.0.1.0 - Production on Tue Jul 26 16:58:39 2011
+
+Copyright (c) 1982, 2005, Oracle.  All rights reserved.
+
+Error at line 1, column 10 in file ezposmgrdb.pc
+     1  #include <ezbusiness/ezposdbtypes.h>
+     1  .........1
+     1  PCC-S-02015, unable to open include file

@@ -1,0 +1,154 @@
+#include <ezbusiness/ezejcmd.h>
+
+void *EzEJcmd :: ezejcmdobj = 0;
+
+EzEJcmd :: EzEJcmd()
+{
+	ezejcmdobj = this;
+}
+
+EzEJcmd :: ~EzEJcmd()
+{
+
+}
+
+int EzEJcmd :: InitEzEJcmd()
+{
+	char ejlogpath[ LOG_PATH_SIZE + 1 ];
+
+	memset( ejlogpath, 0, sizeof( ejlogpath ));
+	sprintf( ejlogpath, "%s/%s/%s", getenv( "EZDIR_HOME" ), "log", "ezejcmd.log" );
+
+	if( openDebug( ejlogpath, "ezejcmd" ) < 0 )
+		exit( 0 );
+
+	if( InitEzChLocateUtil( this, "ezejcmd" ) < 0 )
+	{
+		trace( "Error in Initializing EzChLocateUtil" );
+		trace( "^^^^^^^^^^EzEJcmd Ended Abnormally^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( LocateChannel( ATMEJCHANNEL ) < 0 )
+	{
+		trace( "Error in locating EzEJupload Channel" );
+		trace( "^^^^^^^^^EzEJcmd Ended Abnormally^^^^^^^^^^");
+		closeDebug();
+		TaskExit();
+	}
+
+	if( !IsTaskRunning( "EzAtmEjMgr" ) )
+	{
+		trace( "EzAtmEjMgr is not running" );
+		trace( "^^^^^^^^^^^^EzEJcmd Ended Abnormally^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	if( InitEzAtmEjUtil( this ) < 0 )
+	{
+		trace( "Error in Initializing the EzAtmEjUtil" );
+		trace( "^^^^^^^^^^^EzEJcmd Ended Abnormally^^^^^^^^^^^^^" );
+		closeDebug();
+		TaskExit();
+	}
+
+	return 1;
+}
+
+void EzEJcmd :: startCmdInterface( int argc, char **argv )
+{
+	char ejcommand[100];
+	struct EzAtmEjQMsg Ejupload;
+	if( argc == 1 )
+	{
+		while(1)
+		{
+			printf("\nezejcmd>");
+			waitforinput();
+			memset( ejcommand, 0, sizeof( ejcommand ) );
+			getCommand( ejcommand, 1 );
+			if( strlen( ejcommand ) == 0 )
+				continue;
+			if( !strcasecmp( ejcommand, "help" ) )
+			{
+				printf( "\n\t\t<<<<<<<<<<<<<<< Help For EZEJCMD >>>>>>>>>>>>>>>>>\n" );
+				printf( "\n\tSYNTAX 1: < ATM ID > < ejupload > " );
+
+			}
+			else if( !strcasecmp( ejcommand, "quit" ) || !strcasecmp( ejcommand, "exit" ) )
+				exit( 0 );
+			else
+			{
+				if( VerifyAtmEjMemory( ejcommand ) < 0 )
+				{
+					printf("Invalid ATM id.. Verify the Atm id and try again...\n" );
+					continue;
+				}
+				else
+				{
+					memset( &Ejupload, 0, sizeof( struct EzAtmEjQMsg ) );
+					memcpy( Ejupload.AtmId, ejcommand, strlen( ejcommand ) );
+
+					memset( ejcommand, 0, sizeof( ejcommand ) );
+					getCommand( ejcommand, 2 );
+
+					if( strlen( ejcommand ) == 0 )
+					{
+						printf("\n Invaid command type help for more");
+						continue;
+					}
+					else
+					{
+						if( !strcasecmp( ejcommand, "startupload" ) || !strcasecmp( ejcommand, "C" ) )
+							Ejupload.CommandType = STARTDOWNLOAD;
+						else if( !strcasecmp( ejcommand, "archive" ) || !strcasecmp( ejcommand, "A" ) )
+							Ejupload.CommandType = ARCHIVE;
+						else if( !strcasecmp( ejcommand, "browse" ) || !strcasecmp( ejcommand, "B" ) )
+							Ejupload.CommandType = BROWSE;
+						else if( !strcasecmp( ejcommand, "delete" ) || !strcasecmp( ejcommand, "D" ) )
+							Ejupload.CommandType = DELETE;
+						else if( !strcasecmp( ejcommand, "retrive" ) || !strcasecmp( ejcommand, "R" ) )
+							Ejupload.CommandType = RETRIEVE_EDC;
+						else if( !strcasecmp( ejcommand, "getfileinfo" ) || !strcasecmp( ejcommand, "I" ) )
+							Ejupload.CommandType = GETFILEINFO;
+						else if( !strcasecmp( ejcommand, "getdirinfo" ) || !strcasecmp( ejcommand, "L" ) )
+							Ejupload.CommandType = GETDIRINFO;
+						else if( !strcasecmp( ejcommand, "getconfiginfo" ) || !strcasecmp( ejcommand, "F" ) )
+							Ejupload.CommandType = GETCONFIGINFO;
+						else if( !strcasecmp( ejcommand, "getoption" ) || !strcasecmp( ejcommand, "G" ) )
+							Ejupload.CommandType = GETOPTION;
+						else if( !strcasecmp( ejcommand, "setoption" ) || !strcasecmp( ejcommand, "O" ) )
+							Ejupload.CommandType = SETOPTION;
+						else if( !strcasecmp( ejcommand, "setoption" ) || !strcasecmp( ejcommand, "P" ) )
+							Ejupload.CommandType = SETPERFIX;
+						else
+						{
+							printf("Invalid Command Type");
+							trace("Invalid Command Type[%s]", ejcommand );
+							continue;
+						}
+
+					}
+					trace("AtmId < %s > Command < %s >", Ejupload.AtmId, Ejupload.CommandType );
+					if( WriteChannel( (char*)&Ejupload, sizeof( struct EzAtmEjQMsg ) ) < 0 )
+					{
+						trace( "Failed to write msg into EzEJuploadMgr Channel" );
+						printf( "Failed to Process the Request...");
+						return;
+					}
+				}
+			}
+		}
+	}
+}
+
+int main( int argc, char **argv )
+{
+	EzEJcmd ezejcmdobj;
+	ezejcmdobj.InitEzEJcmd();
+	ezejcmdobj.startCmdInterface( argc, argv );
+	return 1;
+}
+

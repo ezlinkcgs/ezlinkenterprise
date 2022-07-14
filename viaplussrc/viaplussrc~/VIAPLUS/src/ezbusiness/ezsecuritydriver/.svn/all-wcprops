@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/ezlinkenterprise/!svn/ver/2580/trunk/src/ezbusiness/ezsecuritydriver
+END
+ezsecuritydriverutil.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/ezlinkenterprise/!svn/ver/1900/trunk/src/ezbusiness/ezsecuritydriver/ezsecuritydriverutil.cpp
+END
+ezsecuritydriver.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/ezlinkenterprise/!svn/ver/2580/trunk/src/ezbusiness/ezsecuritydriver/ezsecuritydriver.cpp
+END
+ezhsmtools.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/ezlinkenterprise/!svn/ver/2073/trunk/src/ezbusiness/ezsecuritydriver/ezhsmtools.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/ezlinkenterprise/!svn/ver/2547/trunk/src/ezbusiness/ezsecuritydriver/Makefile
+END

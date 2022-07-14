@@ -1,0 +1,216 @@
+#include <ezdb/eznetworkecho.h>
+#include <ezdb/ezechoproperty.h>
+#include <sqlca.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+int getEzNetworkEchoCount( int *SqlErr )
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+    	int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZNETWORKECHO;
+
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int getEzEchoPropertyCount( int *SqlErr )
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+    	int reccount;
+    EXEC SQL END DECLARE SECTION;
+
+    EXEC SQL SELECT COUNT(*) INTO :reccount FROM EZECHOPROPERTY;
+
+    *SqlErr = sqlca.sqlcode;
+    return reccount;
+}
+
+int LoadEzNetworkEcho( struct EzNetworkEcho *eznetworkecho_ptr, int *SqlErr )
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char NetworkId[ 17 ];
+        char EchoPropertyId[ 17 ];
+        char EchoProperty;
+        char LogOnReq;
+    EXEC SQL END DECLARE SECTION;
+
+    int i = 0;
+
+	EXEC SQL VAR NetworkId IS STRING(17);
+	EXEC SQL VAR EchoPropertyId IS STRING(17);
+
+	EXEC SQL DECLARE eznetworkecho_cur CURSOR FOR
+    SELECT
+            RTRIM(NETWORKID),
+            RTRIM(ECHOPROPERTYID),
+            ECHOPROPERTY,
+            LOGONREQ
+    FROM EZNETWORKECHO;
+
+    EXEC SQL OPEN eznetworkecho_cur;
+
+    while( 1 )
+    {
+        memset( NetworkId, 0, sizeof( NetworkId ) );
+        memset( EchoPropertyId, 0, sizeof( EchoPropertyId ) );
+
+        EXEC SQL FETCH eznetworkecho_cur INTO
+        :NetworkId,
+        :EchoPropertyId,
+        :EchoProperty,
+        :LogOnReq;
+
+        if ( sqlca.sqlcode == 1403 )
+        break;
+
+        if ( sqlca.sqlcode != 0 )
+        break;
+
+        memset( ( eznetworkecho_ptr + i ), 0, sizeof( struct EzNetworkEcho ) );
+        strcpy( ( eznetworkecho_ptr + i )->NetworkId, NetworkId );
+        strcpy( ( eznetworkecho_ptr + i )->EchoPropertyId, EchoPropertyId );
+        ( eznetworkecho_ptr + i )->EchoProperty = EchoProperty;
+        ( eznetworkecho_ptr + i )->LogOnReq = LogOnReq;
+        i++;
+	}
+    *SqlErr = sqlca.sqlcode;
+    EXEC SQL CLOSE eznetworkecho_cur;
+                                                             
+	if( *SqlErr != 1403 )
+    	return -1;
+    else
+    	return 1;
+}
+
+int LoadEzEchoProperty( struct EzEchoProperty *ezechoproperty_ptr, int *SqlErr )
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char EchoPropertyId[ 17 ];
+        int EchoInterval;
+    EXEC SQL END DECLARE SECTION;
+
+    int i = 0;
+
+    EXEC SQL VAR EchoPropertyId IS STRING(17);
+
+	EXEC SQL DECLARE ezechoproperty_cur CURSOR FOR
+    SELECT
+        RTRIM(ECHOPROPERTYID),
+        ECHOINTERVAL
+    FROM EZECHOPROPERTY;
+
+    EXEC SQL OPEN ezechoproperty_cur;
+
+    while( 1 )
+    {
+        memset( EchoPropertyId, 0, sizeof( EchoPropertyId ) );
+
+        EXEC SQL FETCH ezechoproperty_cur INTO
+        :EchoPropertyId,
+        :EchoInterval;
+            
+        if ( sqlca.sqlcode == 1403 )
+        break;
+
+        if ( sqlca.sqlcode != 0 )
+        break;
+
+        memset( ( ezechoproperty_ptr + i ), 0, sizeof( struct EzEchoProperty ) );
+        strcpy( ( ezechoproperty_ptr + i )->EchoPropertyId, EchoPropertyId );
+        ( ezechoproperty_ptr + i )->EchoInterval = EchoInterval;
+        i++;
+    }
+    *SqlErr = sqlca.sqlcode;
+    EXEC SQL CLOSE ezechoproperty_cur;
+                                                                                                   
+	if( *SqlErr != 1403 )
+        return -1;
+	else
+        return 1;
+}
+
+int readEzNetworkEcho( const char *I_NetworkId, struct EzNetworkEcho *eznetworkecho_ptr )
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char NetworkId[ 17 ];
+        char Input_NetworkId[ 17 ];
+        char EchoPropertyId[ 17 ];
+        char EchoProperty;
+        char LogOnReq;
+    EXEC SQL END DECLARE SECTION;
+
+    int i = 0;
+
+    EXEC SQL VAR NetworkId IS STRING(17);
+    EXEC SQL VAR Input_NetworkId IS STRING(17);
+    EXEC SQL VAR EchoPropertyId IS STRING(17);
+
+    memset( NetworkId, 0, sizeof( NetworkId ) );
+    memset( Input_NetworkId, 0, sizeof( Input_NetworkId ) );
+    memset( EchoPropertyId, 0, sizeof( EchoPropertyId ) );
+
+    strcpy( Input_NetworkId, I_NetworkId );
+
+    EXEC SQL SELECT
+        RTRIM(NETWORKID),
+        RTRIM(ECHOPROPERTYID),
+        ECHOPROPERTY,
+        LOGONREQ
+    INTO
+        :NetworkId,
+        :EchoPropertyId,
+        :EchoProperty,
+        :LogOnReq
+	FROM EZNETWORKECHO WHERE RTRIM(NETWORKID)=:Input_NetworkId;
+
+    if( sqlca.sqlcode != 0 )
+            return sqlca.sqlcode;
+
+    strcpy( eznetworkecho_ptr->NetworkId, NetworkId );
+    strcpy( eznetworkecho_ptr->EchoPropertyId, EchoPropertyId );
+    eznetworkecho_ptr->EchoProperty = EchoProperty;
+	eznetworkecho_ptr->LogOnReq = LogOnReq;
+    return 0;
+
+}
+                                                                                       
+int readEzEchoProperty( const char *I_EchoPropertyId, struct EzEchoProperty *ezechoproperty_ptr )
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char EchoPropertyId[ 17 ];
+        char Input_EchoPropertyId[ 17 ];
+        int EchoInterval;
+    EXEC SQL END DECLARE SECTION;
+
+    int i = 0;
+
+    EXEC SQL VAR EchoPropertyId IS STRING(17);
+    EXEC SQL VAR Input_EchoPropertyId IS STRING(17);
+    
+    memset( EchoPropertyId, 0, sizeof( EchoPropertyId ) );
+    memset( Input_EchoPropertyId, 0, sizeof( Input_EchoPropertyId ) );
+   
+    strcpy( Input_EchoPropertyId, I_EchoPropertyId );
+
+    EXEC SQL SELECT
+        RTRIM(ECHOPROPERTYID),
+        RTRIM(ECHOINTERVAL)
+    INTO
+        :EchoPropertyId,
+        :EchoInterval
+	FROM EZECHOPROPERTY WHERE RTRIM(ECHOPROPERTYID)=:Input_EchoPropertyId;
+
+    if( sqlca.sqlcode != 0 )
+            return sqlca.sqlcode;
+
+    strcpy( ezechoproperty_ptr->EchoPropertyId, EchoPropertyId );
+    ezechoproperty_ptr->EchoInterval = EchoInterval;
+
+    return 0;
+
+}
+
